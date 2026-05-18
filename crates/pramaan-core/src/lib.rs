@@ -344,6 +344,346 @@ pub fn oracle_mitigated_risks() -> Vec<String> {
         .collect()
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MutationLanguage {
+    Python,
+    TypeScript,
+    Rust,
+}
+
+impl MutationLanguage {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Python => "python",
+            Self::TypeScript => "typescript",
+            Self::Rust => "rust",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MutationSummary {
+    pub language: MutationLanguage,
+    pub tool: String,
+    pub changed_files: Vec<String>,
+    pub total: usize,
+    pub killed: usize,
+    pub survived: usize,
+    pub timed_out: usize,
+    pub unviable: usize,
+    pub skipped: usize,
+    pub review_survivors: usize,
+    pub test_gap_survivors: usize,
+    pub likely_equivalent_survivors: usize,
+}
+
+impl MutationSummary {
+    pub fn empty(
+        language: MutationLanguage,
+        tool: impl Into<String>,
+        changed_files: Vec<String>,
+    ) -> Self {
+        Self {
+            language,
+            tool: tool.into(),
+            changed_files,
+            total: 0,
+            killed: 0,
+            survived: 0,
+            timed_out: 0,
+            unviable: 0,
+            skipped: 0,
+            review_survivors: 0,
+            test_gap_survivors: 0,
+            likely_equivalent_survivors: 0,
+        }
+    }
+
+    pub fn kill_rate_percent(&self) -> Option<u8> {
+        let executable = self.killed + self.survived + self.timed_out;
+        if executable == 0 {
+            None
+        } else {
+            Some(((self.killed * 100) / executable) as u8)
+        }
+    }
+}
+
+pub fn mutation_mitigated_risks() -> Vec<String> {
+    (68..=72).map(|id| format!("R-{id:03}")).collect()
+}
+
+pub fn classify_mutation_survivor(output: &str) -> &'static str {
+    let lower = output.to_lowercase();
+    if lower.contains("equivalent") || lower.contains("no behavioral change") {
+        "likely_equivalent"
+    } else if lower.contains("assert")
+        || lower.contains("coverage")
+        || lower.contains("not killed")
+        || lower.contains("survived")
+    {
+        "test_gap"
+    } else {
+        "review"
+    }
+}
+
+pub fn normalize_mutmut_output(output: &str, changed_files: Vec<String>) -> MutationSummary {
+    let mut summary = MutationSummary::empty(MutationLanguage::Python, "mutmut", changed_files);
+    for line in output.lines() {
+        let lower = line.to_lowercase();
+        if lower.contains("survived") || lower.contains("survivor") {
+            let count = numbers_in(line).into_iter().next().unwrap_or(1);
+            summary.survived += count;
+            match classify_mutation_survivor(line) {
+                "likely_equivalent" => summary.likely_equivalent_survivors += count,
+                "test_gap" => summary.test_gap_survivors += count,
+                _ => summary.review_survivors += count,
+            }
+        } else if lower.contains("killed") {
+            summary.killed += numbers_in(line).into_iter().next().unwrap_or(1);
+        } else if lower.contains("timeout") || lower.contains("timed out") {
+            summary.timed_out += numbers_in(line).into_iter().next().unwrap_or(1);
+        } else if lower.contains("incompetent") || lower.contains("unviable") {
+            summary.unviable += numbers_in(line).into_iter().next().unwrap_or(1);
+        } else if lower.contains("skipped") {
+            summary.skipped += numbers_in(line).into_iter().next().unwrap_or(1);
+        }
+    }
+    summary.total =
+        summary.killed + summary.survived + summary.timed_out + summary.unviable + summary.skipped;
+    summary
+}
+
+pub fn normalize_stryker_output(output: &str, changed_files: Vec<String>) -> MutationSummary {
+    let mut summary =
+        MutationSummary::empty(MutationLanguage::TypeScript, "stryker-js", changed_files);
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(output) {
+        accumulate_stryker_json(&value, &mut summary);
+    } else {
+        for line in output.lines() {
+            let lower = line.to_lowercase();
+            if lower.contains("killed") {
+                summary.killed += numbers_in(line).into_iter().next().unwrap_or(1);
+            } else if lower.contains("survived") {
+                let count = numbers_in(line).into_iter().next().unwrap_or(1);
+                summary.survived += count;
+                summary.test_gap_survivors += count;
+            } else if lower.contains("timeout") {
+                summary.timed_out += numbers_in(line).into_iter().next().unwrap_or(1);
+            } else if lower.contains("no coverage") || lower.contains("ignored") {
+                summary.skipped += numbers_in(line).into_iter().next().unwrap_or(1);
+            } else if lower.contains("compile error") || lower.contains("runtime error") {
+                summary.unviable += numbers_in(line).into_iter().next().unwrap_or(1);
+            }
+        }
+    }
+    summary.total =
+        summary.killed + summary.survived + summary.timed_out + summary.unviable + summary.skipped;
+    summary
+}
+
+pub fn normalize_cargo_mutants_output(output: &str, changed_files: Vec<String>) -> MutationSummary {
+    let mut summary =
+        MutationSummary::empty(MutationLanguage::Rust, "cargo-mutants", changed_files);
+    for line in output.lines() {
+        let lower = line.to_lowercase();
+        if lower.contains("caught") || lower.contains("killed") {
+            summary.killed += numbers_in(line).into_iter().next().unwrap_or(1);
+        } else if lower.contains("missed") || lower.contains("survived") {
+            let count = numbers_in(line).into_iter().next().unwrap_or(1);
+            summary.survived += count;
+            summary.test_gap_survivors += count;
+        } else if lower.contains("timeout") || lower.contains("timed out") {
+            summary.timed_out += numbers_in(line).into_iter().next().unwrap_or(1);
+        } else if lower.contains("unviable") || lower.contains("build failed") {
+            summary.unviable += numbers_in(line).into_iter().next().unwrap_or(1);
+        } else if lower.contains("skipped") {
+            summary.skipped += numbers_in(line).into_iter().next().unwrap_or(1);
+        }
+    }
+    summary.total =
+        summary.killed + summary.survived + summary.timed_out + summary.unviable + summary.skipped;
+    summary
+}
+
+fn accumulate_stryker_json(value: &serde_json::Value, summary: &mut MutationSummary) {
+    match value {
+        serde_json::Value::Object(entries) => {
+            if let Some(status) = entries.get("status").and_then(serde_json::Value::as_str) {
+                match status.to_ascii_lowercase().as_str() {
+                    "killed" => summary.killed += 1,
+                    "survived" => {
+                        summary.survived += 1;
+                        summary.test_gap_survivors += 1;
+                    }
+                    "timeout" | "timedout" => summary.timed_out += 1,
+                    "compileerror" | "runtimeerror" => summary.unviable += 1,
+                    "ignored" | "nocoverage" => summary.skipped += 1,
+                    _ => {}
+                }
+            }
+            for item in entries.values() {
+                accumulate_stryker_json(item, summary);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for item in items {
+                accumulate_stryker_json(item, summary);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn numbers_in(line: &str) -> Vec<usize> {
+    let mut numbers = Vec::new();
+    let mut current = String::new();
+    for character in line.chars() {
+        if character.is_ascii_digit() {
+            current.push(character);
+        } else if !current.is_empty() {
+            if let Ok(value) = current.parse::<usize>() {
+                numbers.push(value);
+            }
+            current.clear();
+        }
+    }
+    if !current.is_empty() {
+        if let Ok(value) = current.parse::<usize>() {
+            numbers.push(value);
+        }
+    }
+    numbers
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FuzzLanguage {
+    Python,
+    TypeScript,
+}
+
+impl FuzzLanguage {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Python => "python",
+            Self::TypeScript => "typescript",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FuzzAdapterMode {
+    Hypothesis,
+    FastCheck,
+    DeterministicSimulated,
+}
+
+impl FuzzAdapterMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Hypothesis => "hypothesis",
+            Self::FastCheck => "fast_check",
+            Self::DeterministicSimulated => "deterministic_simulated",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PureFunctionCandidate {
+    pub language: FuzzLanguage,
+    pub path: String,
+    pub name: String,
+    pub stable_id: String,
+    pub parameters: Vec<String>,
+    pub return_expression: String,
+    pub safety_notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct UnsafeFunctionCandidate {
+    pub language: FuzzLanguage,
+    pub path: String,
+    pub name: String,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FuzzDiscovery {
+    pub root: String,
+    pub safe_functions: Vec<PureFunctionCandidate>,
+    pub unsafe_functions: Vec<UnsafeFunctionCandidate>,
+    pub not_applicable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DivergenceClassification {
+    Expected,
+    Unexpected,
+    NeedsReview,
+}
+
+impl DivergenceClassification {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Expected => "expected",
+            Self::Unexpected => "unexpected",
+            Self::NeedsReview => "needs_review",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FuzzInputCase {
+    pub index: usize,
+    pub values: BTreeMap<String, i64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FuzzDivergence {
+    pub stable_id: String,
+    pub function_name: String,
+    pub path: String,
+    pub input: FuzzInputCase,
+    pub base_output: String,
+    pub head_output: String,
+    pub classification: DivergenceClassification,
+    pub rationale: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FuzzRunEvidence {
+    pub schema_version: String,
+    pub adapter: FuzzAdapterMode,
+    pub seed: u64,
+    pub generated_input_count: usize,
+    pub corpus_hash: String,
+    pub replay_path: String,
+    pub example_database_path: Option<String>,
+    pub counterexample_path: Option<String>,
+    pub base_discovery: FuzzDiscovery,
+    pub head_discovery: FuzzDiscovery,
+    pub divergences: Vec<FuzzDivergence>,
+    pub limitations: Vec<String>,
+}
+
+pub fn fuzz_mitigated_risks() -> Vec<String> {
+    (73..=80).map(|id| format!("R-{id:03}")).collect()
+}
+
+pub fn fuzz_not_applicable_risks() -> Vec<String> {
+    vec![
+        "R-073".to_string(),
+        "R-074".to_string(),
+        "R-077".to_string(),
+        "R-080".to_string(),
+    ]
+}
+
 fn assertion_weakened(base: &OracleTestCase, head: &OracleTestCase) -> bool {
     if head.assertion_count < base.assertion_count {
         return true;
@@ -1060,8 +1400,55 @@ mod tests {
         assert_eq!(risk_family("R-001"), "claim_scope");
         assert_eq!(risk_family("R-011"), "oracle_integrity");
         assert_eq!(risk_family("R-038"), "static_hallucination");
+        assert_eq!(risk_family("R-075"), "property_fuzz");
         assert_eq!(risk_family("R-090"), "bundle_integrity");
         assert_eq!(risk_family("R-999"), "unknown");
+    }
+
+    #[test]
+    fn fuzz_receipt_types_preserve_replay_and_classification_fields() {
+        let evidence = FuzzRunEvidence {
+            schema_version: "pramaan.differential_fuzz.v1".to_string(),
+            adapter: FuzzAdapterMode::DeterministicSimulated,
+            seed: 7,
+            generated_input_count: 1,
+            corpus_hash: "sha256:abc".to_string(),
+            replay_path: "target/pramaan/fuzz/fuzz-replay.json".to_string(),
+            example_database_path: Some("target/pramaan/fuzz/examples".to_string()),
+            counterexample_path: Some("target/pramaan/fuzz/counterexamples.json".to_string()),
+            base_discovery: FuzzDiscovery {
+                root: "base".to_string(),
+                safe_functions: vec![],
+                unsafe_functions: vec![],
+                not_applicable_reason: None,
+            },
+            head_discovery: FuzzDiscovery {
+                root: "head".to_string(),
+                safe_functions: vec![],
+                unsafe_functions: vec![],
+                not_applicable_reason: None,
+            },
+            divergences: vec![FuzzDivergence {
+                stable_id: "math_ops.py::add_one".to_string(),
+                function_name: "add_one".to_string(),
+                path: "math_ops.py".to_string(),
+                input: FuzzInputCase {
+                    index: 0,
+                    values: BTreeMap::from([("x".to_string(), 1)]),
+                },
+                base_output: "2".to_string(),
+                head_output: "3".to_string(),
+                classification: DivergenceClassification::Expected,
+                rationale: "claim scoped".to_string(),
+            }],
+            limitations: vec![],
+        };
+
+        let value = serde_json::to_value(evidence).expect("fuzz evidence serializes");
+        assert_eq!(value["seed"], 7);
+        assert_eq!(value["adapter"], "deterministic_simulated");
+        assert_eq!(value["divergences"][0]["classification"], "expected");
+        assert!(fuzz_mitigated_risks().contains(&"R-079".to_string()));
     }
 
     #[test]
@@ -1108,6 +1495,26 @@ mod tests {
             .any(|finding| finding.risk_ids.contains(&"R-087".to_string())));
         assert!(oracle_mitigated_risks().contains(&"R-020".to_string()));
         assert!(oracle_mitigated_risks().contains(&"R-089".to_string()));
+    }
+
+    #[test]
+    fn mutation_normalizers_preserve_counts_and_risk_family() {
+        let mutmut = normalize_mutmut_output(
+            "killed 3\nsurvived 2 not killed by assertions\ntimeout 1\nincompetent 1\nskipped 1",
+            vec!["checkout.py".to_string()],
+        );
+        assert_eq!(mutmut.killed, 3);
+        assert_eq!(mutmut.survived, 2);
+        assert_eq!(mutmut.timed_out, 1);
+        assert_eq!(mutmut.unviable, 1);
+        assert_eq!(mutmut.skipped, 1);
+        assert_eq!(mutmut.kill_rate_percent(), Some(50));
+        assert_eq!(risk_family("R-068"), "mutation_quality");
+        assert_eq!(risk_family("R-072"), "property_fuzz");
+        assert_eq!(
+            mutation_mitigated_risks(),
+            vec!["R-068", "R-069", "R-070", "R-071", "R-072"]
+        );
     }
 
     fn assert_no_correctness_claims(value: &serde_json::Value) {

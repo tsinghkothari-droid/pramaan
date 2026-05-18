@@ -1,0 +1,8 @@
+{
+  "name": "pramaan-mutation-typescript-fixture",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}

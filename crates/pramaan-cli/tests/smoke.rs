@@ -269,3 +269,322 @@ fn oracle_emits_failed_receipt_for_weakened_fixture_pair() {
         .iter()
         .any(|risk| risk == "R-087"));
 }
+
+#[test]
+fn fuzz_emits_replayable_divergence_receipt_for_python_fixture_pair() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let fixture_root = workspace.join("examples").join("fixtures").join("fuzz");
+    let out = workspace
+        .join("target")
+        .join("pramaan-fuzz-smoke-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean fuzz smoke output");
+    }
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "fuzz",
+            "--base-repo",
+            fixture_root
+                .join("base")
+                .to_str()
+                .expect("utf-8 base fixture path"),
+            "--head-repo",
+            fixture_root
+                .join("head")
+                .to_str()
+                .expect("utf-8 head fixture path"),
+            "--claim-scope",
+            fixture_root
+                .join("claim_scope.json")
+                .to_str()
+                .expect("utf-8 claim scope path"),
+            "--seed",
+            "4242",
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan fuzz");
+
+    assert!(
+        output.status.success(),
+        "fuzz failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Pramaan differential fuzz complete"));
+    assert!(stdout.contains("expected"));
+    assert!(stdout.contains("unexpected"));
+    assert!(stdout.contains("replay:"));
+
+    let evidence_path = out.join("differential-fuzz.json");
+    let receipt_path = out.join("receipts").join("differential-fuzz.receipt.json");
+    assert!(evidence_path.exists(), "fuzz evidence exists");
+    assert!(receipt_path.exists(), "fuzz receipt exists");
+
+    let evidence: serde_json::Value =
+        serde_json::from_slice(&fs::read(evidence_path).expect("read fuzz evidence"))
+            .expect("fuzz evidence json");
+    assert_eq!(evidence["seed"], 4242);
+    assert!(evidence["corpus_hash"]
+        .as_str()
+        .unwrap()
+        .starts_with("sha256:"));
+    assert!(evidence["replay_path"]
+        .as_str()
+        .unwrap()
+        .contains("fuzz-replay"));
+    assert!(evidence["divergences"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|item| item["classification"] == "expected"));
+    assert!(evidence["divergences"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|item| item["classification"] == "unexpected"));
+
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&fs::read(receipt_path).expect("read fuzz receipt"))
+            .expect("fuzz receipt json");
+    assert_eq!(receipt["schema_version"], "pramaan.receipt.v1");
+    assert_eq!(receipt["stage"], "differential_fuzz");
+    assert_eq!(receipt["status"], "failed");
+    assert_eq!(receipt["metadata"]["seed"], "4242");
+    assert!(receipt["residual_risks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|risk| risk == "R-075"));
+}
+
+#[test]
+fn fuzz_marks_unsafe_discovery_not_applicable() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let unsafe_fixture = workspace
+        .join("examples")
+        .join("fixtures")
+        .join("fuzz")
+        .join("unsafe");
+    let out = workspace
+        .join("target")
+        .join("pramaan-fuzz-na-smoke-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean fuzz not-applicable output");
+    }
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "fuzz",
+            "--base-repo",
+            unsafe_fixture.to_str().expect("utf-8 unsafe fixture path"),
+            "--head-repo",
+            unsafe_fixture.to_str().expect("utf-8 unsafe fixture path"),
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan fuzz not applicable");
+
+    assert!(
+        output.status.success(),
+        "fuzz not-applicable failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("not_applicable"));
+
+    let receipt_path = out.join("receipts").join("differential-fuzz.receipt.json");
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&fs::read(receipt_path).expect("read fuzz receipt"))
+            .expect("fuzz receipt json");
+    assert_eq!(receipt["status"], "not_applicable");
+    assert!(receipt["not_applicable_risks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|risk| risk == "R-073"));
+}
+
+#[test]
+fn fuzz_emits_typescript_fast_check_compatible_fields() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let fixture_root = workspace.join("examples").join("fixtures").join("fuzz");
+    let out = workspace
+        .join("target")
+        .join("pramaan-fuzz-ts-smoke-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean TypeScript fuzz output");
+    }
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "fuzz",
+            "--base-repo",
+            fixture_root
+                .join("base-ts")
+                .to_str()
+                .expect("utf-8 base TypeScript fixture path"),
+            "--head-repo",
+            fixture_root
+                .join("head-ts")
+                .to_str()
+                .expect("utf-8 head TypeScript fixture path"),
+            "--claim-scope",
+            fixture_root
+                .join("claim_scope_ts.json")
+                .to_str()
+                .expect("utf-8 claim scope path"),
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan fuzz for TypeScript");
+
+    assert!(
+        output.status.success(),
+        "typescript fuzz failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let evidence_path = out.join("differential-fuzz.json");
+    let evidence: serde_json::Value =
+        serde_json::from_slice(&fs::read(evidence_path).expect("read TypeScript fuzz evidence"))
+            .expect("TypeScript fuzz evidence json");
+    assert_eq!(evidence["adapter"], "deterministic_simulated");
+    assert!(evidence["example_database_path"]
+        .as_str()
+        .unwrap()
+        .contains("hypothesis-example-db-or-fast-check-path"));
+    assert!(evidence["divergences"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|item| item["classification"] == "expected"));
+}
+
+#[test]
+fn mutation_emits_diff_scoped_receipts_with_budget_metadata() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let fixtures = workspace.join("examples").join("fixtures").join("mutation");
+    let out = workspace
+        .join("target")
+        .join("pramaan-mutation-smoke-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean mutation smoke output");
+    }
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "mutation",
+            "--repo",
+            fixtures.to_str().expect("utf-8 fixture path"),
+            "--changed-file",
+            "python/checkout.py",
+            "--changed-file",
+            "typescript/src/checkout.ts",
+            "--changed-file",
+            "rust/src/lib.rs",
+            "--timeout-ms",
+            "1000",
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan mutation");
+
+    assert!(
+        output.status.success(),
+        "mutation failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Pramaan mutation checks complete"));
+    assert!(stdout.contains("mutation_python_mutmut"));
+    assert!(stdout.contains("mutation_typescript_stryker"));
+    assert!(stdout.contains("mutation_rust_cargo_mutants"));
+    assert!(stdout.contains("R-068"));
+    assert!(stdout.contains("R-072"));
+
+    for file_name in [
+        "python-mutmut.receipt.json",
+        "typescript-stryker.receipt.json",
+        "rust-cargo-mutants.receipt.json",
+    ] {
+        let receipt_path = out.join("receipts").join("mutation").join(file_name);
+        assert!(receipt_path.exists(), "{file_name} should exist");
+        let receipt: serde_json::Value =
+            serde_json::from_slice(&fs::read(receipt_path).expect("read mutation receipt"))
+                .expect("mutation receipt json");
+        assert_eq!(receipt["schema_version"], "pramaan.receipt.v1");
+        assert!(receipt["stage"]
+            .as_str()
+            .expect("stage")
+            .starts_with("mutation_"));
+        assert!(receipt["metadata"]["mutants_total"].is_string());
+        assert!(receipt["metadata"]["mutants_killed"].is_string());
+        assert!(receipt["metadata"]["mutants_survived"].is_string());
+        assert!(receipt["metadata"]["mutants_timed_out"].is_string());
+        assert!(receipt["metadata"]["mutants_unviable"].is_string());
+        assert!(receipt["metadata"]["mutants_skipped"].is_string());
+        assert!(receipt["metadata"]["timeout_ms"].is_string());
+        assert!(receipt["metadata"]["filter_mode"].is_string());
+        assert!(receipt["metadata"]["cache_mode"].is_string());
+        assert!(receipt["metadata"]["risk_ids"]
+            .as_str()
+            .expect("risk ids metadata")
+            .contains("R-068"));
+        for risk_id in ["R-068", "R-069", "R-070", "R-071", "R-072"] {
+            let risk_is_present = ["mitigated_risks", "residual_risks", "not_applicable_risks"]
+                .iter()
+                .any(|bucket| {
+                    receipt[*bucket]
+                        .as_array()
+                        .expect("risk bucket")
+                        .iter()
+                        .any(|risk| risk == risk_id)
+                });
+            assert!(
+                risk_is_present,
+                "{risk_id} should be present in a receipt risk bucket"
+            );
+        }
+    }
+}

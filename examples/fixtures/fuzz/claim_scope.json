@@ -1,0 +1,51 @@
+{
+  "schema_version": "pramaan.claim_scope.v1",
+  "claim_scope_id": "scope_fuzz_fixture",
+  "run_id": "run_fuzz_fixture_001",
+  "source_refs": [
+    {
+      "kind": "pr_title",
+      "title": "Change add_one arithmetic behavior",
+      "excerpt": "Change add_one arithmetic behavior"
+    }
+  ],
+  "expected_behavior": [
+    {
+      "id": "B-001",
+      "description": "The add_one function intentionally changes its arithmetic result."
+    }
+  ],
+  "out_of_scope_behavior": [
+    {
+      "id": "B-002",
+      "description": "The double function and bonus function should not change."
+    }
+  ],
+  "touched_public_apis": [
+    {
+      "language": "python",
+      "symbol": "math_ops.add_one",
+      "kind": "function",
+      "change_type": "modified",
+      "file": "math_ops.py"
+    }
+  ],
+  "extraction_method": {
+    "kind": "synthetic",
+    "tool": "pramaan-fixture-author",
+    "review_required": true
+  },
+  "confidence": {
+    "level": "medium",
+    "score": 0.74,
+    "rationale": "Synthetic fixture scope for differential fuzz classification."
+  },
+  "limitations": [
+    {
+      "code": "synthetic_scope",
+      "description": "Fixture-only claim scope.",
+      "risk_ids": ["R-002"]
+    }
+  ],
+  "risk_refs": ["R-073", "R-075", "R-078", "R-079"]
+}

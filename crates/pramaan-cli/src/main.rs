@@ -9,6 +9,8 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+mod fuzz;
+mod mutation;
 mod oracle;
 mod static_checks;
 
@@ -25,6 +27,8 @@ enum Commands {
     Verify(VerifyArgs),
     StaticChecks(StaticChecksArgs),
     Oracle(OracleArgs),
+    Mutation(MutationArgs),
+    Fuzz(FuzzArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -55,6 +59,34 @@ struct OracleArgs {
     out: PathBuf,
 }
 
+#[derive(Debug, Parser)]
+struct MutationArgs {
+    #[arg(long, default_value = ".")]
+    repo: PathBuf,
+    #[arg(long, default_value = "target/pramaan/mutation")]
+    out: PathBuf,
+    #[arg(long = "changed-file")]
+    changed_files: Vec<String>,
+    #[arg(long, default_value_t = 120000)]
+    timeout_ms: u64,
+    #[arg(long, default_value_t = 70)]
+    kill_threshold: u8,
+}
+
+#[derive(Debug, Parser)]
+struct FuzzArgs {
+    #[arg(long)]
+    base_repo: PathBuf,
+    #[arg(long)]
+    head_repo: PathBuf,
+    #[arg(long)]
+    claim_scope: Option<PathBuf>,
+    #[arg(long, default_value = "target/pramaan/fuzz")]
+    out: PathBuf,
+    #[arg(long, default_value_t = 1337)]
+    seed: u64,
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -62,6 +94,20 @@ fn main() -> Result<()> {
         Commands::Verify(args) => run_verify(args),
         Commands::StaticChecks(args) => static_checks::run_static_checks(args.repo, args.out),
         Commands::Oracle(args) => oracle::run_oracle(args.base_repo, args.head_repo, args.out),
+        Commands::Mutation(args) => mutation::run_mutation(
+            args.repo,
+            args.out,
+            args.changed_files,
+            args.timeout_ms,
+            args.kill_threshold,
+        ),
+        Commands::Fuzz(args) => fuzz::run_fuzz(
+            args.base_repo,
+            args.head_repo,
+            args.claim_scope,
+            args.out,
+            args.seed,
+        ),
     }
 }
 
