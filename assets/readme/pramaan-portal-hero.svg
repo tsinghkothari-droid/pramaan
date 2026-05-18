@@ -1,0 +1,105 @@
+<svg width="1600" height="720" viewBox="0 0 1600 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Pramaan portal lab hero</title>
+  <desc id="desc">An original sci-fi portal laboratory scene showing Pramaan verifying an AI-authored pull request with signed proof bundles.</desc>
+  <defs>
+    <radialGradient id="portal" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(253 352) rotate(8) scale(210 250)">
+      <stop offset="0" stop-color="#e4ff70"/>
+      <stop offset="0.3" stop-color="#72ff4f"/>
+      <stop offset="0.7" stop-color="#13c95d"/>
+      <stop offset="1" stop-color="#072315"/>
+    </radialGradient>
+    <linearGradient id="panel" x1="542" y1="137" x2="1326" y2="647" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0c2d3b"/>
+      <stop offset="1" stop-color="#101022"/>
+    </linearGradient>
+    <linearGradient id="titleGlow" x1="414" y1="44" x2="1224" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d8ff5d"/>
+      <stop offset="0.55" stop-color="#72ff4f"/>
+      <stop offset="1" stop-color="#23f2a2"/>
+    </linearGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.18 0 0 0 0 1 0 0 0 0 0.35 0 0 0 0.8 0"/>
+      <feBlend in="SourceGraphic"/>
+    </filter>
+    <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#1be7ff" flood-opacity="0.75"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="720" fill="#070911"/>
+  <path d="M0 0h1600v720H0z" fill="url(#panel)" opacity=".35"/>
+  <path d="M0 536c196-34 312 49 474 19 204-38 289-134 500-97 227 40 370 162 626 75v187H0V536z" fill="#05070d" opacity=".68"/>
+  <g opacity=".35">
+    <path d="M69 88h1460M112 631h1394M0 238h1600M0 444h1600" stroke="#1de4ff" stroke-width="1"/>
+    <path d="M400 0v720M782 0v720M1190 0v720" stroke="#1de4ff" stroke-width="1"/>
+  </g>
+  <g filter="url(#softGlow)">
+    <ellipse cx="253" cy="352" rx="177" ry="232" fill="url(#portal)"/>
+    <ellipse cx="253" cy="352" rx="139" ry="191" stroke="#d7ff5a" stroke-width="16"/>
+    <ellipse cx="253" cy="352" rx="102" ry="147" stroke="#28ff7a" stroke-width="10" stroke-dasharray="34 18"/>
+    <ellipse cx="253" cy="352" rx="62" ry="98" stroke="#dff95d" stroke-width="7" stroke-dasharray="18 13"/>
+  </g>
+  <g transform="translate(120 112)">
+    <rect x="0" y="0" width="190" height="76" rx="8" fill="#f2e4b8" stroke="#322411" stroke-width="4"/>
+    <text x="18" y="28" fill="#2a2119" font-family="Verdana, Arial, sans-serif" font-size="18" font-weight="700">IN CODE WE TRUST.</text>
+    <text x="18" y="56" fill="#165b27" font-family="Verdana, Arial, sans-serif" font-size="18" font-weight="700">IN PROOFS WE VERIFY.</text>
+  </g>
+  <g transform="translate(452 50)">
+    <text x="0" y="84" fill="url(#titleGlow)" font-family="Impact, Arial Black, Arial, sans-serif" font-size="106" letter-spacing="2" filter="url(#softGlow)">PRAMAAN</text>
+    <text x="28" y="126" fill="#f4fff8" font-family="Verdana, Arial, sans-serif" font-size="34" font-weight="700">Proof Bundles for AI Code</text>
+  </g>
+  <g transform="translate(530 174)" filter="url(#cyanGlow)">
+    <rect width="850" height="406" rx="22" fill="#081824" stroke="#21e7ff" stroke-width="4"/>
+    <rect x="24" y="24" width="802" height="54" rx="12" fill="#102b3a" stroke="#1be7ff" stroke-width="2"/>
+    <text x="46" y="60" fill="#c9faff" font-family="Consolas, monospace" font-size="24" font-weight="700">Pull Request #4242</text>
+    <rect x="302" y="36" width="76" height="26" rx="6" fill="#153d23" stroke="#67ff58"/>
+    <text x="316" y="56" fill="#83ff71" font-family="Consolas, monospace" font-size="18" font-weight="700">OPEN</text>
+    <g transform="translate(36 102)">
+      <rect width="340" height="256" rx="12" fill="#06101a" stroke="#2fd8ff" opacity=".95"/>
+      <text x="18" y="36" fill="#d8f9ff" font-family="Consolas, monospace" font-size="21" font-weight="700">Code Diff</text>
+      <text x="24" y="80" fill="#ff7b83" font-family="Consolas, monospace" font-size="18">- assert total &gt;= 0</text>
+      <text x="24" y="114" fill="#8fff76" font-family="Consolas, monospace" font-size="18">+ assert total == 42</text>
+      <text x="24" y="154" fill="#ffdf78" font-family="Consolas, monospace" font-size="18">! oracle-sensitive</text>
+      <text x="24" y="194" fill="#99f6ff" font-family="Consolas, monospace" font-size="18">risk: R-011</text>
+      <text x="24" y="228" fill="#99f6ff" font-family="Consolas, monospace" font-size="18">receipt: failed</text>
+    </g>
+    <g transform="translate(404 102)">
+      <rect width="206" height="154" rx="12" fill="#081d19" stroke="#3bff76" stroke-width="2"/>
+      <text x="24" y="38" fill="#d8ffe2" font-family="Verdana, Arial, sans-serif" font-size="22" font-weight="700">Proof Bundle</text>
+      <text x="24" y="78" fill="#c8ffd1" font-family="Consolas, monospace" font-size="17">bundle.pramaan</text>
+      <text x="24" y="108" fill="#c8ffd1" font-family="Consolas, monospace" font-size="17">SHA256: 9f3c...</text>
+      <text x="24" y="136" fill="#81ff79" font-family="Consolas, monospace" font-size="17">SIGNED</text>
+    </g>
+    <g transform="translate(632 102)">
+      <rect width="178" height="256" rx="12" fill="#120d1f" stroke="#ba74ff" stroke-width="2"/>
+      <text x="18" y="36" fill="#f0dcff" font-family="Verdana, Arial, sans-serif" font-size="22" font-weight="700">Verifiers</text>
+      <text x="22" y="82" fill="#7dff72" font-family="Consolas, monospace" font-size="18">PASS static</text>
+      <text x="22" y="118" fill="#ffdf68" font-family="Consolas, monospace" font-size="18">WARN mutate</text>
+      <text x="22" y="154" fill="#ff6e78" font-family="Consolas, monospace" font-size="18">FAIL oracle</text>
+      <text x="22" y="190" fill="#7dff72" font-family="Consolas, monospace" font-size="18">PASS bundle</text>
+      <text x="22" y="226" fill="#8df9ff" font-family="Consolas, monospace" font-size="18">NO FAKE GREEN</text>
+    </g>
+    <rect x="404" y="282" width="406" height="76" rx="12" fill="#123214" stroke="#69ff5b" stroke-width="2"/>
+    <text x="430" y="330" fill="#84ff6c" font-family="Verdana, Arial, sans-serif" font-size="30" font-weight="900">VERIFICATION: EVIDENCE FIRST</text>
+  </g>
+  <g transform="translate(1352 102)">
+    <rect width="184" height="116" rx="8" fill="#d8aa4a" stroke="#3c2307" stroke-width="5"/>
+    <text x="20" y="34" fill="#2c1606" font-family="Verdana, Arial, sans-serif" font-size="20" font-weight="900">WARNING</text>
+    <text x="20" y="68" fill="#2c1606" font-family="Verdana, Arial, sans-serif" font-size="17" font-weight="700">AI MAY BE</text>
+    <text x="20" y="94" fill="#2c1606" font-family="Verdana, Arial, sans-serif" font-size="17" font-weight="700">CONFIDENTLY WRONG</text>
+  </g>
+  <g transform="translate(1304 430)">
+    <rect width="174" height="180" rx="16" fill="#21112d" stroke="#c468ff" stroke-width="4"/>
+    <circle cx="87" cy="72" r="38" fill="#44ff67"/>
+    <circle cx="73" cy="64" r="8" fill="#111"/>
+    <circle cx="101" cy="64" r="8" fill="#111"/>
+    <path d="M68 90c16 14 32 14 48 0" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+    <text x="20" y="146" fill="#f0dcff" font-family="Verdana, Arial, sans-serif" font-size="16" font-weight="700">EDGE CASES</text>
+    <text x="28" y="168" fill="#f0dcff" font-family="Verdana, Arial, sans-serif" font-size="13">contained with logs</text>
+  </g>
+  <g transform="translate(92 560)">
+    <rect width="292" height="82" rx="10" fill="#2a1717" stroke="#ef5757" stroke-width="4"/>
+    <text x="22" y="34" fill="#ffd6d6" font-family="Verdana, Arial, sans-serif" font-size="20" font-weight="900">IT COMPILES ON MY MACHINE</text>
+    <text x="60" y="64" fill="#ff7777" font-family="Verdana, Arial, sans-serif" font-size="23" font-weight="900">IS NOT A PROOF</text>
+  </g>
+</svg>

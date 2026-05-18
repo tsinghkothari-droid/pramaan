@@ -1,0 +1,72 @@
+<svg width="1400" height="500" viewBox="0 0 1400 500" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Pramaan proof bundle anatomy</title>
+  <desc id="desc">A sci-fi themed diagram showing the contents of a Pramaan proof bundle.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1400" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#080711"/>
+      <stop offset=".5" stop-color="#102330"/>
+      <stop offset="1" stop-color="#101020"/>
+    </linearGradient>
+    <filter id="cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#1be7ff" flood-opacity=".6"/>
+    </filter>
+    <filter id="green" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#61ff5d" flood-opacity=".65"/>
+    </filter>
+  </defs>
+  <rect width="1400" height="500" rx="28" fill="url(#bg)"/>
+  <g transform="translate(78 74)">
+    <text x="0" y="0" fill="#d9ff60" font-family="Verdana, Arial, sans-serif" font-size="36" font-weight="900">Anatomy of a Proof Bundle</text>
+    <text x="0" y="38" fill="#c8faff" font-family="Verdana, Arial, sans-serif" font-size="18">The reviewer gets a ledger, not a vibe check.</text>
+  </g>
+  <g transform="translate(78 148)" filter="url(#green)">
+    <rect width="330" height="270" rx="20" fill="#0b2217" stroke="#64ff5f" stroke-width="4"/>
+    <text x="28" y="48" fill="#e5ffe0" font-family="Verdana, Arial, sans-serif" font-size="25" font-weight="900">bundle.pramaan</text>
+    <text x="28" y="88" fill="#bcffb7" font-family="Consolas, monospace" font-size="18">manifest.json</text>
+    <text x="28" y="122" fill="#bcffb7" font-family="Consolas, monospace" font-size="18">sha256: 9f3c...7a2e</text>
+    <text x="28" y="156" fill="#bcffb7" font-family="Consolas, monospace" font-size="18">identity: github-actions</text>
+    <text x="28" y="190" fill="#bcffb7" font-family="Consolas, monospace" font-size="18">status: evidence-ready</text>
+    <rect x="28" y="218" width="136" height="34" rx="8" fill="#173f21" stroke="#8aff72"/>
+    <text x="46" y="242" fill="#8aff72" font-family="Verdana, Arial, sans-serif" font-size="17" font-weight="900">VERIFIED</text>
+  </g>
+  <g font-family="Verdana, Arial, sans-serif" font-weight="800">
+    <g transform="translate(470 132)" filter="url(#cyan)">
+      <rect width="360" height="88" rx="16" fill="#071d2a" stroke="#23e4ff" stroke-width="3"/>
+      <text x="26" y="38" fill="#d7fbff" font-size="22">Receipts</text>
+      <text x="26" y="66" fill="#9cf4ff" font-family="Consolas, monospace" font-size="17">sandbox, oracle, mutation, fuzz</text>
+    </g>
+    <g transform="translate(470 246)" filter="url(#cyan)">
+      <rect width="360" height="88" rx="16" fill="#21132e" stroke="#ba74ff" stroke-width="3"/>
+      <text x="26" y="38" fill="#f1dcff" font-size="22">Artifacts</text>
+      <text x="26" y="66" fill="#e1c1ff" font-family="Consolas, monospace" font-size="17">logs, corpora, snapshots, diffs</text>
+    </g>
+    <g transform="translate(470 360)" filter="url(#cyan)">
+      <rect width="360" height="88" rx="16" fill="#261d08" stroke="#ffd55c" stroke-width="3"/>
+      <text x="26" y="38" fill="#fff2bf" font-size="22">Replay Data</text>
+      <text x="26" y="66" fill="#ffe28a" font-family="Consolas, monospace" font-size="17">seeds, minimized counterexamples</text>
+    </g>
+    <g transform="translate(902 132)" filter="url(#cyan)">
+      <rect width="390" height="88" rx="16" fill="#2b1114" stroke="#ff6976" stroke-width="3"/>
+      <text x="26" y="38" fill="#ffd5d8" font-size="22">Residual Risks</text>
+      <text x="26" y="66" fill="#ffb0b7" font-family="Consolas, monospace" font-size="17">R-049, R-057, skipped stages</text>
+    </g>
+    <g transform="translate(902 246)" filter="url(#cyan)">
+      <rect width="390" height="88" rx="16" fill="#092618" stroke="#63ff69" stroke-width="3"/>
+      <text x="26" y="38" fill="#dbffd9" font-size="22">Mitigated Risks</text>
+      <text x="26" y="66" fill="#baffb5" font-family="Consolas, monospace" font-size="17">R-010, R-011, R-038</text>
+    </g>
+    <g transform="translate(902 360)" filter="url(#cyan)">
+      <rect width="390" height="88" rx="16" fill="#071d2a" stroke="#23e4ff" stroke-width="3"/>
+      <text x="26" y="38" fill="#d7fbff" font-size="22">Signature Metadata</text>
+      <text x="26" y="66" fill="#9cf4ff" font-family="Consolas, monospace" font-size="17">Sigstore / GitHub attestation ready</text>
+    </g>
+  </g>
+  <g stroke="#79ff6f" stroke-width="4" opacity=".8">
+    <path d="M408 238 C434 210, 438 178, 470 176"/>
+    <path d="M408 258 C436 274, 440 286, 470 290"/>
+    <path d="M408 282 C436 342, 440 398, 470 404"/>
+    <path d="M830 176 H902"/>
+    <path d="M830 290 H902"/>
+    <path d="M830 404 H902"/>
+  </g>
+</svg>

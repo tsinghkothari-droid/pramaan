@@ -1,0 +1,64 @@
+<svg width="1400" height="420" viewBox="0 0 1400 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Pramaan verification pipeline</title>
+  <desc id="desc">A portal-themed verification pipeline from pull request diff through signed proof bundle.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1400" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#080711"/>
+      <stop offset=".55" stop-color="#0b1822"/>
+      <stop offset="1" stop-color="#151021"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#32ff71" flood-opacity=".8"/>
+    </filter>
+  </defs>
+  <rect width="1400" height="420" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" fill="#d9ff60" font-family="Verdana, Arial, sans-serif" font-size="34" font-weight="900">Pramaan Pipeline</text>
+  <text x="50" y="94" fill="#c8faff" font-family="Verdana, Arial, sans-serif" font-size="18">Every stage emits a receipt. Even skips and failures become audit evidence.</text>
+  <g stroke="#1be7ff" stroke-width="4" opacity=".75">
+    <path d="M168 214h1064"/>
+    <path d="M1214 198l28 16-28 16"/>
+  </g>
+  <g font-family="Verdana, Arial, sans-serif" font-weight="800" text-anchor="middle">
+    <g transform="translate(108 156)" filter="url(#glow)">
+      <circle cx="60" cy="60" r="54" fill="#12331d" stroke="#65ff5b" stroke-width="4"/>
+      <text x="60" y="54" fill="#eaffdf" font-size="16">PR</text>
+      <text x="60" y="76" fill="#eaffdf" font-size="16">DIFF</text>
+    </g>
+    <g transform="translate(268 156)">
+      <rect width="118" height="118" rx="20" fill="#071c25" stroke="#21e7ff" stroke-width="4"/>
+      <text x="59" y="54" fill="#c9faff" font-size="15">SANDBOX</text>
+      <text x="59" y="78" fill="#8df9ff" font-size="13">env hash</text>
+    </g>
+    <g transform="translate(426 156)">
+      <rect width="118" height="118" rx="20" fill="#21132e" stroke="#ba74ff" stroke-width="4"/>
+      <text x="59" y="48" fill="#f0dcff" font-size="15">CLAIM</text>
+      <text x="59" y="72" fill="#f0dcff" font-size="15">SCOPE</text>
+    </g>
+    <g transform="translate(584 156)">
+      <rect width="118" height="118" rx="20" fill="#261d08" stroke="#ffd55c" stroke-width="4"/>
+      <text x="59" y="46" fill="#fff4c2" font-size="15">STATIC</text>
+      <text x="59" y="70" fill="#fff4c2" font-size="13">no fake APIs</text>
+    </g>
+    <g transform="translate(742 156)">
+      <rect width="118" height="118" rx="20" fill="#2b1114" stroke="#ff6976" stroke-width="4"/>
+      <text x="59" y="46" fill="#ffd5d8" font-size="15">ORACLE</text>
+      <text x="59" y="70" fill="#ffd5d8" font-size="13">no weak tests</text>
+    </g>
+    <g transform="translate(900 156)">
+      <rect width="118" height="118" rx="20" fill="#092618" stroke="#63ff69" stroke-width="4"/>
+      <text x="59" y="48" fill="#dbffd9" font-size="15">MUTATE</text>
+      <text x="59" y="72" fill="#dbffd9" font-size="13">kill rate</text>
+    </g>
+    <g transform="translate(1058 156)">
+      <rect width="118" height="118" rx="20" fill="#0a1a2a" stroke="#2ae7ff" stroke-width="4"/>
+      <text x="59" y="48" fill="#d7fbff" font-size="15">FUZZ</text>
+      <text x="59" y="72" fill="#d7fbff" font-size="13">replay seeds</text>
+    </g>
+    <g transform="translate(1216 156)" filter="url(#glow)">
+      <circle cx="60" cy="60" r="54" fill="#14331c" stroke="#65ff5b" stroke-width="4"/>
+      <text x="60" y="50" fill="#eaffdf" font-size="15">SIGNED</text>
+      <text x="60" y="74" fill="#eaffdf" font-size="15">BUNDLE</text>
+    </g>
+  </g>
+  <text x="50" y="356" fill="#9df2ff" font-family="Consolas, monospace" font-size="19">Output: claim_scope.json + receipts/*.json + bundle manifest + hashes + seeds + residual risk IDs</text>
+</svg>

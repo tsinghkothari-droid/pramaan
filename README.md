@@ -2,6 +2,8 @@
 
 **Verification infrastructure for AI-authored pull requests.**
 
+![Pramaan portal lab hero](assets/readme/pramaan-portal-hero.svg)
+
 AI coding agents are becoming fast enough to write a meaningful share of the
 world's software. The bottleneck is no longer generation. The bottleneck is
 trust.
@@ -42,6 +44,8 @@ Pramaan answers the question reviewers actually need answered:
 Pramaan is a receipt-first verification layer for code review. For each pull
 request, it builds a signed, inspectable bundle of stage receipts:
 
+![Pramaan verification pipeline](assets/readme/pramaan-pipeline.svg)
+
 ```text
 PR diff
   -> Sandbox and environment evidence
@@ -65,6 +69,8 @@ infrastructure.
 ## What a Bundle Proves
 
 A Pramaan bundle is a bounded claim, not a magic certificate.
+
+![Pramaan proof bundle anatomy](assets/readme/pramaan-proof-bundle.svg)
 
 It can prove things like:
 
