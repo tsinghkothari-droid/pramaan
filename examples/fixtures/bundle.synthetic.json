@@ -18,6 +18,21 @@
       "runtime": "fixture"
     }
   ],
+  "stages": [
+    {
+      "id": "claim_scope",
+      "status": "passed",
+      "receipt_path": "examples/fixtures/receipt.synthetic.json",
+      "tool": {
+        "name": "pramaan-core",
+        "version": "0.1.0-synthetic",
+        "runtime": "fixture"
+      },
+      "mitigated_risks": ["R-001"],
+      "residual_risks": ["R-002", "R-003", "R-045"],
+      "not_applicable_risks": ["R-090"]
+    }
+  ],
   "receipts": [
     {
       "name": "receipt.synthetic.json",
@@ -72,12 +87,24 @@
       "value": "8888888888888888888888888888888888888888888888888888888888888888"
     },
     "signing": {
-      "mode": "none",
-      "status": "unsigned"
+      "mode": "local_dev",
+      "status": "signable",
+      "dev_mode": true,
+      "signable_digest": {
+        "algorithm": "sha256",
+        "value": "9999999999999999999999999999999999999999999999999999999999999999"
+      },
+      "note": "Synthetic fixture is local dev signable metadata only; it is not CI-backed provenance."
     },
     "artifact_attestation": {
-      "provider": "none",
-      "status": "not_requested"
+      "provider": "github_actions",
+      "status": "present",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "subject": "repo:pramaan/pramaan:ref:refs/heads/main",
+      "workflow": "pramaan.yml",
+      "repository": "pramaan/pramaan",
+      "commit_sha": "cccccccccccccccccccccccccccccccccccccccc",
+      "transparency_mode": "public_rekor"
     }
   }
 }

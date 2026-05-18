@@ -1,6 +1,8 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use pramaan_bundle::sha256_hex;
+use pramaan_bundle::{
+    build_manifest, sha256_hex, verify_bundle, write_manifest, BundleBuildOptions,
+};
 use pramaan_core::{
     risk_family, ArtifactRef, ClaimScope, OutputRef, Receipt, ReceiptSummary, RiskRefs, StageStatus,
 };
@@ -25,6 +27,7 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Commands {
     Verify(VerifyArgs),
+    Bundle(BundleArgs),
     StaticChecks(StaticChecksArgs),
     Oracle(OracleArgs),
     Mutation(MutationArgs),
@@ -39,6 +42,22 @@ struct VerifyArgs {
     head: String,
     #[arg(long, default_value = "target/pramaan")]
     out: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct BundleArgs {
+    #[command(subcommand)]
+    command: BundleCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum BundleCommands {
+    Verify(BundleVerifyArgs),
+}
+
+#[derive(Debug, Parser)]
+struct BundleVerifyArgs {
+    path: PathBuf,
 }
 
 #[derive(Debug, Parser)]
@@ -92,6 +111,7 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Verify(args) => run_verify(args),
+        Commands::Bundle(args) => run_bundle(args),
         Commands::StaticChecks(args) => static_checks::run_static_checks(args.repo, args.out),
         Commands::Oracle(args) => oracle::run_oracle(args.base_repo, args.head_repo, args.out),
         Commands::Mutation(args) => mutation::run_mutation(
@@ -108,6 +128,19 @@ fn main() -> Result<()> {
             args.out,
             args.seed,
         ),
+    }
+}
+
+fn run_bundle(args: BundleArgs) -> Result<()> {
+    match args.command {
+        BundleCommands::Verify(args) => {
+            let report = verify_bundle(&args.path).context("verifying bundle manifest")?;
+            println!("Pramaan bundle verification complete");
+            println!("manifest: {}", report.manifest_path.display());
+            println!("receipts_checked: {}", report.checked_receipts);
+            println!("artifacts_checked: {}", report.checked_artifacts);
+            Ok(())
+        }
     }
 }
 
@@ -253,6 +286,13 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     );
     write_json(&synthetic_receipt_path, &synthetic_receipt)?;
 
+    let manifest = build_manifest(
+        &args.out,
+        BundleBuildOptions::synthetic(args.base.clone(), args.head.clone()),
+    )
+    .context("building bundle manifest")?;
+    let manifest_path = write_manifest(&args.out, &manifest).context("writing bundle manifest")?;
+
     render_summary(
         &args,
         &[
@@ -260,16 +300,18 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
             (&sandbox_receipt, &sandbox_receipt_path),
             (&synthetic_receipt, &synthetic_receipt_path),
         ],
+        &manifest_path,
     );
 
     Ok(())
 }
 
-fn render_summary(args: &VerifyArgs, receipts: &[(&Receipt, &Path)]) {
+fn render_summary(args: &VerifyArgs, receipts: &[(&Receipt, &Path)], manifest_path: &Path) {
     println!("Pramaan synthetic verification complete");
     println!("base: {}", args.base);
     println!("head: {}", args.head);
     println!("bundle: {}", args.out.display());
+    println!("manifest: {}", manifest_path.display());
     println!();
     println!("Stages");
     println!("{:<24} {:<16} {}", "stage", "status", "receipt");
@@ -298,6 +340,11 @@ fn render_summary(args: &VerifyArgs, receipts: &[(&Receipt, &Path)]) {
         format_family_counts(&risks.residual)
     );
     println!("{:<12} {}", "skipped", format_family_counts(&risks.skipped));
+    println!(
+        "{:<12} {}",
+        "not_applicable",
+        format_family_counts(&risks.not_applicable)
+    );
     println!();
     println!("Note: synthetic Phase 1 receipts record evidence shape only; they do not prove the code correct.");
 }
@@ -307,6 +354,7 @@ struct RiskSummary {
     mitigated: BTreeMap<&'static str, usize>,
     residual: BTreeMap<&'static str, usize>,
     skipped: BTreeMap<&'static str, usize>,
+    not_applicable: BTreeMap<&'static str, usize>,
 }
 
 fn summarize_risks(receipts: &[(&Receipt, &Path)]) -> RiskSummary {
@@ -314,8 +362,12 @@ fn summarize_risks(receipts: &[(&Receipt, &Path)]) -> RiskSummary {
 
     for (receipt, _) in receipts {
         count_families(&receipt.mitigated_risks, &mut summary.mitigated);
-        count_families(&receipt.residual_risks, &mut summary.residual);
-        count_families(&receipt.not_applicable_risks, &mut summary.skipped);
+        if receipt.status == StageStatus::Skipped {
+            count_families(&receipt.residual_risks, &mut summary.skipped);
+        } else {
+            count_families(&receipt.residual_risks, &mut summary.residual);
+        }
+        count_families(&receipt.not_applicable_risks, &mut summary.not_applicable);
     }
 
     summary

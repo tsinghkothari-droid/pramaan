@@ -30,11 +30,13 @@ Risk IDs are grouped into families that line up with Pramaan stages:
 | R-091..R-095 | ci_supply_chain | CI and dependency trust |
 | R-096..R-100 | demo_corpus | demo and evaluation corpus |
 
-The CLI summary reports these families in three buckets:
+The CLI and bundle summaries report these families in four buckets:
 
 - `mitigated`: the stage produced evidence that addresses the risk.
 - `residual`: the risk remains open or only partially addressed.
-- `skipped`: the risk was not applicable to the stage or deliberately skipped.
+- `skipped`: the stage deliberately skipped a check and records the still-open
+  risk family.
+- `not_applicable`: the risk family genuinely does not apply to the stage.
 
 ## Receipt References
 

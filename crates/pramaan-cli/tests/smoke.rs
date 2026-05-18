@@ -57,6 +57,7 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     let synthetic_receipt_path = out
         .join("receipts")
         .join("synthetic-verification.receipt.json");
+    let manifest_path = out.join("bundle.manifest.json");
 
     assert!(claim_scope_path.exists(), "claim scope should be written");
     assert!(
@@ -67,6 +68,25 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
         synthetic_receipt_path.exists(),
         "synthetic receipt should be written"
     );
+    assert!(manifest_path.exists(), "bundle manifest should be written");
+
+    let bundle_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args(["bundle", "verify", out.to_str().expect("utf-8 output path")])
+        .output()
+        .expect("run pramaan bundle verify");
+
+    assert!(
+        bundle_output.status.success(),
+        "bundle verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&bundle_output.stdout),
+        String::from_utf8_lossy(&bundle_output.stderr)
+    );
+
+    let bundle_stdout = String::from_utf8_lossy(&bundle_output.stdout);
+    assert!(bundle_stdout.contains("Pramaan bundle verification complete"));
+    assert!(bundle_stdout.contains("receipts_checked:"));
+    assert!(bundle_stdout.contains("artifacts_checked:"));
 
     let claim_receipt: serde_json::Value =
         serde_json::from_slice(&fs::read(claim_receipt_path).expect("read claim receipt"))
@@ -75,6 +95,68 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     assert_eq!(claim_receipt["stage"], "claim_scope");
     assert_eq!(claim_receipt["status"], "passed");
     assert!(claim_receipt["residual_risks"].is_array());
+}
+
+#[test]
+fn bundle_verify_fails_when_artifact_is_tampered() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-bundle-tamper-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean tamper output");
+    }
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "verify",
+            "--base",
+            "HEAD",
+            "--head",
+            "HEAD",
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan verify");
+
+    assert!(
+        output.status.success(),
+        "verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    fs::write(
+        out.join("claim_scope.synthetic.json"),
+        b"{\"tampered\":true}",
+    )
+    .expect("tamper artifact");
+
+    let verify_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args(["bundle", "verify", out.to_str().expect("utf-8 output path")])
+        .output()
+        .expect("run pramaan bundle verify on tampered bundle");
+
+    assert!(
+        !verify_output.status.success(),
+        "tampered bundle should fail\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&verify_output.stdout),
+        String::from_utf8_lossy(&verify_output.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&verify_output.stderr).contains("digest mismatch"),
+        "stderr should describe digest mismatch: {}",
+        String::from_utf8_lossy(&verify_output.stderr)
+    );
 }
 
 #[test]
