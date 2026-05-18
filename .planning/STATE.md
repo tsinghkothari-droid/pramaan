@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Phase 7 - Adapter Certification Expansion
+**Current focus:** v1 autonomous build complete through Phase 7
 
 ## Current Phase
 
@@ -14,7 +14,7 @@ Phase 7: Adapter Certification Expansion
 
 ## Status
 
-Phase 6 is implemented and validated: GitHub Action wrapper, risk-aware summary, public demo docs, and starter adversarial corpus are in place. Proceeding to Phase 7 because it was explicitly requested.
+Phases 1-7 are implemented and validated. Pramaan now has a Rust CLI, receipt/risk/claim/bundle schemas, sandbox/static/oracle/mutation/fuzz/bundle/GitHub Action paths, public demo/corpus, and a bounded adapter-certification expansion pack.
 
 ## Open Questions
 
@@ -40,3 +40,4 @@ Phase 6 is implemented and validated: GitHub Action wrapper, risk-aware summary,
 | 2026-05-18 | Completed Phase 4 implementation. | Mutation and differential fuzz commands emit budgeted, replayable, risk-mapped receipts and pass workspace tests. |
 | 2026-05-18 | Completed Phase 5 implementation. | Bundle verification and signing/attestation metadata are green under full workspace tests and CLI manifest verification. |
 | 2026-05-18 | Completed Phase 6 implementation. | GitHub Action, demo docs, and starter adversarial corpus are green under Node tests, Rust tests, and demo oracle verification. |
+| 2026-05-18 | Completed Phase 7 implementation. | Adapter certification docs, schema, fixture, and risk register are in place while registry/Sutra remain deferred. |

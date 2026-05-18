@@ -1,0 +1,314 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/adapter_certification.schema.json",
+  "title": "Pramaan Adapter Certification Receipt",
+  "description": "A versioned Pramaan receipt for MCP servers, agent tools, and adapters. It records typed surface evidence, observed checks, and stable adapter risk IDs without claiming universal safety.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "certification_id",
+    "run_id",
+    "adapter",
+    "certification_target",
+    "status",
+    "timing",
+    "checks",
+    "evidence",
+    "risk_summary",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "pramaan.adapter_certification.v1"
+    },
+    "certification_id": {
+      "type": "string",
+      "pattern": "^adpt_cert_[A-Za-z0-9._-]+$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^run_[A-Za-z0-9._-]+$"
+    },
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "protocol", "source"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "protocol": {
+          "type": "string",
+          "enum": ["mcp", "openapi", "cli", "sdk", "custom"]
+        },
+        "protocol_version": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "ref"],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["git", "package", "directory", "url", "fixture"]
+            },
+            "ref": {
+              "type": "string",
+              "minLength": 1
+            },
+            "digest": {
+              "$ref": "#/$defs/digest"
+            }
+          }
+        }
+      }
+    },
+    "certification_target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "declared_tools", "side_effect_profile"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["surface_review", "fixture_replay", "credentialed_replay", "full_certification"]
+        },
+        "declared_tools": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/tool_contract"
+          }
+        },
+        "required_permissions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "side_effect_profile": {
+          "type": "string",
+          "enum": ["read_only", "bounded_write", "external_send", "privileged", "mixed", "unknown"]
+        }
+      }
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started_at", "ended_at", "duration_ms"],
+      "properties": {
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ended_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/check_result"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence_ref"
+      }
+    },
+    "risk_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mitigated_risks", "residual_risks", "not_applicable_risks"],
+      "properties": {
+        "mitigated_risks": {
+          "$ref": "#/$defs/adapter_risk_ids"
+        },
+        "residual_risks": {
+          "$ref": "#/$defs/adapter_risk_ids"
+        },
+        "not_applicable_risks": {
+          "$ref": "#/$defs/adapter_risk_ids"
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/limitation"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["string", "number", "integer", "boolean", "null"]
+      }
+    }
+  },
+  "$defs": {
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "skipped", "partial", "timed_out", "error"]
+    },
+    "adapter_risk_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^A-[0-9]{3}$"
+      }
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["sha256", "sha512", "blake3"]
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64,128}$"
+        }
+      }
+    },
+    "tool_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "input_schema_ref", "output_schema_ref", "side_effect_class"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input_schema_ref": {
+          "$ref": "#/$defs/evidence_ref"
+        },
+        "output_schema_ref": {
+          "$ref": "#/$defs/evidence_ref"
+        },
+        "side_effect_class": {
+          "type": "string",
+          "enum": ["read_only", "write_once", "update", "delete", "external_send", "privileged", "unknown"]
+        },
+        "permission_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "check_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id", "name", "category", "status", "summary", "risk_ids"],
+      "properties": {
+        "check_id": {
+          "type": "string",
+          "pattern": "^adpt_check_[a-z0-9_]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "enum": ["surface", "typing", "permissions", "replay", "side_effects", "errors", "audit"]
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "risk_ids": {
+          "$ref": "#/$defs/adapter_risk_ids"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence_ref"
+          }
+        }
+      }
+    },
+    "evidence_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "digest"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["manifest", "schema", "fixture", "call_trace", "receipt", "artifact", "documentation", "inline"]
+        },
+        "path": {
+          "type": "string"
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "media_type": {
+          "type": "string"
+        }
+      }
+    },
+    "limitation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "description", "risk_ids"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "risk_ids": {
+          "$ref": "#/$defs/adapter_risk_ids"
+        }
+      }
+    }
+  }
+}

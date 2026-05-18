@@ -89,6 +89,13 @@
 - [ ] **DEMO-02**: Demo instructions show ordinary CI passing while Pramaan fails oracle integrity.
 - [ ] **DEMO-03**: Demo bundle includes a clear receipt naming the weakened assertion or skipped oracle.
 
+### Adapter Certification
+
+- [ ] **ADPT-01**: Pramaan documents adapter certification as an adjacent trust mode for MCP servers and agent tools.
+- [ ] **ADPT-02**: Adapter certification schema captures tool naming, input/output typing, auth scopes, idempotency, retry/rate-limit semantics, and audit receipt expectations.
+- [ ] **ADPT-03**: Adapter risk register defines starter MCP/agent-tool failure modes with stable adapter risk IDs.
+- [ ] **ADPT-04**: Example adapter certification receipt fixture maps findings to adapter risk IDs and states residual risks.
+
 ## v2 Requirements
 
 ### Advanced Stages
@@ -162,10 +169,14 @@
 | DEMO-01 | Phase 6 | Pending |
 | DEMO-02 | Phase 6 | Pending |
 | DEMO-03 | Phase 6 | Pending |
+| ADPT-01 | Phase 7 | Pending |
+| ADPT-02 | Phase 7 | Pending |
+| ADPT-03 | Phase 7 | Pending |
+| ADPT-04 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 48 total
-- Mapped to phases: 48
+- v1 requirements: 52 total
+- Mapped to phases: 52
 - Unmapped: 0
 
 ---

@@ -99,6 +99,19 @@
 7. Demo proof bundle can be inspected in under 30 seconds.
 8. Demo/eval scenarios map to risk IDs from the top-100 flaw register.
 
+## Phase 7: Adapter Certification Expansion
+
+**Goal:** Extend Pramaan from AI-authored PR verification into MCP/agent-tool adapter certification without distracting from the core trust layer.
+
+**Requirements:** ADPT-01, ADPT-02, ADPT-03, ADPT-04
+
+**Success Criteria:**
+
+1. Repository documents Pramaan Adapter Certification as an adjacent certification mode, not a separate registry product.
+2. Adapter certification schema models tool name quality, input/output typing, auth scopes, idempotency, retry/rate-limit metadata, and audit receipts.
+3. Starter adapter risk register exists for MCP/agent tool failure modes.
+4. Example adapter certification receipt fixture maps findings to stable adapter risk IDs.
+
 ## Coverage
 
 | Phase | Requirements | Count |
@@ -109,8 +122,9 @@
 | Phase 4 | MUTN-01, MUTN-02, MUTN-03, MUTN-04, MUTN-05, FUZZ-01, FUZZ-02, FUZZ-03, FUZZ-04 | 9 |
 | Phase 5 | RCPT-04, RISK-03, BNDL-01, BNDL-02, BNDL-03, BNDL-04 | 6 |
 | Phase 6 | GHAC-01, GHAC-02, GHAC-03, GHAC-04, RISK-04, DEMO-01, DEMO-02, DEMO-03 | 8 |
+| Phase 7 | ADPT-01, ADPT-02, ADPT-03, ADPT-04 | 4 |
 
-**Total mapped:** 48 / 48
+**Total mapped:** 52 / 52
 
 ---
 *Roadmap updated: 2026-05-18 after top-100 flaw research*

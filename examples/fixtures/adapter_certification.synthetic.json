@@ -1,0 +1,184 @@
+{
+  "schema_version": "pramaan.adapter_certification.v1",
+  "certification_id": "adpt_cert_synthetic_mcp_filesystem_001",
+  "run_id": "run_synthetic_adapter_001",
+  "adapter": {
+    "name": "synthetic-filesystem-mcp",
+    "version": "0.1.0-fixture",
+    "protocol": "mcp",
+    "protocol_version": "2026-03-26",
+    "source": {
+      "kind": "fixture",
+      "ref": "examples/fixtures/adapter_certification.synthetic.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  },
+  "certification_target": {
+    "mode": "fixture_replay",
+    "declared_tools": [
+      {
+        "name": "read_project_file",
+        "description": "Read one file under a configured project root.",
+        "input_schema_ref": {
+          "name": "read_project_file.input.schema",
+          "kind": "schema",
+          "path": "examples/fixtures/synthetic-filesystem-mcp/read_project_file.input.schema.json",
+          "digest": {
+            "algorithm": "sha256",
+            "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "media_type": "application/schema+json"
+        },
+        "output_schema_ref": {
+          "name": "read_project_file.output.schema",
+          "kind": "schema",
+          "path": "examples/fixtures/synthetic-filesystem-mcp/read_project_file.output.schema.json",
+          "digest": {
+            "algorithm": "sha256",
+            "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          },
+          "media_type": "application/schema+json"
+        },
+        "side_effect_class": "read_only",
+        "permission_refs": ["filesystem:read:project_root"]
+      },
+      {
+        "name": "write_project_note",
+        "description": "Write a bounded note file under the configured project notes directory.",
+        "input_schema_ref": {
+          "name": "write_project_note.input.schema",
+          "kind": "schema",
+          "path": "examples/fixtures/synthetic-filesystem-mcp/write_project_note.input.schema.json",
+          "digest": {
+            "algorithm": "sha256",
+            "value": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          "media_type": "application/schema+json"
+        },
+        "output_schema_ref": {
+          "name": "write_project_note.output.schema",
+          "kind": "schema",
+          "path": "examples/fixtures/synthetic-filesystem-mcp/write_project_note.output.schema.json",
+          "digest": {
+            "algorithm": "sha256",
+            "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "media_type": "application/schema+json"
+        },
+        "side_effect_class": "write_once",
+        "permission_refs": ["filesystem:write:project_notes"]
+      }
+    ],
+    "required_permissions": [
+      "filesystem:read:project_root",
+      "filesystem:write:project_notes"
+    ],
+    "side_effect_profile": "bounded_write"
+  },
+  "status": "partial",
+  "timing": {
+    "started_at": "2026-05-18T18:20:00Z",
+    "ended_at": "2026-05-18T18:20:04Z",
+    "duration_ms": 4000
+  },
+  "checks": [
+    {
+      "check_id": "adpt_check_surface_contracts",
+      "name": "Surface contract review",
+      "category": "surface",
+      "status": "passed",
+      "summary": "The fixture exposed two declared tools with separate input and output schema references.",
+      "observations": [
+        "Tool names are stable and action-oriented.",
+        "Both tools declare side-effect classes."
+      ],
+      "risk_ids": ["A-001", "A-002"],
+      "evidence_refs": [
+        {
+          "name": "synthetic tool list",
+          "kind": "manifest",
+          "path": "examples/fixtures/synthetic-filesystem-mcp/tools.json",
+          "digest": {
+            "algorithm": "sha256",
+            "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          },
+          "media_type": "application/json"
+        }
+      ]
+    },
+    {
+      "check_id": "adpt_check_permission_boundary",
+      "name": "Permission boundary review",
+      "category": "permissions",
+      "status": "partial",
+      "summary": "The fixture records separate read and write scopes, but does not prove runtime enforcement.",
+      "observations": [
+        "Read-only and write-once tools do not share the same permission string.",
+        "Runtime path traversal enforcement is residual because this fixture does not execute a real adapter."
+      ],
+      "risk_ids": ["A-003", "A-004", "A-006"],
+      "evidence_refs": []
+    },
+    {
+      "check_id": "adpt_check_replay_trace",
+      "name": "Synthetic replay trace",
+      "category": "replay",
+      "status": "skipped",
+      "summary": "Replay trace is skipped in this static fixture and must remain visible as residual risk.",
+      "observations": [
+        "No credentialed or live call was executed.",
+        "No side effect was performed."
+      ],
+      "risk_ids": ["A-005", "A-007", "A-008"],
+      "evidence_refs": []
+    }
+  ],
+  "evidence": [
+    {
+      "name": "adapter certification schema",
+      "kind": "schema",
+      "path": "schemas/adapter_certification.schema.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "media_type": "application/schema+json"
+    },
+    {
+      "name": "adapter risk register",
+      "kind": "documentation",
+      "path": ".planning/research/ADAPTER_CERTIFICATION_RISKS_2026-05-18.md",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "media_type": "text/markdown"
+    }
+  ],
+  "risk_summary": {
+    "mitigated_risks": ["A-001", "A-002"],
+    "residual_risks": ["A-003", "A-004", "A-005", "A-006", "A-007", "A-008"],
+    "not_applicable_risks": ["A-009", "A-010"]
+  },
+  "limitations": [
+    {
+      "code": "synthetic_fixture",
+      "description": "This fixture validates receipt shape and risk mapping only; it does not execute a real MCP server.",
+      "risk_ids": ["A-005", "A-007"]
+    },
+    {
+      "code": "no_live_authorization",
+      "description": "No live credentialed service was tested, so auth expiry, revocation, and upstream rate-limit behavior remain residual.",
+      "risk_ids": ["A-004", "A-008"]
+    }
+  ],
+  "metadata": {
+    "fixture": true,
+    "product_focus": "Pramaan",
+    "registry_deferred": true,
+    "sutra_deferred": true
+  }
+}

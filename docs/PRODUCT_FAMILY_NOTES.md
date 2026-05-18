@@ -59,6 +59,6 @@ A linter and constraint set for code that agents can safely modify:
 
 ## Current Decision
 
-Keep these ideas in this repo as strategic context, but build Pramaan first.
+Keep these ideas in this repo as strategic context, but build Pramaan first. Registry and Sutra remain deferred product-family notes, not current implementation tracks.
 
-The first adjacent expansion worth adding later is **Pramaan Adapter Certification**, because it naturally extends the proof-bundle model from code PRs to MCP servers and agent tools.
+The first adjacent expansion is **Pramaan Adapter Certification**, because it naturally extends the proof-bundle model from code PRs to MCP servers and agent tools. It should stay a Pramaan mode: typed receipts, auditable fixtures, explicit limitations, and stable adapter risk IDs. A future registry may consume these certifications, but this repo should not pivot into registry or DSL work before the Pramaan evidence model is solid.
