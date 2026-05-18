@@ -139,4 +139,4 @@ The planned autonomous build sequence is documented here:
 
 ## License
 
-License decision is pending. The intended direction is open source for the core verification engine and hosted services for enterprise execution, managed attestations, and adapter certification.
+Pramaan is licensed under the MIT License. See [LICENSE](LICENSE).

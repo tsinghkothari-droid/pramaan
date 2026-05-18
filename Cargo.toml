@@ -10,8 +10,8 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-license = "UNLICENSED"
-repository = "https://github.com/pramaan/pramaan"
+license = "MIT"
+repository = "https://github.com/tsinghkothari-droid/pramaan"
 
 [workspace.dependencies]
 anyhow = "1.0"
