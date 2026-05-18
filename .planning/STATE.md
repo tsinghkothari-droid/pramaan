@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Phase 1 - Receipt-First CLI Skeleton
+**Current focus:** Phase 1 - Receipt-First CLI Skeleton plans are ready for execution
 
 ## Current Phase
 
@@ -14,7 +14,7 @@ Phase 1: Receipt-First CLI Skeleton
 
 ## Status
 
-Improvement research completed and folded into planning. Ready for `$gsd-discuss-phase 1` or `$gsd-plan-phase 1`.
+Phase 1 GSD context, research, validation strategy, and execution plans are created. Ready for `$gsd-execute-phase 1`.
 
 ## Open Questions
 
@@ -31,3 +31,4 @@ Improvement research completed and folded into planning. Ready for `$gsd-discuss
 | 2026-05-18 | Delay adversarial amplification, formal, and dual critic to v2. | They are valuable but should not block a usable proof bundle. |
 | 2026-05-18 | Make the first demo about test weakening. | It is the clearest user-facing proof that ordinary CI is insufficient. |
 | 2026-05-18 | Add claim/scope receipts before oracle integrity. | Current benchmark research shows hidden tests and task descriptions can be misaligned, too narrow, or too wide. |
+| 2026-05-18 | Split Phase 1 into schema, CLI/orchestrator, and smoke/docs plans. | This keeps the receipt contract stable before real verification stages are added. |
