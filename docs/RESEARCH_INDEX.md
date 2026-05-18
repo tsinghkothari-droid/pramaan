@@ -6,6 +6,7 @@ This index points to the research files that define Pramaan's current direction.
 
 - [.planning/research/SUMMARY.md](../.planning/research/SUMMARY.md)
 - [.planning/research/IMPROVEMENT_RESEARCH_2026-05-18.md](../.planning/research/IMPROVEMENT_RESEARCH_2026-05-18.md)
+- [.planning/research/NEXT_LEVEL_RESEARCH_2026-05-19.md](../.planning/research/NEXT_LEVEL_RESEARCH_2026-05-19.md)
 - [.planning/research/TOP_100_FLAWS_AND_MITIGATIONS_2026-05-18.md](../.planning/research/TOP_100_FLAWS_AND_MITIGATIONS_2026-05-18.md)
 
 ## Product Architecture Research

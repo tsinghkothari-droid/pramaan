@@ -27,6 +27,8 @@ verification layer for AI-authored pull requests.
 - [ ] Make the action install or download the Pramaan CLI deterministically.
 - [ ] Add `base-ref`, `head-ref`, `out-dir`, `fail-on`, and `upload-bundle` inputs.
 - [ ] Define hard performance SLA targets for PR use: target runtime, max runtime, per-stage budget, and behavior when a budget is exhausted.
+- [ ] Add default policy-as-code profile for hard gates, warning gates, waiver rules, stage requirements, and security-sensitive paths.
+- [ ] Add `pramaan policy explain` so reviewers can see why a bundle failed, warned, or passed under a policy.
 - [ ] Upload the proof bundle as a GitHub Actions artifact.
 - [ ] Render a concise PR summary focused on failed stages and residual risks.
 - [ ] Add permissions documentation for pull requests from forks.
@@ -43,6 +45,7 @@ verification layer for AI-authored pull requests.
 - [ ] Detect source changes after a stage runs and mark dirty-after-run risk.
 - [ ] Threat-model the verifier as an attack target, including malicious PR code exploiting mutation engines, fuzzers, parsers, test runners, or plugin hooks.
 - [ ] Add PII/secrets scrubbing rules for environment evidence, logs, network endpoints, internal hostnames, paths, and artifact metadata before bundle emission.
+- [ ] Add CI hardening checks for untrusted PR execution: least-privilege token permissions, `pull_request_target` hazards, cache poisoning, unpinned actions, artifact retention, and self-hosted runner warnings.
 
 ## P1: Claim Scope
 
@@ -62,6 +65,7 @@ verification layer for AI-authored pull requests.
 - [ ] Classify failures as `invented_api`, `invalid_parameter`, `undefined_symbol`, `nonexistent_import`, `resource_mismatch`, `logic_mismatch`, or `unknown`.
 - [ ] Detect relaxed static-check configuration in the PR.
 - [ ] Emit skipped receipts when tools are unavailable instead of hiding missing checks.
+- [ ] Add security-sensitive diff classification for auth, authorization, cryptography, SQL/query construction, subprocess, filesystem, deserialization, secrets, network, and permissions.
 
 ## P1: Oracle Integrity
 
@@ -101,6 +105,8 @@ verification layer for AI-authored pull requests.
 - [ ] Document public-repo and private-repo attestation differences.
 - [ ] Add signing identity and certificate metadata to bundle summaries.
 - [ ] Define plugin trust model: plugin identity, version, signature, sandbox boundary, receipt permissions, and tamper resistance.
+- [ ] Add SLSA Verification Summary Attestation output mode for Pramaan's final verifier decision.
+- [ ] Add redaction profiles: internal-full, reviewer-redacted, public-demo, and summary-only.
 
 ## P2: Adversarial Corpus and Evals
 
@@ -113,6 +119,8 @@ verification layer for AI-authored pull requests.
 - [ ] Create a benchmark report template.
 - [ ] Add repo-level baseline calibration: expected mutation survival range, expected skipped-stage profile, runtime baseline, and noise-floor warnings.
 - [ ] Add trend/drift metrics across PRs: agent failure rate, mutation survival drift, oracle-risk drift, skipped-stage drift, and runtime drift.
+- [ ] Add benchmark-integrity mutation harness to detect agents overfitting eval tasks or hidden-test assumptions.
+- [ ] Add secure-code corpus categories for removed validation, weakened authorization, unsafe deserialization, injection sanitization removal, crypto misuse, and secret exposure.
 
 ## P2: Documentation and Adoption
 
@@ -124,6 +132,7 @@ verification layer for AI-authored pull requests.
 - [ ] Add troubleshooting docs for slow mutation, missing tools, flaky tests, and forked PR permissions.
 - [ ] Add screenshots or rendered examples of PR summaries and bundle inspection.
 - [ ] Document non-GitHub roadmap and minimum abstraction layer for GitLab, Gitea, and Bitbucket support.
+- [ ] Document GitLab artifact, identity, and OIDC differences before implementing GitLab support.
 
 ## P2: Feedback, Calibration, and Drift
 
@@ -179,6 +188,7 @@ verification layer for AI-authored pull requests.
 - [ ] Missing tools and skipped checks are visible.
 - [ ] Receipt schema includes agent attribution and reviewer override fields before v0.1 freeze.
 - [ ] PR runtime SLA is documented and enforced through stage budgets.
+- [ ] Default policy profile can explain hard-fail vs warning-only decisions.
 
 ### Real MVP
 
@@ -189,6 +199,8 @@ verification layer for AI-authored pull requests.
 - [ ] Documentation is good enough for an external maintainer to install and inspect a bundle.
 - [ ] Repo-level calibration prevents obvious alert fatigue.
 - [ ] Plugin trust model prevents untrusted plugins from poisoning receipts.
+- [ ] CI hardening checks catch unsafe workflow patterns for untrusted PR code.
+- [ ] Redaction profiles are tested before any bundle is safe to export.
 
 ### Serious v1
 
@@ -201,3 +213,4 @@ verification layer for AI-authored pull requests.
 - [ ] Public demo proves "GitHub green, Pramaan red" in under 30 seconds.
 - [ ] Reviewer overrides, agent attribution, baseline calibration, and drift reporting are part of the proof-bundle lifecycle.
 - [ ] PII/secrets scrubbing is tested before enterprise bundle export.
+- [ ] Pramaan can emit a VSA-style verification summary attestation.

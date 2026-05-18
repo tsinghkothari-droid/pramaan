@@ -2,7 +2,7 @@
 
 **Created:** 2026-05-18
 **Granularity:** Coarse
-**v1 Requirements:** 99 mapped
+**v1 Requirements:** 111 mapped
 
 ## Phase 1: Receipt-First CLI Skeleton
 
@@ -238,6 +238,24 @@
 7. Bundle redaction policy prevents secrets, private paths, internal endpoints, and sensitive CI metadata from leaking.
 8. Provider-neutral VCS/CI abstraction prepares GitLab support without destabilizing GitHub Action work.
 
+## Phase 17: Policy, CI Hardening, and Evaluation Intelligence
+
+**Goal:** Add policy-as-code gates, CI attack resistance, performance SLA enforcement, VSA output, redaction profiles, and benchmark/evaluation intelligence based on current research.
+
+**Requirements:** POL-01, POL-02, CI-01, CI-02, VSA-01, REDACT-01, EVAL-03, SEC-01, SLA-01, FORGE-01, CORP-01, SUMM-01
+
+**Success Criteria:**
+
+1. A default policy profile classifies hard gates, warning gates, waivers, and stage requirements.
+2. `pramaan policy explain` can explain final decisions from a bundle and policy profile.
+3. CI hardening checks detect risky untrusted-PR workflow patterns.
+4. Performance SLA classes are reflected in receipts and budget-exhausted summaries.
+5. Pramaan can produce a VSA-style verification summary fixture.
+6. Redaction profiles preserve verification-critical hashes while removing sensitive details.
+7. Security-sensitive diff classification changes gate severity for auth, crypto, SQL, secrets, filesystem, subprocess, network, deserialization, and permissions.
+8. Adversarial corpus taxonomy includes security-code, malicious-CI, policy-weakening, benchmark-overfitting, redaction-loss, critic-bias, and trend-drift cases.
+9. Non-GitHub CI abstraction captures artifacts, identity, comments, refs, merge requests, and OIDC signing.
+
 ## Coverage
 
 | Phase | Requirements | Count |
@@ -258,8 +276,9 @@
 | Phase 14 | BNDL-07, BNDL-08, EVAL-01, EVAL-02 | 4 |
 | Phase 15 | DOCS-01, DOCS-02, LANG-01, LANG-02, ADPT-05 | 5 |
 | Phase 16 | ATTR-01, FBCK-01, PERF-01, CAL-01, DRFT-01, PLGN-01, SCRB-01, VCS-01 | 8 |
+| Phase 17 | POL-01, POL-02, CI-01, CI-02, VSA-01, REDACT-01, EVAL-03, SEC-01, SLA-01, FORGE-01, CORP-01, SUMM-01 | 12 |
 
-**Total mapped:** 99 / 99
+**Total mapped:** 111 / 111
 
 ---
-*Roadmap updated: 2026-05-19 after blind-spot gap analysis*
+*Roadmap updated: 2026-05-19 after next-level internet research pass*
