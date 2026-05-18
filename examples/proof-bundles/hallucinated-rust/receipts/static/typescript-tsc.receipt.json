@@ -1,0 +1,51 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "static_typescript_tsc",
+  "status": "not_applicable",
+  "tool": {
+    "name": "pramaan-typescript-static",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-18T21:06:23Z",
+  "ended_at": "2026-05-18T21:06:23Z",
+  "inputs": [
+    {
+      "name": "repository",
+      "value": "."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "static_receipt",
+      "path": "receipts/static/typescript-tsc.receipt.json"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "static_command",
+      "path": "npm exec --offline -- tsc --noEmit",
+      "media_type": "text/x-shellscript"
+    }
+  ],
+  "summary": {
+    "title": "TypeScript tsc --noEmit not applicable",
+    "details": "no TypeScript files were discovered"
+  },
+  "limitations": [
+    "No static evidence was produced because no TypeScript files were discovered."
+  ],
+  "mitigated_risks": [],
+  "residual_risks": [
+    "R-031",
+    "R-032"
+  ],
+  "not_applicable_risks": [
+    "R-038"
+  ],
+  "metadata": {
+    "command": "npm exec --offline -- tsc --noEmit",
+    "configured": "false",
+    "duration_ms": "0",
+    "language": "typescript"
+  }
+}

@@ -5,11 +5,11 @@ verification layer for AI-authored pull requests.
 
 ## P0: Killer Demo
 
-- [ ] Build a standalone demo repository where normal CI passes but Pramaan fails because a test assertion was weakened.
-- [ ] Add a second demo where a snapshot or fixture change silently approves wrong behavior.
-- [ ] Add a third demo where a fake import/API passes superficial review but fails static/hallucination checks.
-- [ ] Create a short reviewer walkthrough that shows the proof bundle can be understood in under 30 seconds.
-- [ ] Add generated example bundles for each demo scenario.
+- [x] Build a standalone demo repository where normal CI passes but Pramaan fails because a test assertion was weakened.
+- [x] Add a second demo where a snapshot or fixture change silently approves wrong behavior.
+- [x] Add a third demo where a fake import/API passes superficial review but fails static/hallucination checks.
+- [x] Create a short reviewer walkthrough that shows the proof bundle can be understood in under 30 seconds.
+- [x] Add generated example bundles for each demo scenario.
 
 ## P0: Receipt and Bundle Trust
 

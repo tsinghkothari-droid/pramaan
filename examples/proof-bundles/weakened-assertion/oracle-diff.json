@@ -1,0 +1,57 @@
+{
+  "base": {
+    "root": "//?/C:/Users/Tushar/Pictures/pramaan/examples/vulnerable-python-pr/base",
+    "tests": [
+      {
+        "language": "python",
+        "path": "test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "stable_id": "test_checkout.py::test_applies_percentage_discount",
+        "fingerprint": "fnv64:76f0e46d47368d06",
+        "assertion_count": 1,
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "signal_tokens": [
+          "equals"
+        ]
+      }
+    ],
+    "artifacts": []
+  },
+  "head": {
+    "root": "//?/C:/Users/Tushar/Pictures/pramaan/examples/vulnerable-python-pr/weakened-test",
+    "tests": [
+      {
+        "language": "python",
+        "path": "test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "stable_id": "test_checkout.py::test_applies_percentage_discount",
+        "fingerprint": "fnv64:987d2074de2dc008",
+        "assertion_count": 1,
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "signal_tokens": [
+          "comparison"
+        ]
+      }
+    ],
+    "artifacts": []
+  },
+  "findings": [
+    {
+      "kind": "weakened_assertion",
+      "path": "test_checkout.py",
+      "test_name": "test_applies_percentage_discount",
+      "details": "Assertion signal weakened: assertions 1 -> 1, tokens [equals] -> [comparison].",
+      "risk_ids": [
+        "R-014",
+        "R-015",
+        "R-016",
+        "R-020",
+        "R-087"
+      ]
+    }
+  ]
+}

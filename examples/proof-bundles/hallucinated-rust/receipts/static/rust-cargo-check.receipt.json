@@ -1,0 +1,55 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "static_rust_cargo_check",
+  "status": "failed",
+  "tool": {
+    "name": "pramaan-rust-static",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-18T21:06:23Z",
+  "ended_at": "2026-05-18T21:06:24Z",
+  "exit_code": 101,
+  "inputs": [
+    {
+      "name": "repository",
+      "value": "."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "static_receipt",
+      "path": "receipts/static/rust-cargo-check.receipt.json"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "static_command",
+      "path": "cargo check",
+      "media_type": "text/x-shellscript"
+    }
+  ],
+  "summary": {
+    "title": "Rust cargo check failed",
+    "details": "Checking pramaan-hallucinated-rust-demo v0.0.0 (C:\\Users\\Tushar\\Pictures\\pramaan\\examples\\hallucinated-rust-pr)\nerror[E0432]: unresolved import `agent_magic_checkout`\n--> src\\lib.rs:1:5\n|\n1 | use agent_magic_checkout::apply_discount;\n|     ^^^^^^^^^^^^^^^^^^^^ use of unresolved module or unlinked crate `agent_magic_checkout`\n|\n= help: if you wanted to use a crate named `agent_magic_checkout`, use `cargo add agent_magic_checkout` to add it to your `Cargo.toml`"
+  },
+  "limitations": [
+    "Static checks are command evidence only; they do not prove semantic correctness."
+  ],
+  "mitigated_risks": [
+    "R-031",
+    "R-032",
+    "R-038"
+  ],
+  "residual_risks": [
+    "R-038"
+  ],
+  "not_applicable_risks": [],
+  "metadata": {
+    "command": "cargo check",
+    "config_path": "//?/C:/Users/Tushar/Pictures/pramaan/examples/hallucinated-rust-pr/Cargo.toml",
+    "configured": "true",
+    "duration_ms": "931",
+    "hallucination_categories": "broken_import",
+    "language": "rust"
+  }
+}

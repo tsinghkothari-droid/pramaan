@@ -1,0 +1,14 @@
+{
+  "demo_id": "hallucinated-rust-pr",
+  "corpus_id": "ADV-003",
+  "failure_mode": "invented_import",
+  "normal_review_signal": "The generated code references a plausible helper crate that is not declared or available.",
+  "pramaan_signal": "Static checks emit a failed receipt for unresolved import/dependency evidence.",
+  "risk_ids": ["R-038", "R-039", "R-040", "R-100"],
+  "risk_mapping": {
+    "R-038": "The generated patch relies on an invented API surface.",
+    "R-039": "The import/dependency does not exist in the project.",
+    "R-040": "The unresolved import leads to missing symbols on the affected path.",
+    "R-100": "The scenario is preserved as an adversarial regression corpus entry."
+  }
+}

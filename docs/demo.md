@@ -1,9 +1,10 @@
 # Demo - CI Green, Pramaan Red
 
-The first Pramaan demo is a tiny Python PR where ordinary CI passes only because
-the assertion was weakened.
+Pramaan's public demo set is deliberately small and brutal. Each scenario shows
+ordinary review or CI looking acceptable while Pramaan emits concrete evidence
+that the result is not trustworthy.
 
-## Scenario
+## Demo 1: Weakened Test Assertion
 
 The checkout function should apply a 10 percent discount:
 
@@ -97,3 +98,63 @@ Only the test oracle changes.
 The adversarial corpus index lives in
 `corpus/starter-adversarial-scenarios.json`, with a reviewer guide in
 `docs/adversarial-corpus.md`.
+
+## Demo 2: Snapshot and Fixture Drift
+
+This demo shows a PR where the test still passes because the expected artifact
+was changed.
+
+Ordinary CI:
+
+```powershell
+python -m unittest discover -s examples/snapshot-fixture-drift-pr/head -p "test_*.py"
+```
+
+Pramaan oracle integrity:
+
+```powershell
+cargo run -p pramaan-cli -- oracle --base-repo examples/snapshot-fixture-drift-pr/base --head-repo examples/snapshot-fixture-drift-pr/head --out target/pramaan-demo/snapshot-fixture-drift
+```
+
+Inspect:
+
+```text
+target/pramaan-demo/snapshot-fixture-drift/receipts/oracle-integrity.receipt.json
+target/pramaan-demo/snapshot-fixture-drift/oracle-diff.json
+examples/snapshot-fixture-drift-pr/risk-map.json
+```
+
+Expected result: normal CI passes, while Pramaan reports
+`sensitive_artifact_changed` findings for fixture and snapshot files.
+
+## Demo 3: Static Hallucination
+
+This demo shows a generated Rust patch that imports a plausible but nonexistent
+helper crate.
+
+Pramaan static checks:
+
+```powershell
+cargo run -p pramaan-cli -- static-checks --repo examples/hallucinated-rust-pr --out target/pramaan-demo/hallucinated-rust
+```
+
+Inspect:
+
+```text
+target/pramaan-demo/hallucinated-rust/receipts/static/rust-cargo-check.receipt.json
+examples/hallucinated-rust-pr/risk-map.json
+```
+
+Expected result: Pramaan emits a failed static receipt with hallucination-style
+evidence for unresolved imports or missing dependencies.
+
+## Checked-In Example Outputs
+
+Generated example outputs for the public demos live under:
+
+```text
+examples/proof-bundles/
+```
+
+These are not claims that the demo code is correct. They are stable artifacts
+showing the evidence shape a reviewer should inspect.

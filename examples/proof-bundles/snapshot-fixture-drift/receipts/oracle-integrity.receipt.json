@@ -1,0 +1,79 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "oracle_integrity",
+  "status": "failed",
+  "tool": {
+    "name": "pramaan-oracle",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-18T21:06:05Z",
+  "ended_at": "2026-05-18T21:06:05Z",
+  "exit_code": 1,
+  "inputs": [
+    {
+      "name": "base_repo",
+      "value": "//?/C:/Users/Tushar/Pictures/pramaan/examples/snapshot-fixture-drift-pr/base"
+    },
+    {
+      "name": "head_repo",
+      "value": "//?/C:/Users/Tushar/Pictures/pramaan/examples/snapshot-fixture-drift-pr/head"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "oracle_diff",
+      "path": "target/pramaan-demo/snapshot-fixture-drift/oracle-diff.json",
+      "digest": "sha256:d92523ea15c0c5a5d725b9a949e9a8875189a375f89696cd9792396b99c44e69"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "oracle_diff_json",
+      "path": "target/pramaan-demo/snapshot-fixture-drift/oracle-diff.json",
+      "media_type": "application/json",
+      "digest": "sha256:d92523ea15c0c5a5d725b9a949e9a8875189a375f89696cd9792396b99c44e69"
+    }
+  ],
+  "summary": {
+    "title": "Oracle integrity failed",
+    "details": "Discovered 1 base tests, 1 head tests, 4 sensitive artifacts, and 2 oracle findings."
+  },
+  "limitations": [
+    "Oracle weakening detection uses deterministic heuristics for Python and JS/TS test syntax; it is conservative and review-oriented.",
+    "Claim-vs-oracle scope mismatch risks are covered by risk IDs but require claim-scope evidence from adjacent stages for final judgment."
+  ],
+  "mitigated_risks": [
+    "R-004",
+    "R-005",
+    "R-006",
+    "R-007",
+    "R-008",
+    "R-009",
+    "R-010",
+    "R-011",
+    "R-012",
+    "R-013",
+    "R-014",
+    "R-015",
+    "R-016",
+    "R-017",
+    "R-018",
+    "R-019",
+    "R-020",
+    "R-087",
+    "R-088",
+    "R-089"
+  ],
+  "residual_risks": [
+    "R-008",
+    "R-017",
+    "R-088"
+  ],
+  "not_applicable_risks": [],
+  "metadata": {
+    "base_tests": "1",
+    "findings": "2",
+    "head_tests": "1",
+    "sensitive_artifact_findings": "2"
+  }
+}

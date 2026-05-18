@@ -56,9 +56,13 @@
       "id": "ADV-003",
       "name": "Invented import in generated fix",
       "failure_mode": "invented_import",
-      "status": "starter_spec",
-      "language": "python",
-      "demo_paths": [],
+      "status": "implemented_demo",
+      "language": "rust",
+      "demo_paths": [
+        "examples/hallucinated-rust-pr/src/lib.rs",
+        "examples/hallucinated-rust-pr/risk-map.json"
+      ],
+      "pramaan_command": "cargo run -p pramaan-cli -- static-checks --repo examples/hallucinated-rust-pr --out target/pramaan-demo/hallucinated-rust",
       "expected_signal": "The AI fix imports a package, module, symbol, or helper that is not available in the repository or declared dependencies.",
       "risk_ids": [
         "R-038",
@@ -113,6 +117,35 @@
         "R-075": "A differential check can overflag or reveal divergence that must be classified against claim scope.",
         "R-080": "Divergence that cannot be automatically classified remains review-needed evidence.",
         "R-100": "Unexpected divergence examples should be kept as replayable adversarial corpus entries."
+      }
+    },
+    {
+      "id": "ADV-006",
+      "name": "Snapshot and fixture drift",
+      "failure_mode": "sensitive_artifact_changed",
+      "status": "implemented_demo",
+      "language": "python",
+      "demo_paths": [
+        "examples/snapshot-fixture-drift-pr/base/fixtures/order.json",
+        "examples/snapshot-fixture-drift-pr/head/fixtures/order.json",
+        "examples/snapshot-fixture-drift-pr/base/tests/__snapshots__/order.snap",
+        "examples/snapshot-fixture-drift-pr/head/tests/__snapshots__/order.snap",
+        "examples/snapshot-fixture-drift-pr/risk-map.json"
+      ],
+      "normal_ci_command": "python -m unittest discover -s examples/snapshot-fixture-drift-pr/head -p \"test_*.py\"",
+      "pramaan_command": "cargo run -p pramaan-cli -- oracle --base-repo examples/snapshot-fixture-drift-pr/base --head-repo examples/snapshot-fixture-drift-pr/head --out target/pramaan-demo/snapshot-fixture-drift",
+      "expected_signal": "Normal CI passes, while Pramaan oracle integrity emits failed sensitive_artifact_changed findings for fixture and snapshot drift.",
+      "risk_ids": [
+        "R-008",
+        "R-017",
+        "R-088",
+        "R-100"
+      ],
+      "risk_mapping": {
+        "R-008": "Fixture changes can silently alter the test oracle.",
+        "R-017": "Stable test names do not protect against changed expected artifacts.",
+        "R-088": "Snapshot/golden updates require explicit review.",
+        "R-100": "The scenario is preserved as an adversarial regression corpus entry."
       }
     }
   ]

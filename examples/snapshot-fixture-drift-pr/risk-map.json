@@ -1,0 +1,14 @@
+{
+  "demo_id": "snapshot-fixture-drift-pr",
+  "corpus_id": "ADV-006",
+  "failure_mode": "sensitive_artifact_changed",
+  "normal_ci_signal": "Head tests pass after expected behavior is redefined through fixture and snapshot changes.",
+  "pramaan_signal": "Oracle integrity emits failed receipt with sensitive_artifact_changed findings.",
+  "risk_ids": ["R-008", "R-017", "R-088", "R-100"],
+  "risk_mapping": {
+    "R-008": "Fixture changes can silently alter the meaning of the test oracle.",
+    "R-017": "Stable test fingerprints are not enough when the expected artifact changed underneath them.",
+    "R-088": "Snapshot or golden output changes require explicit reviewer attention.",
+    "R-100": "The scenario is preserved as an adversarial regression corpus entry."
+  }
+}

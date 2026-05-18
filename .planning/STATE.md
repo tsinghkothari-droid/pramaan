@@ -6,15 +6,15 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Serious v1 planning complete through Phase 17
+**Current focus:** Phase 8 killer demo completed; next safe-order step is Phase 16a schema-impact hooks before Phase 9 schema hardening.
 
 ## Current Phase
 
-Phase 8: Killer Demo and Proof Bundles
+Phase 16a: Schema-impact subset of Attribution, Feedback, Calibration, and Security
 
 ## Status
 
-Phases 1-7 are implemented and validated. Phases 8-17 are now planned as the Serious v1 execution path: killer demos, receipt/bundle hardening, GitHub Action readiness, sandbox/claim/static depth, oracle integrity, mutation/fuzz adapters, attestation/corpus/evals, adoption/language/adapter gates, blind-spot closure for attribution/feedback/calibration/security, and next-level policy/CI/evaluation intelligence.
+Phases 1-8 are implemented and validated. Phases 9-17 remain the Serious v1 execution path: receipt/bundle hardening, GitHub Action readiness, sandbox/claim/static depth, oracle integrity, mutation/fuzz adapters, attestation/corpus/evals, adoption/language/adapter gates, blind-spot closure for attribution/feedback/calibration/security, and next-level policy/CI/evaluation intelligence. The safe order requires the schema-impact subset of Phase 16 before Phase 9 freezes receipt schema v0.1.
 
 ## Open Questions
 
@@ -45,3 +45,4 @@ Phases 1-7 are implemented and validated. Phases 8-17 are now planned as the Ser
 | 2026-05-19 | Added Serious v1 GSD plans for Phases 8-15. | The marketing README now has an execution map behind it, with P0/P1/P2/P3 tasks converted into phase plans. |
 | 2026-05-19 | Added Phase 16 blind-spot plan. | Agent attribution, reviewer override capture, performance SLAs, baseline calibration, drift tracking, plugin trust, bundle redaction, multi-agent provenance, and non-GitHub support must be designed before Serious v1 hardens. |
 | 2026-05-19 | Added next-level research pass and Phase 17. | Current benchmark, CI-security, supply-chain, and policy-as-code research shows Pramaan needs policy gates, VSA output, redaction profiles, CI hardening, secure-code corpus categories, and benchmark-integrity mutation. |
+| 2026-05-19 | Completed Phase 8 killer demo and proof-bundle examples. | Pramaan now has three public demo scenarios where ordinary CI or superficial review misses weakened assertions, sensitive fixture/snapshot drift, or hallucinated Rust imports while Pramaan emits concrete failed receipts. |

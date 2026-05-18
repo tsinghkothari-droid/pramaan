@@ -1,0 +1,88 @@
+{
+  "base": {
+    "root": "//?/C:/Users/Tushar/Pictures/pramaan/examples/snapshot-fixture-drift-pr/base",
+    "tests": [
+      {
+        "language": "python",
+        "path": "tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "stable_id": "tests/test_order_summary.py::test_order_summary_matches_snapshot",
+        "fingerprint": "fnv64:076831b4b35f2e04",
+        "assertion_count": 1,
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "signal_tokens": [
+          "equals"
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "fixtures/order.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ef1ef4ed17d2946f"
+      },
+      {
+        "path": "tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:7d908f822e38042a"
+      }
+    ]
+  },
+  "head": {
+    "root": "//?/C:/Users/Tushar/Pictures/pramaan/examples/snapshot-fixture-drift-pr/head",
+    "tests": [
+      {
+        "language": "python",
+        "path": "tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "stable_id": "tests/test_order_summary.py::test_order_summary_matches_snapshot",
+        "fingerprint": "fnv64:076831b4b35f2e04",
+        "assertion_count": 1,
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "signal_tokens": [
+          "equals"
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "fixtures/order.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:c00156a96ededbf3"
+      },
+      {
+        "path": "tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:dac2e77757d99684"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "kind": "sensitive_artifact_changed",
+      "path": "fixtures/order.json",
+      "test_name": null,
+      "details": "fixture artifact changed and can redefine expected behavior.",
+      "risk_ids": [
+        "R-008",
+        "R-017",
+        "R-088"
+      ]
+    },
+    {
+      "kind": "sensitive_artifact_changed",
+      "path": "tests/__snapshots__/order.snap",
+      "test_name": null,
+      "details": "snapshot artifact changed and can redefine expected behavior.",
+      "risk_ids": [
+        "R-008",
+        "R-017",
+        "R-088"
+      ]
+    }
+  ]
+}

@@ -24,11 +24,12 @@ Each scenario records:
 | --- | --- | --- | --- |
 | `ADV-001` | Weakened assertion | Implemented demo | `R-011`, `R-014`, `R-087`, `R-100` |
 | `ADV-002` | Skipped test | Starter spec | `R-010`, `R-012`, `R-087`, `R-100` |
-| `ADV-003` | Invented import | Starter spec | `R-038`, `R-039`, `R-040`, `R-100` |
+| `ADV-003` | Invented import | Implemented demo | `R-038`, `R-039`, `R-040`, `R-100` |
 | `ADV-004` | Mutation survivor | Starter spec | `R-068`, `R-071`, `R-072`, `R-100` |
 | `ADV-005` | Unexpected differential divergence | Starter spec | `R-073`, `R-075`, `R-080`, `R-100` |
+| `ADV-006` | Sensitive fixture/snapshot drift | Implemented demo | `R-008`, `R-017`, `R-088`, `R-100` |
 
-`ADV-001` is the public Python demo under `examples/vulnerable-python-pr/`. The other four entries are intentionally starter specs so future phases can add executable fixtures without changing the scenario IDs.
+`ADV-001`, `ADV-003`, and `ADV-006` are implemented public demos. The remaining starter specs are preserved so future phases can add executable fixtures without changing scenario IDs.
 
 ## Public Demo Path
 
@@ -51,4 +52,10 @@ target/pramaan-demo/oracle/receipts/oracle-integrity.receipt.json
 target/pramaan-demo/oracle/oracle-diff.json
 examples/vulnerable-python-pr/risk-map.json
 corpus/starter-adversarial-scenarios.json
+```
+
+Checked-in example outputs live under:
+
+```text
+examples/proof-bundles/
 ```
