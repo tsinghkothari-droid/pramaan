@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { renderSummary } from "./render-summary.mjs";
 import { resolveRefs } from "./resolve-refs.mjs";
 
@@ -87,4 +88,20 @@ test("resolveRefs prefers explicit inputs, then event refs, then environment fal
     }),
     { base_ref: "env-base", head_ref: "env-head" },
   );
+});
+
+test("composite action exposes production gate inputs and uploads before failing", () => {
+  const actionYaml = fs.readFileSync(new URL("../action.yml", import.meta.url), "utf8");
+
+  assert.match(actionYaml, /out-dir:/);
+  assert.match(actionYaml, /upload-bundle:/);
+  assert.match(actionYaml, /fail-on:/);
+  assert.match(actionYaml, /cargo build --locked -p pramaan-cli/);
+  assert.match(actionYaml, /target\/debug\/pramaan verify/);
+
+  const uploadIndex = actionYaml.indexOf("name: Upload proof bundle");
+  const failIndex = actionYaml.indexOf("name: Apply failure policy");
+  assert.ok(uploadIndex > 0, "upload step should exist");
+  assert.ok(failIndex > 0, "failure policy step should exist");
+  assert.ok(uploadIndex < failIndex, "bundle upload should happen before fail-on exits");
 });

@@ -1,0 +1,24 @@
+name: Pramaan Rust
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+
+jobs:
+  pramaan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --locked
+      - uses: pramaan/pramaan@v0
+        with:
+          out-dir: target/pramaan
+          upload-bundle: "true"
+          fail-on: failed

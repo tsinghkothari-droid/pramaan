@@ -6,15 +6,15 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Phase 9 receipt and bundle trust hardening completed; next step is Phase 10 GitHub Action production readiness.
+**Current focus:** Phase 10 GitHub Action production readiness completed; next step is Phase 11 sandbox, claim, and static depth.
 
 ## Current Phase
 
-Phase 10: GitHub Action Production Readiness
+Phase 11: Sandbox, Claim, and Static Depth
 
 ## Status
 
-Phases 1-9 and the Phase 16a schema-impact subset are implemented and validated. Phases 10-17 remain the Serious v1 execution path: GitHub Action readiness, sandbox/claim/static depth, oracle integrity, mutation/fuzz adapters, attestation/corpus/evals, adoption/language/adapter gates, blind-spot closure for attribution/feedback/calibration/security, and next-level policy/CI/evaluation intelligence.
+Phases 1-10 and the Phase 16a schema-impact subset are implemented and validated. Phases 11-17 remain the Serious v1 execution path: sandbox/claim/static depth, oracle integrity, mutation/fuzz adapters, attestation/corpus/evals, adoption/language/adapter gates, blind-spot closure for attribution/feedback/calibration/security, and next-level policy/CI/evaluation intelligence.
 
 ## Open Questions
 
@@ -48,3 +48,4 @@ Phases 1-9 and the Phase 16a schema-impact subset are implemented and validated.
 | 2026-05-19 | Completed Phase 8 killer demo and proof-bundle examples. | Pramaan now has three public demo scenarios where ordinary CI or superficial review misses weakened assertions, sensitive fixture/snapshot drift, or hallucinated Rust imports while Pramaan emits concrete failed receipts. |
 | 2026-05-19 | Completed Phase 16a schema-impact hooks. | Receipt and bundle schemas now have hooks for agent attribution, reviewer override, multi-agent provenance, plugin identity, redaction, policy decision, and stage budgets before Phase 9 schema hardening. |
 | 2026-05-19 | Completed Phase 9 receipt and bundle trust hardening. | v0.1 receipt schema now matches runtime output, checked-in receipts parse as current fixtures, and bundle verification rejects missing artifacts, path escapes, ambiguous artifact refs, and signing metadata tamper. |
+| 2026-05-19 | Completed Phase 10 GitHub Action production readiness. | The composite action now has stable PR inputs, deterministic source build, bundle upload before failure policy, fork-permission docs, and Python/TypeScript/Rust workflow examples. |

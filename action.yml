@@ -11,6 +11,10 @@ inputs:
     required: false
     default: ""
   bundle-path:
+    description: Deprecated alias for out-dir. Directory where Pramaan writes the proof bundle.
+    required: false
+    default: ""
+  out-dir:
     description: Directory where Pramaan writes the proof bundle.
     required: false
     default: target/pramaan
@@ -19,9 +23,17 @@ inputs:
     required: false
     default: pramaan-proof-bundle
   upload-artifact:
+    description: Deprecated alias for upload-bundle.
+    required: false
+    default: ""
+  upload-bundle:
     description: Upload the proof bundle with actions/upload-artifact.
     required: false
     default: "true"
+  fail-on:
+    description: "Failure policy: failed, actionable, or never."
+    required: false
+    default: failed
   attest:
     description: Create a GitHub artifact attestation for the uploaded bundle. Requires id-token: write and attestations: write.
     required: false
@@ -58,26 +70,62 @@ runs:
           --head "${{ inputs.head-ref }}" \
           --github-output "$GITHUB_OUTPUT"
 
+    - name: Resolve paths and policy
+      id: config
+      shell: bash
+      run: |
+        set -euo pipefail
+        out_dir="${{ inputs.out-dir }}"
+        if [ -z "$out_dir" ]; then
+          out_dir="${{ inputs.bundle-path }}"
+        fi
+        if [ -z "$out_dir" ]; then
+          out_dir="target/pramaan"
+        fi
+        upload_bundle="${{ inputs.upload-bundle }}"
+        if [ -z "$upload_bundle" ]; then
+          upload_bundle="${{ inputs.upload-artifact }}"
+        fi
+        if [ -z "$upload_bundle" ]; then
+          upload_bundle="true"
+        fi
+        fail_on="${{ inputs.fail-on }}"
+        case "$fail_on" in
+          failed|actionable|never) ;;
+          *) echo "Invalid fail-on value: $fail_on. Expected failed, actionable, or never." >&2; exit 2 ;;
+        esac
+        {
+          echo "out_dir=$out_dir"
+          echo "upload_bundle=$upload_bundle"
+          echo "fail_on=$fail_on"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Build Pramaan CLI
+      shell: bash
+      run: |
+        set -euo pipefail
+        cargo build --locked -p pramaan-cli
+
     - name: Run Pramaan CLI
       shell: bash
       run: |
         set -euo pipefail
-        mkdir -p "${{ inputs.bundle-path }}"
-        log_path="${{ inputs.bundle-path }}/pramaan.log"
-        cargo run -p pramaan-cli -- verify \
+        mkdir -p "${{ steps.config.outputs.out_dir }}"
+        log_path="${{ steps.config.outputs.out_dir }}/pramaan.log"
+        target/debug/pramaan verify \
           --base "${{ steps.refs.outputs.base_ref }}" \
           --head "${{ steps.refs.outputs.head_ref }}" \
-          --out "${{ inputs.bundle-path }}" \
+          --out "${{ steps.config.outputs.out_dir }}" \
           ${{ inputs.pramaan-args }} 2>&1 | tee "$log_path"
 
     - name: Render risk summary
       shell: bash
       run: |
         set -euo pipefail
-        summary_path="${{ inputs.bundle-path }}/github-step-summary.md"
+        summary_path="${{ steps.config.outputs.out_dir }}/github-step-summary.md"
         node "$GITHUB_ACTION_PATH/render-summary.mjs" \
-          --manifest "${{ inputs.bundle-path }}/bundle.manifest.json" \
-          --log "${{ inputs.bundle-path }}/pramaan.log" \
+          --manifest "${{ steps.config.outputs.out_dir }}/bundle.manifest.json" \
+          --log "${{ steps.config.outputs.out_dir }}/pramaan.log" \
           --out "$summary_path" \
           --base "${{ steps.refs.outputs.base_ref }}" \
           --head "${{ steps.refs.outputs.head_ref }}"
@@ -91,9 +139,9 @@ runs:
       run: |
         set -euo pipefail
         {
-          echo "bundle_path=${{ inputs.bundle-path }}"
-          echo "manifest_path=${{ inputs.bundle-path }}/bundle.manifest.json"
-          echo "summary_path=${{ inputs.bundle-path }}/github-step-summary.md"
+          echo "bundle_path=${{ steps.config.outputs.out_dir }}"
+          echo "manifest_path=${{ steps.config.outputs.out_dir }}/bundle.manifest.json"
+          echo "summary_path=${{ steps.config.outputs.out_dir }}/github-step-summary.md"
         } >> "$GITHUB_OUTPUT"
 
     - name: Record final status
@@ -101,15 +149,15 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        final_status="$(node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); process.stdout.write(m.final_status || 'unknown')" "${{ inputs.bundle-path }}/bundle.manifest.json")"
+        final_status="$(node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); process.stdout.write(m.final_status || 'unknown')" "${{ steps.config.outputs.out_dir }}/bundle.manifest.json")"
         echo "final_status=$final_status" >> "$GITHUB_OUTPUT"
 
     - name: Upload proof bundle
-      if: ${{ inputs.upload-artifact == 'true' }}
+      if: ${{ steps.config.outputs.upload_bundle == 'true' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact-name }}
-        path: ${{ inputs.bundle-path }}
+        path: ${{ steps.config.outputs.out_dir }}
         if-no-files-found: error
         retention-days: 14
 
@@ -117,4 +165,22 @@ runs:
       if: ${{ inputs.attest == 'true' }}
       uses: actions/attest-build-provenance@v2
       with:
-        subject-path: ${{ inputs.bundle-path }}/bundle.manifest.json
+        subject-path: ${{ steps.config.outputs.out_dir }}/bundle.manifest.json
+
+    - name: Apply failure policy
+      shell: bash
+      run: |
+        set -euo pipefail
+        final_status="${{ steps.final-status.outputs.final_status }}"
+        fail_on="${{ steps.config.outputs.fail_on }}"
+        if [ "$fail_on" = "never" ]; then
+          exit 0
+        fi
+        if [ "$fail_on" = "failed" ] && [ "$final_status" = "failed" ]; then
+          echo "Pramaan final_status=$final_status and fail-on=failed" >&2
+          exit 1
+        fi
+        if [ "$fail_on" = "actionable" ] && [[ "$final_status" =~ ^(failed|error|inconclusive)$ ]]; then
+          echo "Pramaan final_status=$final_status and fail-on=actionable" >&2
+          exit 1
+        fi

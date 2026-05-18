@@ -1,0 +1,28 @@
+name: Pramaan TypeScript
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+
+jobs:
+  pramaan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - uses: pramaan/pramaan@v0
+        with:
+          out-dir: target/pramaan
+          upload-bundle: "true"
+          fail-on: failed

@@ -33,7 +33,8 @@ jobs:
 The wrapper runs:
 
 ```bash
-cargo run -p pramaan-cli -- verify --base "$BASE_REF" --head "$HEAD_REF" --out target/pramaan
+cargo build --locked -p pramaan-cli
+target/debug/pramaan verify --base "$BASE_REF" --head "$HEAD_REF" --out target/pramaan
 ```
 
 It then uploads `target/pramaan` as the `pramaan-proof-bundle` artifact and
@@ -45,11 +46,19 @@ appends a summary to `GITHUB_STEP_SUMMARY`.
 | --- | --- | --- |
 | `base-ref` | pull request base SHA, then `HEAD~1` | Base ref passed to `pramaan verify`. |
 | `head-ref` | pull request head SHA, then `GITHUB_SHA` | Head ref passed to `pramaan verify`. |
-| `bundle-path` | `target/pramaan` | Proof bundle output directory. |
+| `out-dir` | `target/pramaan` | Proof bundle output directory. |
+| `bundle-path` | empty | Deprecated alias for `out-dir`. |
 | `artifact-name` | `pramaan-proof-bundle` | Uploaded artifact name. |
-| `upload-artifact` | `true` | Set to `false` to skip `actions/upload-artifact`. |
+| `upload-bundle` | `true` | Set to `false` to skip `actions/upload-artifact`. |
+| `upload-artifact` | empty | Deprecated alias for `upload-bundle`. |
+| `fail-on` | `failed` | `failed`, `actionable`, or `never`. |
 | `attest` | `false` | Set to `true` to invoke GitHub artifact attestation. |
 | `pramaan-args` | empty | Extra arguments appended to `pramaan verify`. |
+
+`fail-on: failed` fails the job when the manifest final status is `failed`.
+`fail-on: actionable` also fails on `error` or `inconclusive`. `fail-on: never`
+always leaves the action green while still uploading the bundle and writing the
+summary.
 
 ## Outputs
 
@@ -75,6 +84,11 @@ permissions:
 and `checks: read` are enough for a read-only proof run and summary. The action
 does not require `pull-requests: write` because it writes to the job summary, not
 to PR comments.
+
+For forked pull requests, keep the workflow on `pull_request` rather than
+`pull_request_target` unless you have reviewed the security implications.
+Pramaan runs repository code and should not receive write tokens or secrets from
+untrusted forks.
 
 ## Optional Artifact Attestation
 
@@ -105,3 +119,57 @@ The job summary highlights failed, skipped, timed-out, or errored stages first.
 It also groups risk IDs by family across `mitigated`, `residual`, `skipped`, and
 `not_applicable` buckets. This keeps open risk visible without turning Pramaan
 into a single trust score.
+
+## Minimal Workflow Examples
+
+Python repositories can run their normal tests before Pramaan:
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
+  - uses: actions/setup-python@v5
+    with:
+      python-version: "3.12"
+  - run: python -m pytest
+  - uses: pramaan/pramaan@v0
+    with:
+      out-dir: target/pramaan
+      fail-on: failed
+```
+
+TypeScript repositories should install dependencies before the action if
+Pramaan stages need local toolchains:
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
+  - uses: actions/setup-node@v4
+    with:
+      node-version: "22"
+      cache: npm
+  - run: npm ci
+  - run: npm test
+  - uses: pramaan/pramaan@v0
+    with:
+      out-dir: target/pramaan
+      fail-on: failed
+```
+
+Rust repositories can reuse the same toolchain for project tests and Pramaan:
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
+  - uses: dtolnay/rust-toolchain@stable
+  - run: cargo test --locked
+  - uses: pramaan/pramaan@v0
+    with:
+      out-dir: target/pramaan
+      fail-on: failed
+```

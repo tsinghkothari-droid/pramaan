@@ -28,5 +28,7 @@ jobs:
         with:
           base-ref: ${{ github.event.pull_request.base.sha || 'HEAD~1' }}
           head-ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          bundle-path: target/pramaan
+          out-dir: target/pramaan
           artifact-name: pramaan-proof-bundle
+          upload-bundle: "true"
+          fail-on: failed

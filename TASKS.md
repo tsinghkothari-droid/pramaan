@@ -24,15 +24,15 @@ verification layer for AI-authored pull requests.
 
 ## P0: GitHub Action Readiness
 
-- [ ] Make the action install or download the Pramaan CLI deterministically.
-- [ ] Add `base-ref`, `head-ref`, `out-dir`, `fail-on`, and `upload-bundle` inputs.
+- [x] Make the action install or download the Pramaan CLI deterministically.
+- [x] Add `base-ref`, `head-ref`, `out-dir`, `fail-on`, and `upload-bundle` inputs.
 - [ ] Define hard performance SLA targets for PR use: target runtime, max runtime, per-stage budget, and behavior when a budget is exhausted.
 - [ ] Add default policy-as-code profile for hard gates, warning gates, waiver rules, stage requirements, and security-sensitive paths.
 - [ ] Add `pramaan policy explain` so reviewers can see why a bundle failed, warned, or passed under a policy.
-- [ ] Upload the proof bundle as a GitHub Actions artifact.
-- [ ] Render a concise PR summary focused on failed stages and residual risks.
-- [ ] Add permissions documentation for pull requests from forks.
-- [ ] Add a minimal example workflow for Python, TypeScript, and Rust repositories.
+- [x] Upload the proof bundle as a GitHub Actions artifact.
+- [x] Render a concise PR summary focused on failed stages and residual risks.
+- [x] Add permissions documentation for pull requests from forks.
+- [x] Add a minimal example workflow for Python, TypeScript, and Rust repositories.
 
 ## P1: Sandbox and Environment Evidence
 
