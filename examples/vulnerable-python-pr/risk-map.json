@@ -1,0 +1,40 @@
+{
+  "scenario": "python-checkout-weakened-discount-assertion",
+  "normal_ci": {
+    "command": "python -m unittest discover -s examples/vulnerable-python-pr/weakened-test -p \"test_*.py\"",
+    "expected_status": "passed",
+    "reason": "The weakened head test only checks that the total is positive."
+  },
+  "control_failure": {
+    "command": "python -m unittest discover -s examples/vulnerable-python-pr/base -p \"test_*.py\"",
+    "expected_status": "failed",
+    "reason": "The original assertion proves the 10 percent discount should produce 9000 cents."
+  },
+  "expected_pramaan": {
+    "stage": "oracle_integrity",
+    "status": "failed",
+    "receipt": "examples/vulnerable-python-pr/expected-oracle-integrity.receipt.json"
+  },
+  "risk_ids": [
+    {
+      "id": "R-010",
+      "mapping": "The scenario requires the oracle stage to inspect test-control changes, including skip/xfail/todo additions, even though this specific PR weakens rather than skips the test."
+    },
+    {
+      "id": "R-011",
+      "mapping": "The exact discounted-total assertion is replaced with a weaker assertion."
+    },
+    {
+      "id": "R-014",
+      "mapping": "The new test only checks a broad positive value and would miss the wrong total."
+    },
+    {
+      "id": "R-087",
+      "mapping": "The PR edits code and tests together, making green CI unreliable without an oracle-integrity stage."
+    },
+    {
+      "id": "R-100",
+      "mapping": "The scenario becomes a reusable adversarial regression corpus entry."
+    }
+  ]
+}

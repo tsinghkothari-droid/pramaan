@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+mod oracle;
 mod static_checks;
 
 #[derive(Debug, Parser)]
@@ -23,6 +24,7 @@ struct Cli {
 enum Commands {
     Verify(VerifyArgs),
     StaticChecks(StaticChecksArgs),
+    Oracle(OracleArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -43,12 +45,23 @@ struct StaticChecksArgs {
     out: PathBuf,
 }
 
+#[derive(Debug, Parser)]
+struct OracleArgs {
+    #[arg(long)]
+    base_repo: PathBuf,
+    #[arg(long)]
+    head_repo: PathBuf,
+    #[arg(long, default_value = "target/pramaan/oracle")]
+    out: PathBuf,
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
         Commands::Verify(args) => run_verify(args),
         Commands::StaticChecks(args) => static_checks::run_static_checks(args.repo, args.out),
+        Commands::Oracle(args) => oracle::run_oracle(args.base_repo, args.head_repo, args.out),
     }
 }
 

@@ -196,3 +196,76 @@ fn static_checks_emit_python_fixture_receipts() {
     assert!(["passed", "skipped", "failed", "not_applicable"]
         .contains(&python_receipt["status"].as_str().expect("status string")));
 }
+
+#[test]
+fn oracle_emits_failed_receipt_for_weakened_fixture_pair() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let fixture_root = workspace.join("examples").join("fixtures").join("oracle");
+    let out = workspace
+        .join("target")
+        .join("pramaan-oracle-smoke-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean oracle smoke output");
+    }
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "oracle",
+            "--base-repo",
+            fixture_root
+                .join("base")
+                .to_str()
+                .expect("utf-8 base fixture path"),
+            "--head-repo",
+            fixture_root
+                .join("head")
+                .to_str()
+                .expect("utf-8 head fixture path"),
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan oracle");
+
+    assert!(
+        output.status.success(),
+        "oracle command failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Pramaan oracle integrity complete"));
+    assert!(stdout.contains("deleted_test"));
+    assert!(stdout.contains("weakened_assertion"));
+    assert!(stdout.contains("sensitive_artifact_changed"));
+
+    let diff_path = out.join("oracle-diff.json");
+    let receipt_path = out.join("receipts").join("oracle-integrity.receipt.json");
+    assert!(diff_path.exists(), "oracle diff exists");
+    assert!(receipt_path.exists(), "oracle receipt exists");
+
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&fs::read(receipt_path).expect("read oracle receipt"))
+            .expect("oracle receipt json");
+    assert_eq!(receipt["schema_version"], "pramaan.receipt.v1");
+    assert_eq!(receipt["stage"], "oracle_integrity");
+    assert_eq!(receipt["status"], "failed");
+    assert!(receipt["mitigated_risks"]
+        .as_array()
+        .expect("mitigated risks")
+        .iter()
+        .any(|risk| risk == "R-020"));
+    assert!(receipt["residual_risks"]
+        .as_array()
+        .expect("residual risks")
+        .iter()
+        .any(|risk| risk == "R-087"));
+}

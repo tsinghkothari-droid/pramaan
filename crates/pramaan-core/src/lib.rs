@@ -1,6 +1,9 @@
 use chrono::{DateTime, SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+use std::ffi::OsStr;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 pub const RECEIPT_SCHEMA_VERSION: &str = "pramaan.receipt.v1";
 pub const CLAIM_SCOPE_SCHEMA_VERSION: &str = "pramaan.claim_scope.v1";
@@ -75,6 +78,676 @@ pub fn classify_static_hallucinations(output: &str) -> Vec<StaticHallucinationCa
     categories.sort_by_key(|category| category.as_str());
     categories.dedup();
     categories
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OracleLanguage {
+    Python,
+    TypeScript,
+}
+
+impl OracleLanguage {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Python => "python",
+            Self::TypeScript => "typescript",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OracleTestCase {
+    pub language: OracleLanguage,
+    pub path: String,
+    pub name: String,
+    pub stable_id: String,
+    pub fingerprint: String,
+    pub assertion_count: usize,
+    pub parametrized_case_count: usize,
+    pub skipped: bool,
+    pub skip_reason: Option<String>,
+    pub signal_tokens: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OracleSensitiveArtifact {
+    pub path: String,
+    pub kind: String,
+    pub fingerprint: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OracleSnapshot {
+    pub root: String,
+    pub tests: Vec<OracleTestCase>,
+    pub artifacts: Vec<OracleSensitiveArtifact>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OracleDiff {
+    pub base: OracleSnapshot,
+    pub head: OracleSnapshot,
+    pub findings: Vec<OracleFinding>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OracleFindingKind {
+    DeletedTest,
+    AddedSkip,
+    ParametrizedCaseReduction,
+    WeakenedAssertion,
+    SensitiveArtifactChanged,
+    SensitiveArtifactDeleted,
+}
+
+impl OracleFindingKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::DeletedTest => "deleted_test",
+            Self::AddedSkip => "added_skip",
+            Self::ParametrizedCaseReduction => "parametrized_case_reduction",
+            Self::WeakenedAssertion => "weakened_assertion",
+            Self::SensitiveArtifactChanged => "sensitive_artifact_changed",
+            Self::SensitiveArtifactDeleted => "sensitive_artifact_deleted",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OracleFinding {
+    pub kind: OracleFindingKind,
+    pub path: String,
+    pub test_name: Option<String>,
+    pub details: String,
+    pub risk_ids: Vec<String>,
+}
+
+pub fn discover_oracle_snapshot(root: &Path) -> std::io::Result<OracleSnapshot> {
+    let root = root.canonicalize()?;
+    let mut tests = Vec::new();
+    let mut artifacts = Vec::new();
+
+    for path in walk_oracle_files(&root)? {
+        let relative = portable_relative_path(&root, &path);
+        if is_sensitive_artifact(&path, &relative) {
+            let bytes = fs::read(&path)?;
+            artifacts.push(OracleSensitiveArtifact {
+                path: relative,
+                kind: sensitive_artifact_kind(&path).to_string(),
+                fingerprint: stable_hash_bytes(&bytes),
+            });
+            continue;
+        }
+
+        let Some(language) = test_language(&path, &relative) else {
+            continue;
+        };
+        let text = fs::read_to_string(&path)?;
+        tests.extend(match language {
+            OracleLanguage::Python => discover_python_tests(&relative, &text),
+            OracleLanguage::TypeScript => discover_typescript_tests(&relative, &text),
+        });
+    }
+
+    tests.sort_by(|left, right| left.stable_id.cmp(&right.stable_id));
+    artifacts.sort_by(|left, right| left.path.cmp(&right.path));
+
+    Ok(OracleSnapshot {
+        root: root.to_string_lossy().replace('\\', "/"),
+        tests,
+        artifacts,
+    })
+}
+
+pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> OracleDiff {
+    let mut findings = Vec::new();
+    let head_tests = head
+        .tests
+        .iter()
+        .map(|test| (test.stable_id.clone(), test))
+        .collect::<BTreeMap<_, _>>();
+
+    for base_test in &base.tests {
+        let Some(head_test) = head_tests.get(&base_test.stable_id) else {
+            findings.push(OracleFinding {
+                kind: OracleFindingKind::DeletedTest,
+                path: base_test.path.clone(),
+                test_name: Some(base_test.name.clone()),
+                details: "Test existed in base but was absent in head.".to_string(),
+                risk_ids: vec![
+                    "R-011".to_string(),
+                    "R-012".to_string(),
+                    "R-087".to_string(),
+                ],
+            });
+            continue;
+        };
+
+        if !base_test.skipped && head_test.skipped {
+            findings.push(OracleFinding {
+                kind: OracleFindingKind::AddedSkip,
+                path: head_test.path.clone(),
+                test_name: Some(head_test.name.clone()),
+                details: head_test.skip_reason.clone().unwrap_or_else(|| {
+                    "Skip, xfail, todo, or equivalent marker was added.".to_string()
+                }),
+                risk_ids: vec![
+                    "R-012".to_string(),
+                    "R-013".to_string(),
+                    "R-087".to_string(),
+                ],
+            });
+        }
+
+        if head_test.parametrized_case_count < base_test.parametrized_case_count {
+            findings.push(OracleFinding {
+                kind: OracleFindingKind::ParametrizedCaseReduction,
+                path: head_test.path.clone(),
+                test_name: Some(head_test.name.clone()),
+                details: format!(
+                    "Parametrized cases reduced from {} to {}.",
+                    base_test.parametrized_case_count, head_test.parametrized_case_count
+                ),
+                risk_ids: vec![
+                    "R-018".to_string(),
+                    "R-019".to_string(),
+                    "R-087".to_string(),
+                ],
+            });
+        }
+
+        if assertion_weakened(base_test, head_test) {
+            findings.push(OracleFinding {
+                kind: OracleFindingKind::WeakenedAssertion,
+                path: head_test.path.clone(),
+                test_name: Some(head_test.name.clone()),
+                details: format!(
+                    "Assertion signal weakened: assertions {} -> {}, tokens [{}] -> [{}].",
+                    base_test.assertion_count,
+                    head_test.assertion_count,
+                    base_test.signal_tokens.join(","),
+                    head_test.signal_tokens.join(",")
+                ),
+                risk_ids: vec![
+                    "R-014".to_string(),
+                    "R-015".to_string(),
+                    "R-016".to_string(),
+                    "R-020".to_string(),
+                    "R-087".to_string(),
+                ],
+            });
+        }
+    }
+
+    let head_artifacts = head
+        .artifacts
+        .iter()
+        .map(|artifact| (artifact.path.clone(), artifact))
+        .collect::<BTreeMap<_, _>>();
+
+    for base_artifact in &base.artifacts {
+        match head_artifacts.get(&base_artifact.path) {
+            Some(head_artifact) if head_artifact.fingerprint != base_artifact.fingerprint => {
+                findings.push(OracleFinding {
+                    kind: OracleFindingKind::SensitiveArtifactChanged,
+                    path: head_artifact.path.clone(),
+                    test_name: None,
+                    details: format!(
+                        "{} artifact changed and can redefine expected behavior.",
+                        head_artifact.kind
+                    ),
+                    risk_ids: vec![
+                        "R-008".to_string(),
+                        "R-017".to_string(),
+                        "R-088".to_string(),
+                    ],
+                });
+            }
+            None => findings.push(OracleFinding {
+                kind: OracleFindingKind::SensitiveArtifactDeleted,
+                path: base_artifact.path.clone(),
+                test_name: None,
+                details: format!(
+                    "{} artifact was deleted and may remove oracle coverage.",
+                    base_artifact.kind
+                ),
+                risk_ids: vec![
+                    "R-008".to_string(),
+                    "R-017".to_string(),
+                    "R-089".to_string(),
+                ],
+            }),
+            _ => {}
+        }
+    }
+
+    findings.sort_by(|left, right| {
+        left.path
+            .cmp(&right.path)
+            .then_with(|| left.kind.as_str().cmp(right.kind.as_str()))
+            .then_with(|| left.test_name.cmp(&right.test_name))
+    });
+
+    OracleDiff {
+        base,
+        head,
+        findings,
+    }
+}
+
+pub fn oracle_mitigated_risks() -> Vec<String> {
+    (4..=20)
+        .chain(87..=89)
+        .map(|id| format!("R-{id:03}"))
+        .collect()
+}
+
+fn assertion_weakened(base: &OracleTestCase, head: &OracleTestCase) -> bool {
+    if head.assertion_count < base.assertion_count {
+        return true;
+    }
+
+    let base_tokens = base.signal_tokens.iter().cloned().collect::<BTreeSet<_>>();
+    let head_tokens = head.signal_tokens.iter().cloned().collect::<BTreeSet<_>>();
+    let strong_tokens = [
+        "equals",
+        "deep_equals",
+        "comparison",
+        "raises",
+        "throws",
+        "contains",
+        "snapshot",
+    ];
+
+    strong_tokens
+        .iter()
+        .any(|token| base_tokens.contains(*token) && !head_tokens.contains(*token))
+        || (!base_tokens.contains("truthy") && head_tokens.contains("truthy"))
+        || (!base_tokens.contains("always_true") && head_tokens.contains("always_true"))
+}
+
+fn discover_python_tests(path: &str, text: &str) -> Vec<OracleTestCase> {
+    let lines = text.lines().collect::<Vec<_>>();
+    let mut tests = Vec::new();
+
+    let definitions = lines
+        .iter()
+        .enumerate()
+        .filter_map(|(index, line)| python_test_name(line.trim_start()).map(|name| (index, name)))
+        .collect::<Vec<_>>();
+
+    for (position, (definition_index, name)) in definitions.iter().enumerate() {
+        let start = python_decorator_start(&lines, *definition_index);
+
+        let end = definitions
+            .get(position + 1)
+            .map(|(next_definition, _)| python_decorator_start(&lines, *next_definition))
+            .unwrap_or(lines.len());
+
+        if start < end {
+            let block = lines[start..end].join("\n");
+            tests.push(build_test_case(
+                OracleLanguage::Python,
+                path,
+                name.clone(),
+                &block,
+            ));
+        }
+    }
+
+    tests
+}
+
+fn python_decorator_start(lines: &[&str], definition_index: usize) -> usize {
+    let mut start = definition_index;
+    while start > 0 {
+        let previous = lines[start - 1].trim_start();
+        if previous.is_empty()
+            || python_test_name(previous).is_some()
+            || previous.starts_with("def ")
+            || previous.starts_with("async def ")
+        {
+            break;
+        }
+        start -= 1;
+    }
+    start
+}
+
+fn discover_typescript_tests(path: &str, text: &str) -> Vec<OracleTestCase> {
+    let mut tests = Vec::new();
+    let lines = text.lines().collect::<Vec<_>>();
+    let mut index = 0;
+
+    while index < lines.len() {
+        if let Some(name) = typescript_test_name(lines[index]) {
+            let start = index;
+            index += 1;
+            while index < lines.len() && typescript_test_name(lines[index]).is_none() {
+                index += 1;
+            }
+            let block = lines[start..index].join("\n");
+            tests.push(build_test_case(
+                OracleLanguage::TypeScript,
+                path,
+                name,
+                &block,
+            ));
+        } else {
+            index += 1;
+        }
+    }
+
+    tests
+}
+
+fn build_test_case(
+    language: OracleLanguage,
+    path: &str,
+    name: String,
+    block: &str,
+) -> OracleTestCase {
+    let normalized = normalize_test_block(block);
+    let skipped = skipped_test(language, block);
+
+    OracleTestCase {
+        language,
+        path: path.to_string(),
+        stable_id: format!("{}::{}", path.replace('\\', "/"), name),
+        fingerprint: stable_hash_text(&format!("{}:{}:{normalized}", language.as_str(), name)),
+        name,
+        assertion_count: assertion_count(language, block),
+        parametrized_case_count: parametrized_case_count(language, block),
+        skipped,
+        skip_reason: skipped.then(|| skip_reason(language, block)),
+        signal_tokens: signal_tokens(language, block),
+    }
+}
+
+fn python_test_name(line: &str) -> Option<String> {
+    let line = line.strip_prefix("async ").unwrap_or(line);
+    let rest = line.strip_prefix("def test_")?;
+    let end = rest.find('(')?;
+    Some(format!("test_{}", &rest[..end]))
+}
+
+fn typescript_test_name(line: &str) -> Option<String> {
+    let compact = line.trim_start();
+    let prefixes = [
+        "test.skip(",
+        "it.skip(",
+        "test.todo(",
+        "it.todo(",
+        "test(",
+        "it(",
+    ];
+    for prefix in prefixes {
+        if let Some(rest) = compact.strip_prefix(prefix) {
+            let quote = rest.chars().next()?;
+            if quote == '\'' || quote == '"' || quote == '`' {
+                if let Some(end) = rest[1..].find(quote) {
+                    return Some(rest[1..1 + end].to_string());
+                }
+            }
+        }
+    }
+    None
+}
+
+fn normalize_test_block(block: &str) -> String {
+    block
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#') && !line.starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn assertion_count(language: OracleLanguage, block: &str) -> usize {
+    match language {
+        OracleLanguage::Python => block
+            .lines()
+            .filter(|line| {
+                let trimmed = line.trim_start();
+                trimmed.starts_with("assert ")
+                    || trimmed.contains("pytest.raises(")
+                    || trimmed.contains(".assert")
+            })
+            .count(),
+        OracleLanguage::TypeScript => {
+            count_occurrences(block, "expect(")
+                + count_occurrences(block, "assert.")
+                + count_occurrences(block, "assert(")
+        }
+    }
+}
+
+fn parametrized_case_count(language: OracleLanguage, block: &str) -> usize {
+    match language {
+        OracleLanguage::Python => {
+            if !block.contains("parametrize") {
+                return 1;
+            }
+            block
+                .matches("),")
+                .count()
+                .max(block.matches("],").count())
+                .max(1)
+        }
+        OracleLanguage::TypeScript => {
+            if block.contains("test.each") || block.contains("it.each") {
+                block.matches("],").count().max(1)
+            } else {
+                1
+            }
+        }
+    }
+}
+
+fn skipped_test(language: OracleLanguage, block: &str) -> bool {
+    match language {
+        OracleLanguage::Python => {
+            block.contains("@pytest.mark.skip")
+                || block.contains("@pytest.mark.xfail")
+                || block.contains("pytest.skip(")
+        }
+        OracleLanguage::TypeScript => {
+            block.contains("test.skip(")
+                || block.contains("it.skip(")
+                || block.contains("test.todo(")
+                || block.contains("it.todo(")
+        }
+    }
+}
+
+fn skip_reason(language: OracleLanguage, block: &str) -> String {
+    match language {
+        OracleLanguage::Python => {
+            if block.contains("xfail") {
+                "pytest xfail marker added".to_string()
+            } else {
+                "pytest skip marker or runtime skip added".to_string()
+            }
+        }
+        OracleLanguage::TypeScript => {
+            if block.contains(".todo(") {
+                "JS/TS todo test marker added".to_string()
+            } else {
+                "JS/TS skip test marker added".to_string()
+            }
+        }
+    }
+}
+
+fn signal_tokens(language: OracleLanguage, block: &str) -> Vec<String> {
+    let mut tokens = BTreeSet::new();
+    let signal_text = match language {
+        OracleLanguage::Python => block
+            .lines()
+            .map(str::trim_start)
+            .filter(|line| {
+                line.starts_with("assert ")
+                    || line.contains("pytest.raises(")
+                    || line.contains(".assert")
+            })
+            .collect::<Vec<_>>()
+            .join("\n"),
+        OracleLanguage::TypeScript => block.to_string(),
+    };
+    let lower = signal_text.to_lowercase();
+
+    if lower.contains("assert true") || lower.contains("expect(true)") {
+        tokens.insert("always_true".to_string());
+    }
+    if lower.contains("assert ") && !lower.contains("==") && !lower.contains("!=") {
+        tokens.insert("truthy".to_string());
+    }
+    if lower.contains("tobetruthy")
+        || lower.contains("tobedefined")
+        || lower.contains("not.tobenull")
+    {
+        tokens.insert("truthy".to_string());
+    }
+    if lower.contains("==")
+        || lower.contains("!=")
+        || lower.contains("assertequal")
+        || lower.contains("assertnotequal")
+        || lower.contains(".tobe(")
+        || lower.contains(".toequal(")
+    {
+        tokens.insert("equals".to_string());
+    }
+    if lower.contains("assertgreater")
+        || lower.contains("assertless")
+        || lower.contains("assertgreaterequal")
+        || lower.contains("assertlessequal")
+    {
+        tokens.insert("comparison".to_string());
+    }
+    if lower.contains(".tostrictequal(") || lower.contains(".tomatchobject(") {
+        tokens.insert("deep_equals".to_string());
+    }
+    if lower.contains('>')
+        || lower.contains('<')
+        || lower.contains(".tobegreater")
+        || lower.contains(".tobeless")
+    {
+        tokens.insert("comparison".to_string());
+    }
+    if lower.contains(" in ") || lower.contains(".tocontain") || lower.contains(".tomatch(") {
+        tokens.insert("contains".to_string());
+    }
+    if lower.contains("pytest.raises") {
+        tokens.insert("raises".to_string());
+    }
+    if lower.contains("tothrow") || lower.contains("assert.throws") {
+        tokens.insert("throws".to_string());
+    }
+    if lower.contains("snapshot") || lower.contains(".tomatchsnapshot(") {
+        tokens.insert("snapshot".to_string());
+    }
+    if language == OracleLanguage::Python && lower.contains("pytest.approx") {
+        tokens.insert("approximate".to_string());
+    }
+
+    tokens.into_iter().collect()
+}
+
+fn test_language(path: &Path, relative: &str) -> Option<OracleLanguage> {
+    let file_name = path.file_name().and_then(OsStr::to_str).unwrap_or_default();
+    let extension = path.extension().and_then(OsStr::to_str).unwrap_or_default();
+    if extension.eq_ignore_ascii_case("py")
+        && (file_name.starts_with("test_") || file_name.ends_with("_test.py"))
+    {
+        return Some(OracleLanguage::Python);
+    }
+
+    let lower = relative.to_lowercase();
+    if matches!(extension, "js" | "jsx" | "ts" | "tsx")
+        && (lower.contains(".test.")
+            || lower.contains(".spec.")
+            || lower.contains("/__tests__/")
+            || lower.contains("\\__tests__\\"))
+    {
+        return Some(OracleLanguage::TypeScript);
+    }
+
+    None
+}
+
+fn is_sensitive_artifact(path: &Path, relative: &str) -> bool {
+    let lower = relative.to_lowercase();
+    let extension = path.extension().and_then(OsStr::to_str).unwrap_or_default();
+    lower.contains("__snapshots__")
+        || lower.ends_with(".snap")
+        || lower.ends_with(".snapshot")
+        || lower.starts_with("fixtures/")
+        || lower.starts_with("fixtures\\")
+        || lower.contains("/fixtures/")
+        || lower.contains("\\fixtures\\")
+        || matches!(extension, "snap" | "snapshot" | "golden")
+}
+
+fn sensitive_artifact_kind(path: &Path) -> &'static str {
+    let extension = path.extension().and_then(OsStr::to_str).unwrap_or_default();
+    match extension {
+        "snap" | "snapshot" => "snapshot",
+        _ => "fixture",
+    }
+}
+
+fn walk_oracle_files(root: &Path) -> std::io::Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    let mut stack = vec![root.to_path_buf()];
+
+    while let Some(path) = stack.pop() {
+        for entry in fs::read_dir(&path)? {
+            let entry = entry?;
+            let entry_path = entry.path();
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+
+            if entry_path.is_dir() {
+                if matches!(
+                    name.as_ref(),
+                    ".git" | "target" | "node_modules" | ".venv" | "venv" | "__pycache__"
+                ) {
+                    continue;
+                }
+                stack.push(entry_path);
+            } else {
+                files.push(entry_path);
+            }
+        }
+    }
+
+    Ok(files)
+}
+
+fn portable_relative_path(root: &Path, path: &Path) -> String {
+    path.strip_prefix(root)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+fn count_occurrences(text: &str, needle: &str) -> usize {
+    text.match_indices(needle).count()
+}
+
+fn stable_hash_text(text: &str) -> String {
+    stable_hash_bytes(text.as_bytes())
+}
+
+fn stable_hash_bytes(bytes: &[u8]) -> String {
+    let mut hash = 0xcbf29ce484222325u64;
+    for byte in bytes {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    format!("fnv64:{hash:016x}")
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -404,6 +1077,37 @@ mod tests {
                 StaticHallucinationCategory::UndefinedSymbol
             ]
         );
+    }
+
+    #[test]
+    fn oracle_fixture_diff_detects_weakened_tests_and_artifacts() {
+        let fixture_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(|path| path.parent())
+            .expect("workspace root")
+            .join("examples")
+            .join("fixtures")
+            .join("oracle");
+        let base = discover_oracle_snapshot(&fixture_root.join("base")).expect("base snapshot");
+        let head = discover_oracle_snapshot(&fixture_root.join("head")).expect("head snapshot");
+        let diff = diff_oracle_snapshots(base, head);
+        let kinds = diff
+            .findings
+            .iter()
+            .map(|finding| finding.kind)
+            .collect::<BTreeSet<_>>();
+
+        assert!(kinds.contains(&OracleFindingKind::DeletedTest));
+        assert!(kinds.contains(&OracleFindingKind::AddedSkip));
+        assert!(kinds.contains(&OracleFindingKind::ParametrizedCaseReduction));
+        assert!(kinds.contains(&OracleFindingKind::WeakenedAssertion));
+        assert!(kinds.contains(&OracleFindingKind::SensitiveArtifactChanged));
+        assert!(diff
+            .findings
+            .iter()
+            .any(|finding| finding.risk_ids.contains(&"R-087".to_string())));
+        assert!(oracle_mitigated_risks().contains(&"R-020".to_string()));
+        assert!(oracle_mitigated_risks().contains(&"R-089".to_string()));
     }
 
     fn assert_no_correctness_claims(value: &serde_json::Value) {

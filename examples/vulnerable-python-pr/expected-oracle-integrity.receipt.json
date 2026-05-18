@@ -1,0 +1,30 @@
+{
+  "schema_version": "0.1.0",
+  "stage": "oracle_integrity",
+  "status": "failed",
+  "summary": {
+    "title": "Weakened checkout assertion detected",
+    "details": "The PR keeps the production bug while changing test_checkout.py from an exact discounted-total assertion to a broad positivity assertion."
+  },
+  "findings": [
+    {
+      "id": "ORCL-WEAK-001",
+      "kind": "weakened_assertion",
+      "base_file": "examples/vulnerable-python-pr/base/test_checkout.py",
+      "head_file": "examples/vulnerable-python-pr/weakened-test/test_checkout.py",
+      "base_assertion": "self.assertEqual(discounted_total(10_000, 10), 9_000)",
+      "head_assertion": "self.assertGreater(discounted_total(10_000, 10), 0)",
+      "why_it_matters": "The head assertion only proves the function returns a positive value, not that the 10 percent discount was applied."
+    }
+  ],
+  "mitigated_risks": [
+    "R-011",
+    "R-014",
+    "R-087",
+    "R-100"
+  ],
+  "residual_risks": [
+    "R-010"
+  ],
+  "not_applicable_risks": []
+}

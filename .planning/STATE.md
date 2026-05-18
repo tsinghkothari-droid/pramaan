@@ -6,15 +6,15 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Phase 3 - Oracle Integrity and Killer Demo
+**Current focus:** Phase 4 - Diff Mutation and Differential Fuzz
 
 ## Current Phase
 
-Phase 3: Oracle Integrity and Killer Demo
+Phase 4: Diff Mutation and Differential Fuzz
 
 ## Status
 
-Phase 2 is implemented and validated: sandbox worktree evidence, environment/config hashing, static adapter skeletons, and hallucination classification receipts are in place. Proceeding to Phase 3.
+Phase 3 is implemented and validated: oracle integrity detects weakened assertions, fixture/snapshot-sensitive changes, and the vulnerable Python demo shows ordinary CI green while Pramaan flags the weakened oracle. Proceeding to Phase 4.
 
 ## Open Questions
 
@@ -36,3 +36,4 @@ Phase 2 is implemented and validated: sandbox worktree evidence, environment/con
 | 2026-05-18 | Planned all six v1 phases and added autonomous build command. | The project now has an end-to-end build path from schemas through GitHub Action and demo corpus. |
 | 2026-05-18 | Completed Phase 1 implementation. | The receipt-first skeleton is green under `cargo fmt --check`, `cargo test`, and synthetic CLI smoke verification. |
 | 2026-05-18 | Completed Phase 2 implementation. | Sandbox and static-check paths are green under `cargo fmt --check`, full workspace tests, and CLI smoke verification. |
+| 2026-05-18 | Completed Phase 3 implementation. | Oracle integrity catches the weakened-test demo while the weakened PR's normal unit test passes. |
