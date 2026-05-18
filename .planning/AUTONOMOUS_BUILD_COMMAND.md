@@ -1,5 +1,16 @@
 # Autonomous Build Command
 
+For the newer recursive loop with subagents, stress tests, unbiased review
+files, phase aggregation, commits, and GitHub pushes, use:
+
+[.planning/AUTONOMOUS_RECURSIVE_GSD_COMMAND.md](AUTONOMOUS_RECURSIVE_GSD_COMMAND.md)
+
+To print the next resumable command:
+
+```powershell
+.\scripts\gsd-loop-next.ps1
+```
+
 Use this in Codex from `C:\Users\Tushar\Pictures\pramaan` to build Pramaan end to end without further clarification prompts:
 
 ```text
