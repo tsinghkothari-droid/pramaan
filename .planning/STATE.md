@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Serious v1 planning complete through Phase 15
+**Current focus:** Serious v1 planning complete through Phase 16
 
 ## Current Phase
 
@@ -14,7 +14,7 @@ Phase 8: Killer Demo and Proof Bundles
 
 ## Status
 
-Phases 1-7 are implemented and validated. Phases 8-15 are now planned as the Serious v1 execution path: killer demos, receipt/bundle hardening, GitHub Action readiness, sandbox/claim/static depth, oracle integrity, mutation/fuzz adapters, attestation/corpus/evals, and adoption/language/adapter gates.
+Phases 1-7 are implemented and validated. Phases 8-16 are now planned as the Serious v1 execution path: killer demos, receipt/bundle hardening, GitHub Action readiness, sandbox/claim/static depth, oracle integrity, mutation/fuzz adapters, attestation/corpus/evals, adoption/language/adapter gates, and blind-spot closure for attribution, feedback, calibration, drift, verifier/plugin trust, redaction, and non-GitHub support.
 
 ## Open Questions
 
@@ -43,3 +43,4 @@ Phases 1-7 are implemented and validated. Phases 8-15 are now planned as the Ser
 | 2026-05-18 | Completed Phase 7 implementation. | Adapter certification docs, schema, fixture, and risk register are in place while registry/Sutra remain deferred. |
 | 2026-05-19 | Made the GitHub repository public. | Pramaan needs public proof, public research grounding, and public demo credibility. |
 | 2026-05-19 | Added Serious v1 GSD plans for Phases 8-15. | The marketing README now has an execution map behind it, with P0/P1/P2/P3 tasks converted into phase plans. |
+| 2026-05-19 | Added Phase 16 blind-spot plan. | Agent attribution, reviewer override capture, performance SLAs, baseline calibration, drift tracking, plugin trust, bundle redaction, multi-agent provenance, and non-GitHub support must be designed before Serious v1 hardens. |

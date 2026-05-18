@@ -2,7 +2,7 @@
 
 **Created:** 2026-05-18
 **Granularity:** Coarse
-**v1 Requirements:** 48 mapped
+**v1 Requirements:** 99 mapped
 
 ## Phase 1: Receipt-First CLI Skeleton
 
@@ -221,6 +221,23 @@
 4. Go and Java support wait for protocol stability and first-language depth.
 5. Adapter certification remains bounded and does not distract from core PR verification.
 
+## Phase 16: Attribution, Feedback, Calibration, and Verifier Security
+
+**Goal:** Add the missing production trust layer around Pramaan itself: who authored the code, who overrode the evidence, what baseline is normal for this repo, whether agent quality is drifting, whether plugins can be trusted, and whether bundles safely redact sensitive data.
+
+**Requirements:** ATTR-01, FBCK-01, PERF-01, CAL-01, DRFT-01, PLGN-01, SCRB-01, VCS-01
+
+**Success Criteria:**
+
+1. Receipt/bundle schemas can represent agent-author attribution and multi-agent provenance before v0.1 freezes.
+2. Reviewer overrides are captured as auditable evidence with accepted risk IDs and reasons.
+3. Performance SLA targets and per-stage budgets are documented and reflected in receipts.
+4. Repo-level calibration distinguishes normal noise from newly risky PR behavior.
+5. Trend/drift exports aggregate multiple bundles by agent, repo, risk family, and runtime.
+6. Plugin trust model prevents untrusted plugins from poisoning receipts or manifests.
+7. Bundle redaction policy prevents secrets, private paths, internal endpoints, and sensitive CI metadata from leaking.
+8. Provider-neutral VCS/CI abstraction prepares GitLab support without destabilizing GitHub Action work.
+
 ## Coverage
 
 | Phase | Requirements | Count |
@@ -240,8 +257,9 @@
 | Phase 13 | MUTN-06, MUTN-07, FUZZ-05, FUZZ-06 | 4 |
 | Phase 14 | BNDL-07, BNDL-08, EVAL-01, EVAL-02 | 4 |
 | Phase 15 | DOCS-01, DOCS-02, LANG-01, LANG-02, ADPT-05 | 5 |
+| Phase 16 | ATTR-01, FBCK-01, PERF-01, CAL-01, DRFT-01, PLGN-01, SCRB-01, VCS-01 | 8 |
 
-**Total mapped:** 87 / 87
+**Total mapped:** 99 / 99
 
 ---
-*Roadmap updated: 2026-05-19 after Serious v1 task planning*
+*Roadmap updated: 2026-05-19 after blind-spot gap analysis*

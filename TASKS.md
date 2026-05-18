@@ -14,6 +14,8 @@ verification layer for AI-authored pull requests.
 ## P0: Receipt and Bundle Trust
 
 - [ ] Freeze receipt schema version `0.1`.
+- [ ] Add agent-author attribution before schema freeze: agent product, model family/version when available, execution mode, prompt/context hash, and commit provenance.
+- [ ] Add reviewer override capture before schema freeze: override decision, reason, reviewer identity source, timestamp, risk IDs accepted, and linked merge outcome.
 - [ ] Add schema compatibility tests for all checked-in fixture receipts.
 - [ ] Add golden tests that diff generated receipts against approved fixtures.
 - [ ] Add artifact graph support so every receipt can point to hashed logs, corpora, and tool outputs.
@@ -24,6 +26,7 @@ verification layer for AI-authored pull requests.
 
 - [ ] Make the action install or download the Pramaan CLI deterministically.
 - [ ] Add `base-ref`, `head-ref`, `out-dir`, `fail-on`, and `upload-bundle` inputs.
+- [ ] Define hard performance SLA targets for PR use: target runtime, max runtime, per-stage budget, and behavior when a budget is exhausted.
 - [ ] Upload the proof bundle as a GitHub Actions artifact.
 - [ ] Render a concise PR summary focused on failed stages and residual risks.
 - [ ] Add permissions documentation for pull requests from forks.
@@ -38,6 +41,8 @@ verification layer for AI-authored pull requests.
 - [ ] Capture container image names and digests when running inside OCI containers.
 - [ ] Add network policy evidence: disabled, allowed, observed, or unknown.
 - [ ] Detect source changes after a stage runs and mark dirty-after-run risk.
+- [ ] Threat-model the verifier as an attack target, including malicious PR code exploiting mutation engines, fuzzers, parsers, test runners, or plugin hooks.
+- [ ] Add PII/secrets scrubbing rules for environment evidence, logs, network endpoints, internal hostnames, paths, and artifact metadata before bundle emission.
 
 ## P1: Claim Scope
 
@@ -47,6 +52,7 @@ verification layer for AI-authored pull requests.
 - [ ] Add low-confidence claim-scope warnings for vague or missing PR descriptions.
 - [ ] Allow maintainers to provide a scope note file for expected and out-of-scope behavior.
 - [ ] Map claim-scope warnings to stable risk IDs.
+- [ ] Add semantic claim-implementation mismatch detection as a bounded signal: compare stated intent, touched APIs, tests, and changed behavior without making it a sole merge gate.
 
 ## P1: Static and Hallucination Checks
 
@@ -94,6 +100,7 @@ verification layer for AI-authored pull requests.
 - [ ] Add offline verification mode for downloaded bundles.
 - [ ] Document public-repo and private-repo attestation differences.
 - [ ] Add signing identity and certificate metadata to bundle summaries.
+- [ ] Define plugin trust model: plugin identity, version, signature, sandbox boundary, receipt permissions, and tamper resistance.
 
 ## P2: Adversarial Corpus and Evals
 
@@ -104,6 +111,8 @@ verification layer for AI-authored pull requests.
 - [ ] Add flaky-case quarantine rules.
 - [ ] Track false positives, false negatives, runtime, and reviewer time-to-understand.
 - [ ] Create a benchmark report template.
+- [ ] Add repo-level baseline calibration: expected mutation survival range, expected skipped-stage profile, runtime baseline, and noise-floor warnings.
+- [ ] Add trend/drift metrics across PRs: agent failure rate, mutation survival drift, oracle-risk drift, skipped-stage drift, and runtime drift.
 
 ## P2: Documentation and Adoption
 
@@ -114,6 +123,33 @@ verification layer for AI-authored pull requests.
 - [ ] Write an enterprise deployment guide.
 - [ ] Add troubleshooting docs for slow mutation, missing tools, flaky tests, and forked PR permissions.
 - [ ] Add screenshots or rendered examples of PR summaries and bundle inspection.
+- [ ] Document non-GitHub roadmap and minimum abstraction layer for GitLab, Gitea, and Bitbucket support.
+
+## P2: Feedback, Calibration, and Drift
+
+- [ ] Persist reviewer override decisions as first-class evidence, not comments that disappear in PR history.
+- [ ] Correlate override outcomes with later defects or revert signals when available.
+- [ ] Store per-repo baselines for mutation survival, oracle warnings, skipped stages, runtime, and static/hallucination findings.
+- [ ] Expose a trend API or export format for weekly/monthly agent-code quality drift.
+- [ ] Add dashboard-ready metrics without making the dashboard a blocker for CLI adoption.
+- [ ] Track agent-author attribution over time to compare failure modes by agent, model, workflow, and repository.
+
+## P2: Verifier and Plugin Security
+
+- [ ] Define a plugin protocol with least-privilege receipt-writing permissions.
+- [ ] Require plugin identity, version, provenance, and optional signature in every plugin-emitted receipt.
+- [ ] Prevent plugins from editing prior receipts or bundle manifests directly.
+- [ ] Run risky parsers, test runners, mutation engines, and fuzzers behind stronger sandbox boundaries.
+- [ ] Add malicious-plugin and malicious-PR fixtures to the adversarial corpus.
+- [ ] Add bundle redaction policy tests for secrets, internal endpoints, private paths, and CI metadata.
+
+## P3: Multi-Agent and Multi-Forge Support
+
+- [ ] Model multi-agent provenance chains: code author agent, review agent, test-writing agent, and final human reviewer.
+- [ ] Record intermediate commit attribution and handoff metadata where available.
+- [ ] Add provider-neutral VCS interfaces before adding GitLab support.
+- [ ] Add GitLab CI support after GitHub Action readiness stabilizes.
+- [ ] Add Gitea and Bitbucket notes as later adoption targets, not MVP blockers.
 
 ## P2: Language Expansion
 
@@ -141,6 +177,8 @@ verification layer for AI-authored pull requests.
 - [ ] GitHub Action posts a useful PR summary.
 - [ ] Bundle verification catches tampering.
 - [ ] Missing tools and skipped checks are visible.
+- [ ] Receipt schema includes agent attribution and reviewer override fields before v0.1 freeze.
+- [ ] PR runtime SLA is documented and enforced through stage budgets.
 
 ### Real MVP
 
@@ -149,6 +187,8 @@ verification layer for AI-authored pull requests.
 - [ ] Mutation and property/fuzz stages run within practical CI budgets.
 - [ ] At least 75 adversarial scenarios exist.
 - [ ] Documentation is good enough for an external maintainer to install and inspect a bundle.
+- [ ] Repo-level calibration prevents obvious alert fatigue.
+- [ ] Plugin trust model prevents untrusted plugins from poisoning receipts.
 
 ### Serious v1
 
@@ -159,3 +199,5 @@ verification layer for AI-authored pull requests.
 - [ ] Cross-platform CI.
 - [ ] Security model and threat model complete.
 - [ ] Public demo proves "GitHub green, Pramaan red" in under 30 seconds.
+- [ ] Reviewer overrides, agent attribution, baseline calibration, and drift reporting are part of the proof-bundle lifecycle.
+- [ ] PII/secrets scrubbing is tested before enterprise bundle export.
