@@ -2,13 +2,13 @@
 
 **Created:** 2026-05-18
 **Granularity:** Coarse
-**v1 Requirements:** 36 mapped
+**v1 Requirements:** 43 mapped
 
 ## Phase 1: Receipt-First CLI Skeleton
 
-**Goal:** Create the project skeleton, CLI entry point, schemas, and orchestrator contract so every future stage can emit auditable receipts.
+**Goal:** Create the project skeleton, CLI entry point, schemas, claim-scope model, and orchestrator contract so every future stage can emit auditable receipts.
 
-**Requirements:** CLI-01, CLI-02, CLI-03, RCPT-01, RCPT-02, RCPT-03
+**Requirements:** CLI-01, CLI-02, CLI-03, RCPT-01, RCPT-02, RCPT-03, SCOP-01, SCOP-02
 
 **Success Criteria:**
 
@@ -17,12 +17,13 @@
 3. Schema validation passes for generated receipts.
 4. Terminal summary distinguishes pass, fail, skipped, and not-applicable statuses.
 5. Rust workspace and plugin directory skeleton match the intended architecture.
+6. Claim-scope schema can represent expected behavior, out-of-scope behavior, touched public APIs, and confidence.
 
 ## Phase 2: Sandbox and Static Checks
 
 **Goal:** Produce real environment evidence and language static-check receipts for Python, TypeScript, and Rust repositories.
 
-**Requirements:** SNDB-01, SNDB-02, SNDB-03, STAT-01, STAT-02, STAT-03, STAT-04
+**Requirements:** SNDB-01, SNDB-02, SNDB-03, STAT-01, STAT-02, STAT-03, STAT-04, STAT-05
 
 **Success Criteria:**
 
@@ -31,12 +32,13 @@
 3. TypeScript plugin emits receipts for type/lint checks when tools are present.
 4. Rust plugin emits receipts for cargo check/test-build checks when tools are present.
 5. Missing or unavailable tools are represented as skipped/not-applicable receipts, not hidden failures.
+6. Static failures include hallucination categories when the evidence supports classification.
 
 ## Phase 3: Oracle Integrity and Killer Demo
 
-**Goal:** Detect test weakening and prove Pramaan's value through a demo where ordinary CI passes but Pramaan fails.
+**Goal:** Detect test weakening and oracle/scope mismatch, then prove Pramaan's value through a demo where ordinary CI passes but Pramaan fails.
 
-**Requirements:** ORCL-01, ORCL-02, ORCL-03, ORCL-04, ORCL-05
+**Requirements:** SCOP-03, ORCL-01, ORCL-02, ORCL-03, ORCL-04, ORCL-05
 
 **Success Criteria:**
 
@@ -45,27 +47,29 @@
 3. Oracle stage detects weakened TypeScript/JavaScript assertions.
 4. Snapshot and fixture diffs are classified as oracle-sensitive.
 5. Demo PR passes normal tests and fails Pramaan with a clear receipt naming the weakened oracle.
+6. Oracle stage can flag narrow, wide, changed, and missing-regression risks relative to the claim scope.
 
 ## Phase 4: Diff Mutation and Differential Fuzz
 
 **Goal:** Add execution-grounded test-quality and regression checks scoped to changed files and eligible pure functions.
 
-**Requirements:** MUTN-01, MUTN-02, MUTN-03, MUTN-04, FUZZ-01, FUZZ-02, FUZZ-03, FUZZ-04
+**Requirements:** MUTN-01, MUTN-02, MUTN-03, MUTN-04, MUTN-05, FUZZ-01, FUZZ-02, FUZZ-03, FUZZ-04
 
 **Success Criteria:**
 
 1. Python diff-scoped mutation stage reports created/killed/survived/timed-out mutants.
 2. TypeScript diff-scoped mutation stage reports kill-rate against threshold.
 3. Rust diff-scoped mutation stage produces usable receipts.
-4. Python Hypothesis differential checks run for eligible changed pure functions.
-5. TypeScript fast-check differential checks run for eligible changed pure functions.
-6. Differential receipts include seeds, generated input counts, corpus hashes, and divergence summaries.
+4. Mutation receipts record timeout policy, filtering mode, cache/reuse state, and skipped/unviable mutant rationale.
+5. Python Hypothesis differential checks run for eligible changed pure functions.
+6. TypeScript fast-check differential checks run for eligible changed pure functions.
+7. Differential receipts include seeds, generated input counts, corpus hashes, replay data, and divergence summaries.
 
 ## Phase 5: Bundle Signing and Verification
 
 **Goal:** Turn receipts into a durable, verifiable proof bundle with manifest, hashes, and local signing/signable output.
 
-**Requirements:** RCPT-04, BNDL-01, BNDL-02, BNDL-03
+**Requirements:** RCPT-04, BNDL-01, BNDL-02, BNDL-03, BNDL-04
 
 **Success Criteria:**
 
@@ -74,34 +78,36 @@
 3. Local dev signing or signable output is supported.
 4. `pramaan bundle verify <path>` validates manifest, hashes, and signature/signable metadata.
 5. Bundle summary uses accurate language and avoids correctness-proof claims.
+6. Bundle manifest can carry GitHub artifact attestation metadata when available.
 
 ## Phase 6: GitHub Action and Public Demo Loop
 
 **Goal:** Make Pramaan usable on pull requests and package the killer demo as a repeatable proof of value.
 
-**Requirements:** GHAC-01, GHAC-02, GHAC-03, DEMO-01, DEMO-02, DEMO-03
+**Requirements:** GHAC-01, GHAC-02, GHAC-03, GHAC-04, DEMO-01, DEMO-02, DEMO-03
 
 **Success Criteria:**
 
 1. GitHub Action runs Pramaan on pull requests.
 2. Action uploads the proof bundle as an artifact.
 3. Action publishes a concise PR summary focused on failed and risky stages.
-4. Demo repository includes the weakened-test AI-fix scenario.
-5. Demo documentation shows normal CI green and Pramaan red.
-6. Demo proof bundle can be inspected in under 30 seconds.
+4. Action can optionally request artifact attestation for the proof bundle.
+5. Demo repository includes the weakened-test AI-fix scenario.
+6. Demo documentation shows normal CI green and Pramaan red.
+7. Demo proof bundle can be inspected in under 30 seconds.
 
 ## Coverage
 
 | Phase | Requirements | Count |
 |-------|--------------|-------|
-| Phase 1 | CLI-01, CLI-02, CLI-03, RCPT-01, RCPT-02, RCPT-03 | 6 |
-| Phase 2 | SNDB-01, SNDB-02, SNDB-03, STAT-01, STAT-02, STAT-03, STAT-04 | 7 |
-| Phase 3 | ORCL-01, ORCL-02, ORCL-03, ORCL-04, ORCL-05 | 5 |
-| Phase 4 | MUTN-01, MUTN-02, MUTN-03, MUTN-04, FUZZ-01, FUZZ-02, FUZZ-03, FUZZ-04 | 8 |
-| Phase 5 | RCPT-04, BNDL-01, BNDL-02, BNDL-03 | 4 |
-| Phase 6 | GHAC-01, GHAC-02, GHAC-03, DEMO-01, DEMO-02, DEMO-03 | 6 |
+| Phase 1 | CLI-01, CLI-02, CLI-03, RCPT-01, RCPT-02, RCPT-03, SCOP-01, SCOP-02 | 8 |
+| Phase 2 | SNDB-01, SNDB-02, SNDB-03, STAT-01, STAT-02, STAT-03, STAT-04, STAT-05 | 8 |
+| Phase 3 | SCOP-03, ORCL-01, ORCL-02, ORCL-03, ORCL-04, ORCL-05 | 6 |
+| Phase 4 | MUTN-01, MUTN-02, MUTN-03, MUTN-04, MUTN-05, FUZZ-01, FUZZ-02, FUZZ-03, FUZZ-04 | 9 |
+| Phase 5 | RCPT-04, BNDL-01, BNDL-02, BNDL-03, BNDL-04 | 5 |
+| Phase 6 | GHAC-01, GHAC-02, GHAC-03, GHAC-04, DEMO-01, DEMO-02, DEMO-03 | 7 |
 
-**Total mapped:** 36 / 36
+**Total mapped:** 43 / 43
 
 ---
-*Roadmap created: 2026-05-18*
+*Roadmap updated: 2026-05-18 after improvement research*

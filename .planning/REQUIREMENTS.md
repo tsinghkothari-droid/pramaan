@@ -18,6 +18,12 @@
 - [ ] **RCPT-03**: Receipt and bundle schemas are versioned and committed under `schemas/`.
 - [ ] **RCPT-04**: Bundle manifest references every receipt and artifact by content hash.
 
+### Claim Scope
+
+- [ ] **SCOP-01**: Developer can provide or auto-derive a PR claim scope from PR title, PR body, linked issue text, changed public APIs, and optional notes.
+- [ ] **SCOP-02**: Claim scope receipt records expected behavior, explicitly out-of-scope behavior, touched public APIs, and confidence level.
+- [ ] **SCOP-03**: Pramaan flags oracle/scope mismatch risks, including narrow oracle, wide oracle, changed oracle, and missing regression risks.
+
 ### Sandbox
 
 - [ ] **SNDB-01**: Sandbox creates isolated base and head worktrees for a PR verification run.
@@ -30,6 +36,7 @@
 - [ ] **STAT-02**: TypeScript plugin can run configured type/lint checks and convert results to receipts.
 - [ ] **STAT-03**: Rust plugin can run configured cargo check/test-build checks and convert results to receipts.
 - [ ] **STAT-04**: Static stage flags broken imports, undeclared symbols, and missing referenced APIs where language tooling exposes them.
+- [ ] **STAT-05**: Static stage classifies likely code hallucinations when evidence allows, such as invented API, invalid parameter, undefined symbol, nonexistent import, resource mismatch, or logic mismatch.
 
 ### Oracle Integrity
 
@@ -45,6 +52,7 @@
 - [ ] **MUTN-02**: TypeScript mutation stage runs diff-scoped mutation testing on changed source files.
 - [ ] **MUTN-03**: Rust mutation stage runs diff-scoped mutation testing on changed source files.
 - [ ] **MUTN-04**: Mutation receipt reports mutants created, killed, survived, timed out, and kill-rate threshold result.
+- [ ] **MUTN-05**: Mutation receipt records timeout policy, coverage/filter mode, incremental cache/reuse status, and skipped/unviable mutant rationale where available.
 
 ### Differential Fuzz
 
@@ -58,12 +66,14 @@
 - [ ] **BNDL-01**: Bundle stage emits a manifest containing tool versions, stage receipts, artifact hashes, seeds, corpus hashes, and final status.
 - [ ] **BNDL-02**: Bundle stage supports local dev signing or signable output in v1.
 - [ ] **BNDL-03**: User can verify a bundle manifest against included receipts and artifacts.
+- [ ] **BNDL-04**: Bundle manifest can carry GitHub artifact attestation metadata when generated in GitHub Actions.
 
 ### GitHub Action
 
 - [ ] **GHAC-01**: GitHub Action runs Pramaan on pull requests.
 - [ ] **GHAC-02**: GitHub Action uploads the proof bundle as a CI artifact.
 - [ ] **GHAC-03**: GitHub Action publishes a concise PR summary focused on failed or risky stages.
+- [ ] **GHAC-04**: GitHub Action can optionally request artifact attestation for the uploaded proof bundle.
 
 ### Demo
 
@@ -103,6 +113,9 @@
 | RCPT-02 | Phase 1 | Pending |
 | RCPT-03 | Phase 1 | Pending |
 | RCPT-04 | Phase 5 | Pending |
+| SCOP-01 | Phase 1 | Pending |
+| SCOP-02 | Phase 1 | Pending |
+| SCOP-03 | Phase 3 | Pending |
 | SNDB-01 | Phase 2 | Pending |
 | SNDB-02 | Phase 2 | Pending |
 | SNDB-03 | Phase 2 | Pending |
@@ -110,6 +123,7 @@
 | STAT-02 | Phase 2 | Pending |
 | STAT-03 | Phase 2 | Pending |
 | STAT-04 | Phase 2 | Pending |
+| STAT-05 | Phase 2 | Pending |
 | ORCL-01 | Phase 3 | Pending |
 | ORCL-02 | Phase 3 | Pending |
 | ORCL-03 | Phase 3 | Pending |
@@ -119,6 +133,7 @@
 | MUTN-02 | Phase 4 | Pending |
 | MUTN-03 | Phase 4 | Pending |
 | MUTN-04 | Phase 4 | Pending |
+| MUTN-05 | Phase 4 | Pending |
 | FUZZ-01 | Phase 4 | Pending |
 | FUZZ-02 | Phase 4 | Pending |
 | FUZZ-03 | Phase 4 | Pending |
@@ -126,18 +141,20 @@
 | BNDL-01 | Phase 5 | Pending |
 | BNDL-02 | Phase 5 | Pending |
 | BNDL-03 | Phase 5 | Pending |
+| BNDL-04 | Phase 5 | Pending |
 | GHAC-01 | Phase 6 | Pending |
 | GHAC-02 | Phase 6 | Pending |
 | GHAC-03 | Phase 6 | Pending |
+| GHAC-04 | Phase 6 | Pending |
 | DEMO-01 | Phase 6 | Pending |
 | DEMO-02 | Phase 6 | Pending |
 | DEMO-03 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 36 total
-- Mapped to phases: 36
+- v1 requirements: 43 total
+- Mapped to phases: 43
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-18*
-*Last updated: 2026-05-18 after roadmap creation*
+*Last updated: 2026-05-18 after improvement research*

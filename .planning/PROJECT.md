@@ -52,8 +52,9 @@ Optional Formal -> Dual Critic -> Signed Bundle
 For v1, the build should deliberately narrow this to the stages that can become reliable first:
 
 ```text
-CLI + GitHub Action -> Receipts -> Sandbox -> Static -> Oracle Integrity ->
-Diff Mutation -> Differential Property/Fuzz -> Signed Bundle
+CLI + GitHub Action -> Receipts -> Sandbox -> Claim Scope ->
+Static -> Oracle Integrity -> Diff Mutation -> Differential Property/Fuzz ->
+Signed/Attested Bundle
 ```
 
 The first demo should be brutally simple: an AI agent fixes a bug by weakening a test, ordinary CI goes green, and Pramaan fails the PR with a clean receipt naming the weakened assertion.
@@ -62,6 +63,7 @@ The first demo should be brutally simple: an AI agent fixes a bug by weakening a
 
 - **Claim discipline**: Never market Pramaan as proving code correct - it proves specific checks ran and what they found.
 - **Stage independence**: Treat stages as diverse but not fully independent; shared bad oracles and bad scope definitions can correlate failures.
+- **Claim/scope integrity**: Record what behavior the PR claims to change before judging whether tests and generated checks are aligned.
 - **v1 stack**: Rust core orchestrator, Python plugins for language verifiers, TypeScript GitHub Action wrapper.
 - **Initial languages**: Python, TypeScript/JavaScript, and Rust first; Go and Java after the core receipts and oracle checks are stable.
 - **Latency target**: 15-25 minutes single-machine and 5-8 minutes parallel for typical PRs.
@@ -73,10 +75,11 @@ The first demo should be brutally simple: an AI agent fixes a bug by weakening a
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Build receipts before breadth | Trust depends on inspectable evidence, not on having many flashy stages. | - Pending |
+| Add claim/scope receipts before oracle integrity | Research on SWE-bench failures shows tests can be too narrow, too wide, or mismatched with task descriptions. | - Pending |
 | Start with Python, TypeScript, and Rust | They cover high-value AI coding workflows and have workable tooling for typecheck, mutation, and property/fuzz testing. | - Pending |
 | Delay adversarial amplification, formal, and dual critic | Stages 5-7 are valuable but can distract from making core execution gates deterministic and hard to game. | - Pending |
 | Use signed bundles as the product boundary | The durable deliverable is an auditable proof bundle, not a transient CI log. | - Pending |
 | Lead demo focuses on test weakening | Test tampering is legible, common, and sells the problem instantly. | - Pending |
 
 ---
-*Last updated: 2026-05-18 after initialization*
+*Last updated: 2026-05-18 after improvement research*
