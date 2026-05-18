@@ -1,0 +1,10 @@
+target/
+node_modules/
+.env
+.env.*
+*.log
+dist/
+coverage/
+__pycache__/
+.pytest_cache/
+.hypothesis/
