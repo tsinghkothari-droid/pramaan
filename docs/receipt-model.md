@@ -1,7 +1,7 @@
 # Receipt Model
 
-Pramaan's Phase 1 model is deliberately modest: it records evidence about a
-verification run. It does not certify that the changed code is correct.
+Pramaan's v0.1 receipt model is deliberately modest: it records evidence about
+a verification run. It does not certify that the changed code is correct.
 
 ## Terms
 
@@ -21,6 +21,29 @@ digest is still useful during Phase 1, but it is weaker evidence.
 artifacts so a reviewer or GitHub Action can inspect the run without reading
 every file first.
 
+## v0.1 Compatibility Rules
+
+The v0.1 public contract is the compact runtime shape emitted by the Rust CLI:
+
+- `schema_version` remains `pramaan.receipt.v1`.
+- `stage` is a stable string ID such as `claim_scope`, `oracle_integrity`, or
+  `differential_fuzz`.
+- `started_at` and `ended_at` remain top-level RFC3339 timestamps.
+- `summary` contains `title` and `details`.
+- `inputs`, `outputs`, and `artifacts` are arrays of simple references with
+  optional digests.
+- risk buckets stay explicit: `mitigated_risks`, `residual_risks`, and
+  `not_applicable_risks`.
+- Phase 16a trust hooks are optional but reserved: `agent_author`,
+  `reviewer_override`, `multi_agent_provenance`, `plugin_identity`,
+  `plugin_permissions`, `evidence_sensitivity`, `redaction_manifest`,
+  `policy_decision`, and `stage_budget`.
+
+Compatible additions may add optional fields or new enum values only after a
+schema-version decision. Incompatible changes include removing existing fields,
+changing field types, hiding skipped/failed stage evidence, or replacing risk
+buckets with a single score.
+
 ## How They Relate
 
 The claim scope sets the target for later checks. Stage receipts then report
@@ -39,7 +62,7 @@ The direction matters. Pramaan should not start with a verdict and then search
 for supporting evidence. It should record what each stage actually observed and
 leave residual risk visible.
 
-## Phase 1 Synthetic Receipts
+## Synthetic Receipts
 
 The current CLI command is:
 
@@ -47,9 +70,22 @@ The current CLI command is:
 cargo run -p pramaan-cli -- verify --base HEAD --head HEAD --out target/pramaan-smoke
 ```
 
-This writes a synthetic claim scope and two receipts. Those receipts exercise the
-contract for status, artifact paths, and risk references. They do not run static
-analysis, mutation testing, differential fuzzing, or sandbox replay.
+This writes a synthetic claim scope plus stage receipts. Those receipts exercise
+the contract for status, artifact paths, risk references, and the Phase 16a trust
+hooks. They do not prove static analysis, mutation testing, differential fuzzing,
+or sandbox replay found the code correct.
+
+## Compatibility Tests
+
+Phase 9 pins the receipt contract in two ways:
+
+- checked-in `*.receipt.json` fixtures under `examples/` must deserialize as
+  current Pramaan receipts;
+- CLI smoke tests assert that generated receipts and manifests still carry the
+  expected fields.
+
+This is a compatibility floor, not the final schema-validation story. Full JSON
+Schema validation for every generated artifact remains a hardening target.
 
 ## Claim Discipline
 

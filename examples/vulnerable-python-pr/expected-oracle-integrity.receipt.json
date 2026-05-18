@@ -1,30 +1,83 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "pramaan.receipt.v1",
   "stage": "oracle_integrity",
   "status": "failed",
-  "summary": {
-    "title": "Weakened checkout assertion detected",
-    "details": "The PR keeps the production bug while changing test_checkout.py from an exact discounted-total assertion to a broad positivity assertion."
+  "tool": {
+    "name": "pramaan-oracle",
+    "version": "0.1.0"
   },
-  "findings": [
+  "started_at": "2026-05-18T21:06:05Z",
+  "ended_at": "2026-05-18T21:06:05Z",
+  "exit_code": 1,
+  "inputs": [
     {
-      "id": "ORCL-WEAK-001",
-      "kind": "weakened_assertion",
-      "base_file": "examples/vulnerable-python-pr/base/test_checkout.py",
-      "head_file": "examples/vulnerable-python-pr/weakened-test/test_checkout.py",
-      "base_assertion": "self.assertEqual(discounted_total(10_000, 10), 9_000)",
-      "head_assertion": "self.assertGreater(discounted_total(10_000, 10), 0)",
-      "why_it_matters": "The head assertion only proves the function returns a positive value, not that the 10 percent discount was applied."
+      "name": "base_repo",
+      "value": "examples/vulnerable-python-pr/base",
+      "digest": null
+    },
+    {
+      "name": "head_repo",
+      "value": "examples/vulnerable-python-pr/weakened-test",
+      "digest": null
     }
   ],
+  "outputs": [
+    {
+      "name": "oracle_diff",
+      "path": "target/pramaan-demo/weakened-assertion/oracle-diff.json",
+      "digest": "sha256:285da79e7d8ea7ce01d83341efdddb4412d25e47e69e66839b05dceb910ff1f0"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "oracle_diff_json",
+      "path": "target/pramaan-demo/weakened-assertion/oracle-diff.json",
+      "media_type": "application/json",
+      "digest": "sha256:285da79e7d8ea7ce01d83341efdddb4412d25e47e69e66839b05dceb910ff1f0"
+    }
+  ],
+  "summary": {
+    "title": "Oracle integrity failed",
+    "details": "Discovered 1 base tests, 1 head tests, 0 sensitive artifacts, and 1 oracle findings."
+  },
+  "limitations": [
+    "Oracle weakening detection uses deterministic heuristics for Python and JS/TS test syntax; it is conservative and review-oriented.",
+    "Claim-vs-oracle scope mismatch risks are covered by risk IDs but require claim-scope evidence from adjacent stages for final judgment."
+  ],
   "mitigated_risks": [
+    "R-004",
+    "R-005",
+    "R-006",
+    "R-007",
+    "R-008",
+    "R-009",
+    "R-010",
     "R-011",
+    "R-012",
+    "R-013",
     "R-014",
+    "R-015",
+    "R-016",
+    "R-017",
+    "R-018",
+    "R-019",
+    "R-020",
     "R-087",
-    "R-100"
+    "R-088",
+    "R-089"
   ],
   "residual_risks": [
-    "R-010"
+    "R-014",
+    "R-015",
+    "R-016",
+    "R-020",
+    "R-087"
   ],
-  "not_applicable_risks": []
+  "not_applicable_risks": [],
+  "metadata": {
+    "base_tests": "1",
+    "findings": "1",
+    "head_tests": "1",
+    "sensitive_artifact_findings": "0"
+  }
 }

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest as ShaDigest, Sha256};
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use thiserror::Error;
 
 pub const BUNDLE_SCHEMA_VERSION: &str = "pramaan.bundle.v1";
@@ -348,18 +348,33 @@ pub fn build_manifest(bundle_root: &Path, options: BundleBuildOptions) -> Result
             }
         }
         for artifact in &receipt.artifacts {
+            if artifact.media_type.as_deref() == Some("inode/directory") {
+                continue;
+            }
             if is_file_like_path(&artifact.path) {
                 artifact_candidates.insert(artifact.path.clone());
             }
         }
     }
 
-    let artifacts = artifact_candidates
-        .iter()
-        .filter_map(|path| resolve_reference_path(bundle_root, path))
-        .filter(|path| path.is_file())
-        .map(|path| manifest_ref_for_path(bundle_root, &path, media_type_for_path(&path)))
-        .collect::<Result<Vec<_>>>()?;
+    let mut artifacts = Vec::new();
+    for raw_path in &artifact_candidates {
+        let Some(path) = resolve_reference_path(bundle_root, raw_path)? else {
+            return Err(BundleError::Schema(format!(
+                "receipt-declared artifact {raw_path} was not found in the bundle"
+            )));
+        };
+        if !path.is_file() {
+            return Err(BundleError::Schema(format!(
+                "receipt-declared artifact {raw_path} is not a file"
+            )));
+        }
+        artifacts.push(manifest_ref_for_path(
+            bundle_root,
+            &path,
+            media_type_for_path(&path),
+        )?);
+    }
 
     let final_status = final_status(&stages);
     let summary = BundleSummary {
@@ -711,6 +726,12 @@ fn validate_manifest_shape(manifest: &BundleManifest) -> Result<()> {
                 "manifest references must have non-empty name and path".to_string(),
             ));
         }
+        if !is_safe_relative_manifest_path(&reference.path) {
+            return Err(BundleError::Schema(format!(
+                "{} must be a relative path inside the bundle",
+                reference.path
+            )));
+        }
         if reference.digest.algorithm != "sha256" || reference.digest.value.len() != 64 {
             return Err(BundleError::Schema(format!(
                 "{} must use a sha256 digest with 64 hex characters",
@@ -732,27 +753,67 @@ fn validate_manifest_shape(manifest: &BundleManifest) -> Result<()> {
     Ok(())
 }
 
-fn resolve_reference_path(bundle_root: &Path, raw_path: &str) -> Option<PathBuf> {
+fn is_safe_relative_manifest_path(raw_path: &str) -> bool {
+    let path = Path::new(raw_path);
+    !path.is_absolute()
+        && path
+            .components()
+            .all(|component| matches!(component, Component::Normal(_) | Component::CurDir))
+}
+
+fn resolve_reference_path(bundle_root: &Path, raw_path: &str) -> Result<Option<PathBuf>> {
     let path = Path::new(raw_path);
     if path.is_absolute() && path.exists() {
-        return Some(path.to_path_buf());
+        let canonical_bundle_root =
+            bundle_root
+                .canonicalize()
+                .map_err(|source| BundleError::Io {
+                    path: bundle_root.to_path_buf(),
+                    source,
+                })?;
+        let canonical_path = path.canonicalize().map_err(|source| BundleError::Io {
+            path: path.to_path_buf(),
+            source,
+        })?;
+        if !canonical_path.starts_with(&canonical_bundle_root) {
+            return Err(BundleError::Schema(format!(
+                "{raw_path} must stay inside the bundle root"
+            )));
+        }
+        return Ok(Some(canonical_path));
     }
 
     let direct = bundle_root.join(raw_path);
     if direct.exists() {
-        return Some(direct);
+        return Ok(Some(direct));
     }
 
-    let file_name = path.file_name()?.to_str()?;
-    let by_name = find_file_by_name(bundle_root, file_name)?;
-    Some(by_name)
+    let Some(file_name) = path.file_name().and_then(|name| name.to_str()) else {
+        return Ok(None);
+    };
+    let matches = find_files_by_name(bundle_root, file_name)?;
+    match matches.len() {
+        0 => Ok(None),
+        1 => Ok(matches.into_iter().next()),
+        _ => Err(BundleError::Schema(format!(
+            "{raw_path} is ambiguous inside the bundle; use an exact relative path"
+        ))),
+    }
 }
 
-fn find_file_by_name(root: &Path, file_name: &str) -> Option<PathBuf> {
+fn find_files_by_name(root: &Path, file_name: &str) -> Result<Vec<PathBuf>> {
     let mut pending = vec![root.to_path_buf()];
+    let mut found = Vec::new();
     while let Some(path) = pending.pop() {
-        let entries = fs::read_dir(&path).ok()?;
-        for entry in entries.flatten() {
+        let entries = fs::read_dir(&path).map_err(|source| BundleError::Io {
+            path: path.clone(),
+            source,
+        })?;
+        for entry in entries {
+            let entry = entry.map_err(|source| BundleError::Io {
+                path: path.clone(),
+                source,
+            })?;
             let entry_path = entry.path();
             if entry_path.is_dir() {
                 pending.push(entry_path);
@@ -761,11 +822,11 @@ fn find_file_by_name(root: &Path, file_name: &str) -> Option<PathBuf> {
                 .and_then(|name| name.to_str())
                 .is_some_and(|name| name == file_name)
             {
-                return Some(entry_path);
+                found.push(entry_path);
             }
         }
     }
-    None
+    Ok(found)
 }
 
 fn is_file_like_path(path: &str) -> bool {
@@ -781,6 +842,11 @@ fn media_type_for_path(path: &Path) -> &'static str {
 }
 
 fn portable_relative_path(root: &Path, path: &Path) -> String {
+    if let (Ok(root), Ok(path)) = (root.canonicalize(), path.canonicalize()) {
+        if let Ok(relative) = path.strip_prefix(&root) {
+            return relative.to_string_lossy().replace('\\', "/");
+        }
+    }
     path.strip_prefix(root)
         .unwrap_or(path)
         .to_string_lossy()
@@ -895,6 +961,142 @@ mod tests {
     }
 
     #[test]
+    fn bundle_verification_fails_when_artifact_is_missing() {
+        let root = write_test_bundle("pramaan-missing-artifact-test");
+
+        fs::remove_file(root.join("artifact.json")).expect("remove artifact");
+        let error = verify_bundle(&root).expect_err("missing artifact should fail");
+        assert!(error.to_string().contains("I/O error"));
+
+        fs::remove_dir_all(&root).expect("cleanup temp bundle");
+    }
+
+    #[test]
+    fn build_manifest_fails_when_receipt_declares_missing_file_artifact() {
+        let root = std::env::temp_dir().join(format!(
+            "pramaan-missing-declared-artifact-test-{}",
+            std::process::id()
+        ));
+        if root.exists() {
+            fs::remove_dir_all(&root).expect("clean temp bundle");
+        }
+        fs::create_dir_all(root.join("receipts")).expect("receipt dir");
+
+        let receipt = Receipt::synthetic(
+            "claim_scope",
+            StageStatus::Passed,
+            "HEAD",
+            "HEAD",
+            vec![OutputRef {
+                name: "missing_artifact".to_string(),
+                path: "missing.json".to_string(),
+                digest: None,
+            }],
+            vec![],
+            ReceiptSummary {
+                title: "Synthetic".to_string(),
+                details: "Synthetic receipt.".to_string(),
+            },
+            RiskRefs::sample(),
+        );
+        fs::write(
+            root.join("receipts").join("claim.receipt.json"),
+            serde_json::to_vec_pretty(&receipt).expect("receipt json"),
+        )
+        .expect("write receipt");
+
+        let error = build_manifest(&root, BundleBuildOptions::synthetic("HEAD", "HEAD"))
+            .expect_err("missing declared artifact should fail");
+        assert!(error
+            .to_string()
+            .contains("receipt-declared artifact missing.json was not found"));
+
+        fs::remove_dir_all(&root).expect("cleanup temp bundle");
+    }
+
+    #[test]
+    fn bundle_verification_rejects_manifest_path_escape() {
+        let root = write_test_bundle("pramaan-path-escape-test");
+        let manifest_path = root.join(MANIFEST_FILE_NAME);
+        let mut manifest = read_manifest(&manifest_path).expect("read manifest");
+        manifest.artifacts[0].path = "../artifact.json".to_string();
+        write_manifest(&root, &manifest).expect("write invalid manifest");
+
+        let error = verify_bundle(&root).expect_err("path escape should fail");
+        assert!(error
+            .to_string()
+            .contains("must be a relative path inside the bundle"));
+
+        fs::remove_dir_all(&root).expect("cleanup temp bundle");
+    }
+
+    #[test]
+    fn build_manifest_rejects_duplicate_basename_artifact_resolution() {
+        let root = std::env::temp_dir().join(format!(
+            "pramaan-duplicate-basename-test-{}",
+            std::process::id()
+        ));
+        if root.exists() {
+            fs::remove_dir_all(&root).expect("clean temp bundle");
+        }
+        fs::create_dir_all(root.join("receipts")).expect("receipt dir");
+        fs::create_dir_all(root.join("left")).expect("left dir");
+        fs::create_dir_all(root.join("right")).expect("right dir");
+        fs::write(root.join("left").join("output.json"), br#"{"left":true}"#).expect("left");
+        fs::write(root.join("right").join("output.json"), br#"{"right":true}"#).expect("right");
+
+        let receipt = Receipt::synthetic(
+            "claim_scope",
+            StageStatus::Passed,
+            "HEAD",
+            "HEAD",
+            vec![OutputRef {
+                name: "ambiguous_artifact".to_string(),
+                path: "output.json".to_string(),
+                digest: None,
+            }],
+            vec![],
+            ReceiptSummary {
+                title: "Synthetic".to_string(),
+                details: "Synthetic receipt.".to_string(),
+            },
+            RiskRefs::sample(),
+        );
+        fs::write(
+            root.join("receipts").join("claim.receipt.json"),
+            serde_json::to_vec_pretty(&receipt).expect("receipt json"),
+        )
+        .expect("write receipt");
+
+        let error = build_manifest(&root, BundleBuildOptions::synthetic("HEAD", "HEAD"))
+            .expect_err("duplicate basename should fail");
+        assert!(error.to_string().contains("ambiguous inside the bundle"));
+
+        fs::remove_dir_all(&root).expect("cleanup temp bundle");
+    }
+
+    #[test]
+    fn bundle_verification_fails_after_signing_metadata_tamper() {
+        let root = write_test_bundle("pramaan-signing-tamper-test");
+        let manifest_path = root.join(MANIFEST_FILE_NAME);
+        let mut value: serde_json::Value =
+            serde_json::from_slice(&fs::read(&manifest_path).expect("read manifest"))
+                .expect("manifest json");
+        value["integrity"]["signing"]["note"] =
+            serde_json::Value::String("tampered signing note".to_string());
+        fs::write(
+            &manifest_path,
+            serde_json::to_vec_pretty(&value).expect("manifest bytes"),
+        )
+        .expect("write tampered manifest");
+
+        let error = verify_bundle(&root).expect_err("signing metadata tamper should fail");
+        assert!(error.to_string().contains("manifest digest mismatch"));
+
+        fs::remove_dir_all(&root).expect("cleanup temp bundle");
+    }
+
+    #[test]
     fn manifest_aggregates_phase_16a_trust_hooks() {
         let root =
             std::env::temp_dir().join(format!("pramaan-phase16a-test-{}", std::process::id()));
@@ -989,5 +1191,88 @@ mod tests {
         );
 
         fs::remove_dir_all(&root).expect("cleanup temp bundle");
+    }
+
+    #[test]
+    fn checked_in_receipt_and_bundle_fixtures_are_serde_compatible() {
+        let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(|path| path.parent())
+            .expect("workspace root")
+            .to_path_buf();
+        let examples = workspace.join("examples");
+        let mut receipt_paths = Vec::new();
+        collect_by_suffix(&examples, ".receipt.json", &mut receipt_paths);
+        assert!(!receipt_paths.is_empty(), "expected checked-in receipts");
+
+        for path in receipt_paths {
+            let bytes = fs::read(&path).expect("read receipt fixture");
+            let receipt: Receipt = serde_json::from_slice(&bytes)
+                .unwrap_or_else(|error| panic!("{} should parse: {error}", path.display()));
+            assert_eq!(receipt.schema_version, pramaan_core::RECEIPT_SCHEMA_VERSION);
+        }
+
+        let bundle_fixture = examples.join("fixtures").join("bundle.synthetic.json");
+        let bytes = fs::read(&bundle_fixture).expect("read bundle fixture");
+        let manifest: BundleManifest =
+            serde_json::from_slice(&bytes).expect("bundle fixture should parse");
+        assert_eq!(manifest.schema_version, BUNDLE_SCHEMA_VERSION);
+        assert!(!manifest.agent_attribution.is_empty());
+    }
+
+    fn write_test_bundle(prefix: &str) -> PathBuf {
+        let root = std::env::temp_dir().join(format!("{prefix}-{}", std::process::id()));
+        if root.exists() {
+            fs::remove_dir_all(&root).expect("clean temp bundle");
+        }
+        fs::create_dir_all(root.join("receipts")).expect("receipt dir");
+        fs::write(root.join("artifact.json"), br#"{"ok":true}"#).expect("artifact");
+
+        let receipt = Receipt::synthetic(
+            "claim_scope",
+            StageStatus::Passed,
+            "HEAD",
+            "HEAD",
+            vec![OutputRef {
+                name: "artifact".to_string(),
+                path: "artifact.json".to_string(),
+                digest: None,
+            }],
+            vec![],
+            ReceiptSummary {
+                title: "Synthetic".to_string(),
+                details: "Synthetic receipt.".to_string(),
+            },
+            RiskRefs::sample(),
+        );
+        fs::write(
+            root.join("receipts").join("claim.receipt.json"),
+            serde_json::to_vec_pretty(&receipt).expect("receipt json"),
+        )
+        .expect("write receipt");
+
+        let manifest =
+            build_manifest(&root, BundleBuildOptions::synthetic("HEAD", "HEAD")).expect("manifest");
+        write_manifest(&root, &manifest).expect("write manifest");
+        verify_bundle(&root).expect("valid test bundle verifies");
+        root
+    }
+
+    fn collect_by_suffix(root: &Path, suffix: &str, found: &mut Vec<PathBuf>) {
+        let Ok(entries) = fs::read_dir(root) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                collect_by_suffix(&path, suffix, found);
+            } else if path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.ends_with(suffix))
+            {
+                found.push(path);
+            }
+        }
     }
 }

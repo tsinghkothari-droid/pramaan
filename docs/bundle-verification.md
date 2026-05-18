@@ -20,7 +20,11 @@ Verify a bundle with:
 cargo run -p pramaan-cli -- bundle verify target/pramaan
 ```
 
-The verifier loads `bundle.manifest.json`, validates the v1 manifest shape, recomputes the manifest digest, then recomputes every referenced receipt and artifact hash. Verification fails if the manifest is malformed, a referenced receipt no longer parses as a Pramaan receipt, a referenced file is missing, a file size changes, or a SHA-256 digest differs.
+The verifier loads `bundle.manifest.json`, validates the v1 manifest shape,
+recomputes the manifest digest, then recomputes every referenced receipt and
+artifact hash. Verification fails if the manifest is malformed, a referenced
+receipt no longer parses as a Pramaan receipt, a referenced file is missing, a
+file size changes, or a SHA-256 digest differs.
 
 You can also point directly at the manifest file:
 
@@ -28,4 +32,25 @@ You can also point directly at the manifest file:
 cargo run -p pramaan-cli -- bundle verify target/pramaan/bundle.manifest.json
 ```
 
-Tamper checks are intentionally local and deterministic. If a receipt or artifact is edited after manifest emission, `pramaan bundle verify` exits non-zero and reports the mismatched path.
+Tamper checks are intentionally local and deterministic. If a receipt, artifact,
+or signing metadata field is edited after manifest emission,
+`pramaan bundle verify` exits non-zero and reports the mismatched path or digest.
+
+## Path Policy
+
+Bundle manifest paths must stay inside the bundle root. The verifier rejects
+absolute paths and parent traversal such as `../outside.json` in manifest
+references. During manifest construction, receipt-declared file artifacts must
+exist; missing artifacts are not silently dropped. If a receipt names only a
+basename and multiple files in the bundle share that basename, manifest
+construction fails as ambiguous.
+
+Directory artifacts such as `inode/directory` placeholders can remain in the
+stage receipt, but they are not added as file artifacts to the manifest.
+
+## What Verification Does Not Prove
+
+Local bundle verification proves local self-consistency: manifest digest,
+receipt parsing, file size, and SHA-256 hashes. It does not prove signer identity
+or CI provenance by itself. Sigstore, GitHub artifact attestations, and stronger
+signing verification remain separate hardening paths.
