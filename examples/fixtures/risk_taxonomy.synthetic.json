@@ -1,0 +1,58 @@
+{
+  "schema_version": "pramaan.risk_taxonomy.v1",
+  "taxonomy_id": "risk_taxonomy_synthetic_subset",
+  "source": {
+    "name": "Top 100 Flaws and Mitigations: Pramaan",
+    "path": ".planning/research/TOP_100_FLAWS_AND_MITIGATIONS_2026-05-18.md",
+    "digest": {
+      "algorithm": "sha256",
+      "value": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+  },
+  "risks": [
+    {
+      "risk_id": "R-001",
+      "family": "claim_scope",
+      "flaw": "No explicit PR claim",
+      "trust_break": "Checks cannot know intended behavior.",
+      "mitigation": "Add a claim-scope receipt before execution stages.",
+      "phase_owner": "phase_1",
+      "severity": "high",
+      "requirement_refs": ["SCOP-01", "SCOP-02"],
+      "stage_owners": ["claim_scope"]
+    },
+    {
+      "risk_id": "R-011",
+      "family": "oracle_integrity",
+      "flaw": "Assertion weakened",
+      "trust_break": "A test still exists but no longer proves the intended fix.",
+      "mitigation": "Compare assertion ASTs and classify weaker expectations.",
+      "phase_owner": "phase_3",
+      "severity": "critical",
+      "requirement_refs": ["ORCL-02", "ORCL-03"],
+      "stage_owners": ["oracle_integrity", "demo"]
+    },
+    {
+      "risk_id": "R-038",
+      "family": "static_hallucination",
+      "flaw": "Invented API",
+      "trust_break": "The agent calls a method or symbol that does not exist.",
+      "mitigation": "Static receipts classify invented API evidence when language tooling exposes it.",
+      "phase_owner": "phase_2",
+      "severity": "high",
+      "requirement_refs": ["STAT-04", "STAT-05"],
+      "stage_owners": ["static"]
+    },
+    {
+      "risk_id": "R-090",
+      "family": "bundle_integrity",
+      "flaw": "Bundle missing failed receipts",
+      "trust_break": "Reviewers cannot audit checks that failed or timed out.",
+      "mitigation": "Every planned stage emits a receipt even on failure.",
+      "phase_owner": "phase_1",
+      "severity": "critical",
+      "requirement_refs": ["RCPT-01", "RCPT-02"],
+      "stage_owners": ["bundle"]
+    }
+  ]
+}

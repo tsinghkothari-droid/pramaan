@@ -1,0 +1,19 @@
+[package]
+name = "pramaan-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "pramaan"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+pramaan-bundle = { path = "../pramaan-bundle" }
+pramaan-core = { path = "../pramaan-core" }
+pramaan-sandbox = { path = "../pramaan-sandbox" }
+serde.workspace = true
+serde_json.workspace = true

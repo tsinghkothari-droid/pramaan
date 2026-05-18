@@ -1,0 +1,83 @@
+{
+  "schema_version": "pramaan.bundle.v1",
+  "bundle_id": "bundle_synthetic_001",
+  "run_id": "run_synthetic_001",
+  "created_at": "2026-05-18T17:30:02Z",
+  "final_status": "inconclusive",
+  "repository": {
+    "path": ".",
+    "base_ref": "main",
+    "head_ref": "feature/rounding",
+    "base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "head_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "tool_versions": [
+    {
+      "name": "pramaan-core",
+      "version": "0.1.0-synthetic",
+      "runtime": "fixture"
+    }
+  ],
+  "receipts": [
+    {
+      "name": "receipt.synthetic.json",
+      "path": "examples/fixtures/receipt.synthetic.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "6666666666666666666666666666666666666666666666666666666666666666"
+      },
+      "media_type": "application/json",
+      "size_bytes": 4096
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "claim_scope.synthetic.json",
+      "path": "examples/fixtures/claim_scope.synthetic.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "media_type": "application/json",
+      "size_bytes": 2048
+    },
+    {
+      "name": "risk_taxonomy.synthetic.json",
+      "path": "examples/fixtures/risk_taxonomy.synthetic.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      "media_type": "application/json",
+      "size_bytes": 4096
+    }
+  ],
+  "risk_summary": {
+    "mitigated": ["R-001"],
+    "residual": ["R-002", "R-003", "R-045"],
+    "skipped": [],
+    "not_applicable": ["R-090"]
+  },
+  "summary": {
+    "claim": "Fix invoice rounding for mixed tax rates.",
+    "evidence": [
+      "Synthetic claim-scope receipt produced expected and out-of-scope behavior.",
+      "Bundle references receipts and artifacts by digest for later verification."
+    ],
+    "residual_risk_note": "This fixture is inconclusive because it does not run sandbox, static, oracle, mutation, or differential stages."
+  },
+  "integrity": {
+    "manifest_digest": {
+      "algorithm": "sha256",
+      "value": "8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    "signing": {
+      "mode": "none",
+      "status": "unsigned"
+    },
+    "artifact_attestation": {
+      "provider": "none",
+      "status": "not_requested"
+    }
+  }
+}

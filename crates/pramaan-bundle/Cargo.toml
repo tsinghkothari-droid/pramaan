@@ -1,0 +1,11 @@
+[package]
+name = "pramaan-bundle"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+pramaan-core = { path = "../pramaan-core" }
+serde.workspace = true
+sha2.workspace = true

@@ -1,0 +1,307 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/receipt.schema.json",
+  "title": "Pramaan Stage Receipt",
+  "description": "A versioned receipt describing what one Pramaan stage ran, what evidence it produced, and which risks it mitigated or left open. It is not a correctness proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "run_id",
+    "stage",
+    "status",
+    "tool",
+    "timing",
+    "inputs",
+    "outputs",
+    "artifacts",
+    "summary",
+    "mitigated_risks",
+    "residual_risks",
+    "not_applicable_risks",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "pramaan.receipt.v1"
+    },
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^rcpt_[A-Za-z0-9._-]+$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^run_[A-Za-z0-9._-]+$"
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "category"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "claim_scope",
+            "sandbox",
+            "static",
+            "oracle_integrity",
+            "mutation",
+            "differential_fuzz",
+            "bundle",
+            "smoke",
+            "other"
+          ]
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      }
+    },
+    "status": {
+      "$ref": "#/$defs/stage_status"
+    },
+    "exit_code": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "tool": {
+      "$ref": "#/$defs/tool_identity"
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started_at", "ended_at", "duration_ms"],
+      "properties": {
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ended_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timeout_ms": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence_ref"
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence_ref"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact_ref"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "result", "details"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "type": ["number", "integer", "string", "boolean", "null"]
+          }
+        }
+      }
+    },
+    "mitigated_risks": {
+      "$ref": "#/$defs/risk_id_array"
+    },
+    "residual_risks": {
+      "$ref": "#/$defs/risk_id_array"
+    },
+    "not_applicable_risks": {
+      "$ref": "#/$defs/risk_id_array"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/limitation"
+      }
+    },
+    "claim_scope_ref": {
+      "$ref": "#/$defs/artifact_ref"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["string", "number", "integer", "boolean", "null"]
+      }
+    }
+  },
+  "$defs": {
+    "stage_status": {
+      "type": "string",
+      "enum": [
+        "passed",
+        "failed",
+        "skipped",
+        "not_applicable",
+        "timed_out",
+        "error"
+      ]
+    },
+    "tool_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "vendor": {
+          "type": "string"
+        },
+        "runtime": {
+          "type": "string"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["sha256", "sha512", "blake3"]
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64,128}$"
+        }
+      }
+    },
+    "evidence_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "digest"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["git_ref", "diff", "file", "directory", "config", "claim_scope", "receipt", "artifact", "inline"]
+        },
+        "path": {
+          "type": "string"
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "media_type": {
+          "type": "string"
+        }
+      }
+    },
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path", "digest", "media_type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "risk_id_array": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^R-[0-9]{3}$"
+      }
+    },
+    "limitation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "description", "risk_ids"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "risk_ids": {
+          "$ref": "#/$defs/risk_id_array"
+        }
+      }
+    }
+  }
+}

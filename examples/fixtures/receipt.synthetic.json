@@ -1,0 +1,99 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "receipt_id": "rcpt_synthetic_claim_scope",
+  "run_id": "run_synthetic_001",
+  "stage": {
+    "id": "claim_scope",
+    "name": "Claim Scope Extraction",
+    "category": "claim_scope",
+    "attempt": 1
+  },
+  "status": "passed",
+  "exit_code": 0,
+  "tool": {
+    "name": "pramaan-core",
+    "version": "0.1.0-synthetic",
+    "vendor": "Pramaan",
+    "runtime": "fixture",
+    "command": ["pramaan", "verify", "--base", "main", "--head", "feature/rounding", "--out", "target/pramaan-fixture"]
+  },
+  "timing": {
+    "started_at": "2026-05-18T17:30:00Z",
+    "ended_at": "2026-05-18T17:30:01Z",
+    "duration_ms": 1000,
+    "timeout_ms": 30000
+  },
+  "inputs": [
+    {
+      "name": "pull_request_metadata",
+      "kind": "inline",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "media_type": "application/json"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "claim_scope",
+      "kind": "claim_scope",
+      "path": "examples/fixtures/claim_scope.synthetic.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "media_type": "application/json"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "claim_scope.synthetic.json",
+      "path": "examples/fixtures/claim_scope.synthetic.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "media_type": "application/json",
+      "size_bytes": 2048
+    }
+  ],
+  "summary": {
+    "title": "Synthetic claim scope extracted",
+    "result": "The stage produced a reviewable claim scope for downstream oracle and risk checks.",
+    "details": [
+      "Expected behavior and out-of-scope behavior are explicit.",
+      "Touched public API is recorded for compatibility and oracle alignment checks.",
+      "This receipt records evidence produced by the stage; it does not assert that the code is correct."
+    ],
+    "metrics": {
+      "expected_behavior_count": 2,
+      "out_of_scope_behavior_count": 1,
+      "touched_public_api_count": 1
+    }
+  },
+  "mitigated_risks": ["R-001"],
+  "residual_risks": ["R-002", "R-003", "R-045"],
+  "not_applicable_risks": ["R-090"],
+  "limitations": [
+    {
+      "code": "synthetic_fixture",
+      "description": "Fixture data is deterministic and does not represent a real PR verification run.",
+      "risk_ids": ["R-002"]
+    }
+  ],
+  "claim_scope_ref": {
+    "name": "claim_scope.synthetic.json",
+    "path": "examples/fixtures/claim_scope.synthetic.json",
+    "digest": {
+      "algorithm": "sha256",
+      "value": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    "media_type": "application/json",
+    "size_bytes": 2048
+  },
+  "metadata": {
+    "fixture": true,
+    "claim_discipline": "evidence_not_correctness"
+  }
+}

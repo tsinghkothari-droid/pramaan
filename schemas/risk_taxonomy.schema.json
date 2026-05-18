@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/risk_taxonomy.schema.json",
+  "title": "Pramaan Risk Taxonomy",
+  "description": "A versioned register of stable Pramaan risk IDs used by receipts, bundles, and demo/eval scenarios.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "taxonomy_id", "source", "risks"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "pramaan.risk_taxonomy.v1"
+    },
+    "taxonomy_id": {
+      "type": "string",
+      "pattern": "^risk_taxonomy_[A-Za-z0-9._-]+$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/risk"
+      }
+    }
+  },
+  "$defs": {
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "risk_id",
+        "family",
+        "flaw",
+        "trust_break",
+        "mitigation",
+        "phase_owner",
+        "severity"
+      ],
+      "properties": {
+        "risk_id": {
+          "type": "string",
+          "pattern": "^R-[0-9]{3}$"
+        },
+        "family": {
+          "type": "string",
+          "enum": [
+            "claim_scope",
+            "oracle_integrity",
+            "sandbox_reproducibility",
+            "static_hallucination",
+            "public_api_compatibility",
+            "runtime_behavior",
+            "mutation_quality",
+            "property_fuzz",
+            "formal_critic",
+            "bundle_integrity",
+            "ci_supply_chain",
+            "demo_corpus"
+          ]
+        },
+        "flaw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trust_break": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mitigation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase_owner": {
+          "type": "string",
+          "enum": ["phase_1", "phase_2", "phase_3", "phase_4", "phase_5", "phase_6"]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "requirement_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]{4}-[0-9]{2}$"
+          }
+        },
+        "stage_owners": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "claim_scope",
+              "sandbox",
+              "static",
+              "oracle_integrity",
+              "mutation",
+              "differential_fuzz",
+              "bundle",
+              "github_action",
+              "demo"
+            ]
+          }
+        }
+      }
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["sha256", "sha512", "blake3"]
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64,128}$"
+        }
+      }
+    }
+  }
+}

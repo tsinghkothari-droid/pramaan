@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/claim_scope.schema.json",
+  "title": "Pramaan Claim Scope",
+  "description": "A reviewable model of what a PR claims to change, what it does not claim, and which public APIs appear touched.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "claim_scope_id",
+    "run_id",
+    "source_refs",
+    "expected_behavior",
+    "out_of_scope_behavior",
+    "touched_public_apis",
+    "extraction_method",
+    "confidence",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "pramaan.claim_scope.v1"
+    },
+    "claim_scope_id": {
+      "type": "string",
+      "pattern": "^scope_[A-Za-z0-9._-]+$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^run_[A-Za-z0-9._-]+$"
+    },
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/source_ref"
+      }
+    },
+    "expected_behavior": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/behavior_claim"
+      }
+    },
+    "out_of_scope_behavior": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/behavior_claim"
+      }
+    },
+    "touched_public_apis": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/public_api"
+      }
+    },
+    "extraction_method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "tool", "review_required"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["manual", "pr_metadata", "deterministic", "llm_assisted", "mixed", "synthetic"]
+        },
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "review_required": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "score", "rationale"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/limitation"
+      }
+    },
+    "risk_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^R-[0-9]{3}$"
+      }
+    }
+  },
+  "$defs": {
+    "source_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "title"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["pr_title", "pr_body", "issue", "commit_message", "diff", "user_note", "other"]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uri": {
+          "type": "string"
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "excerpt": {
+          "type": "string"
+        }
+      }
+    },
+    "behavior_claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^B-[0-9]{3}$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "public_api": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["language", "symbol", "kind", "change_type"],
+      "properties": {
+        "language": {
+          "type": "string",
+          "enum": ["python", "typescript", "javascript", "rust", "go", "java", "other"]
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["function", "method", "class", "type", "module", "endpoint", "cli", "config", "other"]
+        },
+        "change_type": {
+          "type": "string",
+          "enum": ["added", "modified", "removed", "renamed", "unknown"]
+        },
+        "file": {
+          "type": "string"
+        }
+      }
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["sha256", "sha512", "blake3"]
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64,128}$"
+        }
+      }
+    },
+    "limitation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "description", "risk_ids"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "risk_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^R-[0-9]{3}$"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/bundle.schema.json",
+  "title": "Pramaan Proof Bundle Manifest",
+  "description": "A manifest that references Pramaan receipts and artifacts by digest and summarizes evidence without reducing risk to a single score.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "bundle_id",
+    "run_id",
+    "created_at",
+    "final_status",
+    "repository",
+    "tool_versions",
+    "receipts",
+    "artifacts",
+    "risk_summary",
+    "summary",
+    "integrity"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "pramaan.bundle.v1"
+    },
+    "bundle_id": {
+      "type": "string",
+      "pattern": "^bundle_[A-Za-z0-9._-]+$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^run_[A-Za-z0-9._-]+$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "final_status": {
+      "type": "string",
+      "enum": ["passed", "failed", "inconclusive", "error"]
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "base_ref", "head_ref"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "base_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "head_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "base_sha": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{7,64}$"
+        },
+        "head_sha": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{7,64}$"
+        }
+      }
+    },
+    "tool_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/tool_identity"
+      }
+    },
+    "receipts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/manifest_ref"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/manifest_ref"
+      }
+    },
+    "risk_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mitigated",
+        "residual",
+        "skipped",
+        "not_applicable"
+      ],
+      "properties": {
+        "mitigated": {
+          "$ref": "#/$defs/risk_id_array"
+        },
+        "residual": {
+          "$ref": "#/$defs/risk_id_array"
+        },
+        "skipped": {
+          "$ref": "#/$defs/risk_id_array"
+        },
+        "not_applicable": {
+          "$ref": "#/$defs/risk_id_array"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim", "evidence", "residual_risk_note"],
+      "properties": {
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "residual_risk_note": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest_digest"],
+      "properties": {
+        "manifest_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "signing": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["mode", "status"],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["none", "local_dev", "sigstore_keyless", "external"]
+            },
+            "status": {
+              "type": "string",
+              "enum": ["unsigned", "signable", "signed", "verified", "unverified"]
+            },
+            "signature_path": {
+              "type": "string"
+            },
+            "certificate_path": {
+              "type": "string"
+            }
+          }
+        },
+        "artifact_attestation": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["provider", "status"],
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": ["github_actions", "sigstore", "slsa", "none", "other"]
+            },
+            "status": {
+              "type": "string",
+              "enum": ["not_requested", "requested", "present", "verified", "unverified"]
+            },
+            "attestation_path": {
+              "type": "string"
+            },
+            "issuer": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "tool_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtime": {
+          "type": "string"
+        }
+      }
+    },
+    "manifest_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path", "digest", "media_type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["sha256", "sha512", "blake3"]
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64,128}$"
+        }
+      }
+    },
+    "risk_id_array": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^R-[0-9]{3}$"
+      }
+    }
+  }
+}

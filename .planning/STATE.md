@@ -6,15 +6,15 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** All six v1 phases are planned; autonomous execution can start at Phase 1
+**Current focus:** Phase 2 - Sandbox and Static Checks
 
 ## Current Phase
 
-Phase 1: Receipt-First CLI Skeleton
+Phase 2: Sandbox and Static Checks
 
 ## Status
 
-All v1 GSD phase packs are created for Phases 1-6, including context, validation strategy, and execution plans. Use `.planning/AUTONOMOUS_BUILD_COMMAND.md` to run the full build sequence without further clarification prompts.
+Phase 1 is implemented and validated: schemas, risk taxonomy, claim scope, Rust workspace, synthetic CLI verify path, smoke test, and receipt/risk docs are in place. Proceeding to Phase 2.
 
 ## Open Questions
 
@@ -34,3 +34,4 @@ All v1 GSD phase packs are created for Phases 1-6, including context, validation
 | 2026-05-18 | Split Phase 1 into schema, CLI/orchestrator, and smoke/docs plans. | This keeps the receipt contract stable before real verification stages are added. |
 | 2026-05-18 | Add top-100 flaw register and risk-ID references to receipts. | Reviewers need risk-family evidence and residual risk, not a single opaque score. |
 | 2026-05-18 | Planned all six v1 phases and added autonomous build command. | The project now has an end-to-end build path from schemas through GitHub Action and demo corpus. |
+| 2026-05-18 | Completed Phase 1 implementation. | The receipt-first skeleton is green under `cargo fmt --check`, `cargo test`, and synthetic CLI smoke verification. |

@@ -1,0 +1,73 @@
+{
+  "schema_version": "pramaan.claim_scope.v1",
+  "claim_scope_id": "scope_synthetic_rounding_fix",
+  "run_id": "run_synthetic_001",
+  "source_refs": [
+    {
+      "kind": "pr_title",
+      "title": "Fix invoice rounding for mixed tax rates",
+      "uri": "https://example.invalid/pr/42",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "excerpt": "Fix invoice rounding for mixed tax rates"
+    },
+    {
+      "kind": "issue",
+      "title": "Incorrect totals when line items use different tax rates",
+      "uri": "https://example.invalid/issues/17",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "excerpt": "Mixed VAT and GST line items should round at the line level before invoice total aggregation."
+    }
+  ],
+  "expected_behavior": [
+    {
+      "id": "B-001",
+      "description": "Invoice totals use line-level rounded tax amounts when line items have mixed tax rates.",
+      "evidence_source_ids": ["pr_title", "issue_17"]
+    },
+    {
+      "id": "B-002",
+      "description": "Existing single-rate invoice totals remain unchanged.",
+      "evidence_source_ids": ["issue_17"]
+    }
+  ],
+  "out_of_scope_behavior": [
+    {
+      "id": "B-003",
+      "description": "This change does not claim to alter currency conversion, discount allocation, or invoice rendering."
+    }
+  ],
+  "touched_public_apis": [
+    {
+      "language": "python",
+      "symbol": "billing.invoice.calculate_total",
+      "kind": "function",
+      "change_type": "modified",
+      "file": "billing/invoice.py"
+    }
+  ],
+  "extraction_method": {
+    "kind": "synthetic",
+    "tool": "pramaan-fixture-author",
+    "review_required": true,
+    "notes": "Synthetic example for schema validation only."
+  },
+  "confidence": {
+    "level": "medium",
+    "score": 0.72,
+    "rationale": "The title and issue agree on the expected behavior, but no human scope note was provided."
+  },
+  "limitations": [
+    {
+      "code": "missing_human_scope_note",
+      "description": "The claim was derived from PR metadata and should be reviewed before gating oracle decisions.",
+      "risk_ids": ["R-002", "R-003"]
+    }
+  ],
+  "risk_refs": ["R-001", "R-002", "R-003", "R-045"]
+}

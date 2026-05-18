@@ -1,8 +1,41 @@
 # Pramaan
 
-Pramaan is a verification system for AI-generated code changes.
+Pramaan is a receipt-first verification system for AI-generated code changes.
 
-It does not claim that code is correct. It creates an auditable proof bundle that shows what was checked, what evidence was produced, and what risks remain.
+It does not claim that code is correct. It creates an auditable proof bundle that
+shows what was checked, what evidence was produced, which risk families were
+mitigated, and which risks remain.
+
+## Quickstart
+
+From the repository root:
+
+```powershell
+cargo run -p pramaan-cli -- verify --base HEAD --head HEAD --out target/pramaan-smoke
+```
+
+The Phase 1 CLI writes a synthetic bundle directory:
+
+```text
+target/pramaan-smoke/
+  claim_scope.synthetic.json
+  receipts/
+    claim-scope.receipt.json
+    synthetic-verification.receipt.json
+```
+
+The terminal summary reports stage status and risk families as separate
+mitigated, residual, and skipped buckets. It intentionally avoids a single
+confidence score because Pramaan's job is to leave an auditable ledger, not to
+hide uncertainty behind one number.
+
+Phase 1 validation:
+
+```powershell
+cargo fmt --check
+cargo test
+cargo run -p pramaan-cli -- verify --base HEAD --head HEAD --out target/pramaan-smoke
+```
 
 ## Why This Exists
 
@@ -59,6 +92,19 @@ Pramaan does not say:
 > This code is definitely correct.
 
 That distinction is the product.
+
+Each receipt should be read as a bounded claim about a stage: what ran, what it
+observed, which artifacts back that observation, and which risk IDs remain open
+or out of scope. A passed receipt is useful review evidence; it is not a general
+proof of program behavior.
+
+## Receipt Model
+
+See [docs/receipt-model.md](docs/receipt-model.md) for how claim scope,
+receipts, artifacts, and the bundle manifest fit together.
+
+See [docs/risk-taxonomy.md](docs/risk-taxonomy.md) for how Pramaan maps the
+top-100 flaw register into stable risk IDs and family summaries.
 
 ## Planned v1 Pipeline
 
