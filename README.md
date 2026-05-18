@@ -2,7 +2,7 @@
 
 **Verification infrastructure for AI-authored pull requests.**
 
-![Pramaan portal lab hero](assets/readme/pramaan-portal-hero.svg)
+![Pramaan portal lab hero](assets/readme/pramaan-generated-hero.png)
 
 AI coding agents are becoming fast enough to write a meaningful share of the
 world's software. The bottleneck is no longer generation. The bottleneck is
