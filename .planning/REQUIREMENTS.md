@@ -17,6 +17,14 @@
 - [ ] **RCPT-02**: Receipt includes stage name, tool name/version, input hashes, start/end time, exit code/status, summary, and artifact paths.
 - [ ] **RCPT-03**: Receipt and bundle schemas are versioned and committed under `schemas/`.
 - [ ] **RCPT-04**: Bundle manifest references every receipt and artifact by content hash.
+- [ ] **RCPT-05**: Every receipt can reference mitigated, residual, and not-applicable risk IDs from the Pramaan risk taxonomy.
+
+### Risk Intelligence
+
+- [ ] **RISK-01**: Repository contains a top-100 flaw register with concrete mitigation and phase ownership for every flaw.
+- [ ] **RISK-02**: Risk taxonomy schema is versioned so receipts and bundles can reference stable risk IDs.
+- [ ] **RISK-03**: CLI and bundle summaries show mitigated, residual, skipped, and not-applicable risk families without collapsing them into one opaque score.
+- [ ] **RISK-04**: Demo/eval corpus maps scenarios to risk IDs so every recurring failure becomes a reusable regression artifact.
 
 ### Claim Scope
 
@@ -113,6 +121,11 @@
 | RCPT-02 | Phase 1 | Pending |
 | RCPT-03 | Phase 1 | Pending |
 | RCPT-04 | Phase 5 | Pending |
+| RCPT-05 | Phase 1 | Pending |
+| RISK-01 | Phase 1 | Pending |
+| RISK-02 | Phase 1 | Pending |
+| RISK-03 | Phase 5 | Pending |
+| RISK-04 | Phase 6 | Pending |
 | SCOP-01 | Phase 1 | Pending |
 | SCOP-02 | Phase 1 | Pending |
 | SCOP-03 | Phase 3 | Pending |
@@ -151,10 +164,10 @@
 | DEMO-03 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 43 total
-- Mapped to phases: 43
+- v1 requirements: 48 total
+- Mapped to phases: 48
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-18*
-*Last updated: 2026-05-18 after improvement research*
+*Last updated: 2026-05-18 after top-100 flaw research*

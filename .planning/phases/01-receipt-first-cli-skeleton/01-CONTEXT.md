@@ -16,6 +16,8 @@ pramaan verify --base <ref> --head <ref> --out <dir>
 ```
 
 and produce at least one schema-valid synthetic receipt plus a concise terminal summary.
+
+After the top-100 flaw research pass, Phase 1 also owns the first risk-intelligence contract: receipts and bundles must be able to reference stable risk IDs such as `R-001` and `R-090`.
 </domain>
 
 <decisions>
@@ -26,6 +28,7 @@ and produce at least one schema-valid synthetic receipt plus a concise terminal 
 - Use a Rust workspace with `crates/pramaan-cli`, `crates/pramaan-core`, `crates/pramaan-sandbox`, and `crates/pramaan-bundle`.
 - Use JSON receipts and JSON Schema under `schemas/`.
 - Include a `claim_scope` schema in Phase 1 because downstream oracle integrity depends on knowing what behavior the PR claims to change.
+- Include a `risk_taxonomy` schema in Phase 1 because downstream receipts need stable references for mitigated and residual risks.
 - Use content-addressed artifact references in schema design even if Phase 1 only emits synthetic artifacts.
 - The CLI should distinguish `passed`, `failed`, `skipped`, `not_applicable`, `timed_out`, and `error`.
 - Do not add real language plugins in Phase 1 beyond directory/protocol placeholders.
@@ -42,7 +45,9 @@ and produce at least one schema-valid synthetic receipt plus a concise terminal 
 ## Specific Ideas
 
 - Receipt fields should include `schema_version`, `stage`, `status`, `tool`, `started_at`, `ended_at`, `inputs`, `outputs`, `summary`, `artifacts`, and `limitations`.
+- Receipt fields should include `mitigated_risks`, `residual_risks`, and `not_applicable_risks`.
 - Claim scope fields should include `source_refs`, `expected_behavior`, `out_of_scope_behavior`, `touched_public_apis`, `confidence`, and `extraction_method`.
+- Risk taxonomy fields should include `risk_id`, `family`, `flaw`, `mitigation`, `phase_owner`, and `severity`.
 - Bundle manifest should anticipate later Sigstore/GitHub attestation metadata without requiring live signing in Phase 1.
 - CLI output should be boring and auditable: stage table plus bundle path.
 </specifics>

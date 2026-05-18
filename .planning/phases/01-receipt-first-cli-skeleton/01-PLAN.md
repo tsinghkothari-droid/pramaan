@@ -7,15 +7,20 @@ depends_on: []
 files_modified:
   - schemas/receipt.schema.json
   - schemas/claim_scope.schema.json
+  - schemas/risk_taxonomy.schema.json
   - schemas/bundle.schema.json
   - examples/fixtures/receipt.synthetic.json
   - examples/fixtures/claim_scope.synthetic.json
+  - examples/fixtures/risk_taxonomy.synthetic.json
   - examples/fixtures/bundle.synthetic.json
 autonomous: true
 requirements:
   - RCPT-01
   - RCPT-02
   - RCPT-03
+  - RCPT-05
+  - RISK-01
+  - RISK-02
   - SCOP-01
   - SCOP-02
 ---
@@ -29,8 +34,9 @@ Define Pramaan's v1 evidence model before implementation details harden. The rec
 ## Must Haves
 
 - Receipt schema supports all normalized statuses: `passed`, `failed`, `skipped`, `not_applicable`, `timed_out`, `error`.
-- Receipt schema includes tool identity, inputs, outputs, artifact references, timing, summary, and limitations.
+- Receipt schema includes tool identity, inputs, outputs, artifact references, timing, summary, limitations, and risk ID arrays.
 - Claim-scope schema supports PR/issue source refs, expected behavior, out-of-scope behavior, touched public APIs, extraction method, and confidence.
+- Risk taxonomy schema supports stable `R-###` IDs, family, flaw, mitigation, phase owner, and severity.
 - Bundle schema references receipts/artifacts by digest and has a placeholder for future signing/attestation metadata.
 - Synthetic fixtures validate against schemas.
 
@@ -45,15 +51,19 @@ Create `schemas/claim_scope.schema.json` that models expected behavior, excluded
 </task>
 
 <task id="1-01-03">
-Create `schemas/bundle.schema.json` that aggregates receipts, artifacts, tool versions, final status, and optional signing or artifact-attestation metadata.
+Create `schemas/risk_taxonomy.schema.json` using the top-100 flaw register as the source of stable risk IDs.
 </task>
 
 <task id="1-01-04">
-Add synthetic JSON fixtures under `examples/fixtures/` for receipt, claim scope, and bundle.
+Create `schemas/bundle.schema.json` that aggregates receipts, artifacts, risk summaries, tool versions, final status, and optional signing or artifact-attestation metadata.
 </task>
 
 <task id="1-01-05">
-Document schema intent in fixture comments or adjacent README text without claiming code correctness.
+Add synthetic JSON fixtures under `examples/fixtures/` for receipt, claim scope, risk taxonomy, and bundle.
+</task>
+
+<task id="1-01-06">
+Document schema intent in fixture comments or adjacent README text without claiming code correctness or emitting a single opaque risk score.
 </task>
 
 ## Verification

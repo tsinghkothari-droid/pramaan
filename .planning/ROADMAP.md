@@ -2,13 +2,13 @@
 
 **Created:** 2026-05-18
 **Granularity:** Coarse
-**v1 Requirements:** 43 mapped
+**v1 Requirements:** 48 mapped
 
 ## Phase 1: Receipt-First CLI Skeleton
 
-**Goal:** Create the project skeleton, CLI entry point, schemas, claim-scope model, and orchestrator contract so every future stage can emit auditable receipts.
+**Goal:** Create the project skeleton, CLI entry point, schemas, risk taxonomy, claim-scope model, and orchestrator contract so every future stage can emit auditable receipts tied to known risk IDs.
 
-**Requirements:** CLI-01, CLI-02, CLI-03, RCPT-01, RCPT-02, RCPT-03, SCOP-01, SCOP-02
+**Requirements:** CLI-01, CLI-02, CLI-03, RCPT-01, RCPT-02, RCPT-03, RCPT-05, RISK-01, RISK-02, SCOP-01, SCOP-02
 
 **Success Criteria:**
 
@@ -18,6 +18,7 @@
 4. Terminal summary distinguishes pass, fail, skipped, and not-applicable statuses.
 5. Rust workspace and plugin directory skeleton match the intended architecture.
 6. Claim-scope schema can represent expected behavior, out-of-scope behavior, touched public APIs, and confidence.
+7. Risk taxonomy schema and top-100 flaw register exist, and synthetic receipts can reference risk IDs.
 
 ## Phase 2: Sandbox and Static Checks
 
@@ -69,7 +70,7 @@
 
 **Goal:** Turn receipts into a durable, verifiable proof bundle with manifest, hashes, and local signing/signable output.
 
-**Requirements:** RCPT-04, BNDL-01, BNDL-02, BNDL-03, BNDL-04
+**Requirements:** RCPT-04, RISK-03, BNDL-01, BNDL-02, BNDL-03, BNDL-04
 
 **Success Criteria:**
 
@@ -79,12 +80,13 @@
 4. `pramaan bundle verify <path>` validates manifest, hashes, and signature/signable metadata.
 5. Bundle summary uses accurate language and avoids correctness-proof claims.
 6. Bundle manifest can carry GitHub artifact attestation metadata when available.
+7. Bundle summary shows mitigated, residual, skipped, and not-applicable risk families without one opaque score.
 
 ## Phase 6: GitHub Action and Public Demo Loop
 
 **Goal:** Make Pramaan usable on pull requests and package the killer demo as a repeatable proof of value.
 
-**Requirements:** GHAC-01, GHAC-02, GHAC-03, GHAC-04, DEMO-01, DEMO-02, DEMO-03
+**Requirements:** GHAC-01, GHAC-02, GHAC-03, GHAC-04, RISK-04, DEMO-01, DEMO-02, DEMO-03
 
 **Success Criteria:**
 
@@ -95,19 +97,20 @@
 5. Demo repository includes the weakened-test AI-fix scenario.
 6. Demo documentation shows normal CI green and Pramaan red.
 7. Demo proof bundle can be inspected in under 30 seconds.
+8. Demo/eval scenarios map to risk IDs from the top-100 flaw register.
 
 ## Coverage
 
 | Phase | Requirements | Count |
 |-------|--------------|-------|
-| Phase 1 | CLI-01, CLI-02, CLI-03, RCPT-01, RCPT-02, RCPT-03, SCOP-01, SCOP-02 | 8 |
+| Phase 1 | CLI-01, CLI-02, CLI-03, RCPT-01, RCPT-02, RCPT-03, RCPT-05, RISK-01, RISK-02, SCOP-01, SCOP-02 | 11 |
 | Phase 2 | SNDB-01, SNDB-02, SNDB-03, STAT-01, STAT-02, STAT-03, STAT-04, STAT-05 | 8 |
 | Phase 3 | SCOP-03, ORCL-01, ORCL-02, ORCL-03, ORCL-04, ORCL-05 | 6 |
 | Phase 4 | MUTN-01, MUTN-02, MUTN-03, MUTN-04, MUTN-05, FUZZ-01, FUZZ-02, FUZZ-03, FUZZ-04 | 9 |
-| Phase 5 | RCPT-04, BNDL-01, BNDL-02, BNDL-03, BNDL-04 | 5 |
-| Phase 6 | GHAC-01, GHAC-02, GHAC-03, GHAC-04, DEMO-01, DEMO-02, DEMO-03 | 7 |
+| Phase 5 | RCPT-04, RISK-03, BNDL-01, BNDL-02, BNDL-03, BNDL-04 | 6 |
+| Phase 6 | GHAC-01, GHAC-02, GHAC-03, GHAC-04, RISK-04, DEMO-01, DEMO-02, DEMO-03 | 8 |
 
-**Total mapped:** 43 / 43
+**Total mapped:** 48 / 48
 
 ---
-*Roadmap updated: 2026-05-18 after improvement research*
+*Roadmap updated: 2026-05-18 after top-100 flaw research*

@@ -12,10 +12,12 @@ files_modified:
   - crates/pramaan-core/src/lib.rs
   - README.md
   - docs/receipt-model.md
+  - docs/risk-taxonomy.md
 autonomous: true
 requirements:
   - CLI-03
   - RCPT-03
+  - RISK-01
 ---
 
 # Plan 03 - Smoke Tests, Summary Output, and Phase Docs
@@ -27,9 +29,11 @@ Make the Phase 1 skeleton demonstrably usable: schema fixtures validate, the CLI
 ## Must Haves
 
 - CLI prints a compact summary with stage name, status, and output bundle path.
+- CLI summary shows risk families as mitigated/residual/skipped without a single opaque score.
 - Smoke test exercises the CLI verify path.
 - README shows the intended command and carefully describes Pramaan as an auditable proof bundle, not a correctness proof.
 - `docs/receipt-model.md` explains how receipts, claim scope, and bundle manifest relate.
+- `docs/risk-taxonomy.md` explains how the top-100 flaw register maps to receipt risk IDs.
 - Phase 1 validation commands are documented and green.
 
 ## Tasks
@@ -51,6 +55,10 @@ Create README quickstart and `docs/receipt-model.md` with claim-disciplined lang
 </task>
 
 <task id="1-03-05">
+Create `docs/risk-taxonomy.md` explaining the top-100 risk model and how stage receipts reference risk IDs.
+</task>
+
+<task id="1-03-06">
 Run the full validation suite and update Phase 1 notes if any commands differ from the validation strategy.
 </task>
 

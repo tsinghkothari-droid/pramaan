@@ -40,6 +40,7 @@ created: 2026-05-18
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
 | 1-01-01 | 01 | 0 | RCPT-03 | schema | `cargo test -p pramaan-core schema_fixtures` | W0 | pending |
 | 1-01-02 | 01 | 0 | SCOP-02 | schema | `cargo test -p pramaan-core schema_fixtures` | W0 | pending |
+| 1-01-03 | 01 | 0 | RISK-02 | schema | `cargo test -p pramaan-core schema_fixtures` | W0 | pending |
 | 1-02-01 | 02 | 1 | CLI-01 | smoke | `cargo run -p pramaan-cli -- verify --base HEAD --head HEAD --out target/pramaan-smoke` | W1 | pending |
 | 1-02-02 | 02 | 1 | RCPT-01 | unit | `cargo test -p pramaan-core receipt_writer` | W1 | pending |
 | 1-03-01 | 03 | 2 | CLI-03 | smoke | `cargo test -p pramaan-cli summary` | W2 | pending |
@@ -51,9 +52,11 @@ created: 2026-05-18
 
 - [ ] `schemas/receipt.schema.json`
 - [ ] `schemas/claim_scope.schema.json`
+- [ ] `schemas/risk_taxonomy.schema.json`
 - [ ] `schemas/bundle.schema.json`
 - [ ] `examples/fixtures/receipt.synthetic.json`
 - [ ] `examples/fixtures/claim_scope.synthetic.json`
+- [ ] `examples/fixtures/risk_taxonomy.synthetic.json`
 - [ ] `Cargo.toml` workspace scaffold
 
 ---
