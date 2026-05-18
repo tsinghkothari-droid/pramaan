@@ -1,0 +1,31 @@
+# State: Pramaan
+
+## Project Reference
+
+See: `.planning/PROJECT.md` (updated 2026-05-18)
+
+**Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
+
+**Current focus:** Phase 1 - Receipt-First CLI Skeleton
+
+## Current Phase
+
+Phase 1: Receipt-First CLI Skeleton
+
+## Status
+
+Project initialized. Ready for `$gsd-discuss-phase 1` or `$gsd-plan-phase 1`.
+
+## Open Questions
+
+- Exact v1 demo language: Python first is recommended, TypeScript also viable.
+- Whether to create a real monorepo skeleton immediately in Phase 1 or keep planning docs first until phase discussion.
+- Whether initial signing should be pure local signing metadata or a Sigstore-compatible placeholder.
+
+## Recent Decisions
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-05-18 | Narrow v1 to CLI, receipts, sandbox, static, oracle, mutation, differential fuzz, and bundle signing. | Reliability beats stage breadth for first trustable release. |
+| 2026-05-18 | Delay adversarial amplification, formal, and dual critic to v2. | They are valuable but should not block a usable proof bundle. |
+| 2026-05-18 | Make the first demo about test weakening. | It is the clearest user-facing proof that ordinary CI is insufficient. |
