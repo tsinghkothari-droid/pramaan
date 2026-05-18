@@ -112,6 +112,115 @@
 3. Starter adapter risk register exists for MCP/agent tool failure modes.
 4. Example adapter certification receipt fixture maps findings to stable adapter risk IDs.
 
+## Phase 8: Killer Demo and Proof Bundles
+
+**Goal:** Create undeniable public demos where normal CI passes but Pramaan catches weakened tests, oracle drift, or hallucinated code evidence.
+
+**Requirements:** DEMO-04, DEMO-05, DEMO-06, RISK-05
+
+**Success Criteria:**
+
+1. Weakened-test demo passes ordinary CI and fails Pramaan with a precise oracle receipt.
+2. Snapshot/fixture drift demo produces a clear oracle-sensitive receipt.
+3. Static/hallucination demo maps invented code to a stable risk ID.
+4. Generated proof bundles can be inspected and verified.
+5. Demo documentation explains the value in under 30 seconds.
+
+## Phase 9: Receipt and Bundle Trust Hardening
+
+**Goal:** Freeze the first receipt/bundle contract and add compatibility, golden, and tamper tests.
+
+**Requirements:** RCPT-06, RCPT-07, BNDL-05, BNDL-06
+
+**Success Criteria:**
+
+1. Receipt schema version `0.1` has documented compatibility rules.
+2. Checked-in fixtures are validated by schema compatibility tests.
+3. Golden tests detect accidental receipt shape changes.
+4. Bundle verification catches missing artifacts, changed receipts, changed manifests, and changed signing metadata.
+
+## Phase 10: GitHub Action Production Readiness
+
+**Goal:** Make Pramaan usable as a serious pull-request GitHub Action.
+
+**Requirements:** GHAC-05, GHAC-06, GHAC-07, GHAC-08
+
+**Success Criteria:**
+
+1. Action installs or downloads the CLI deterministically.
+2. Action exposes stable inputs for refs, output path, failure policy, and bundle upload.
+3. Action uploads bundles and renders reviewer-focused PR summaries.
+4. Forked-PR permissions and failure modes are documented.
+
+## Phase 11: Sandbox, Claim Scope, and Static Depth
+
+**Goal:** Produce practical environment, claim-scope, and static evidence for real Python, TypeScript, and Rust repositories.
+
+**Requirements:** SNDB-04, SNDB-05, SCOP-04, SCOP-05, STAT-06, STAT-07
+
+**Success Criteria:**
+
+1. Environment receipts include OS, architecture, timezone, locale, toolchains, commits, dirty state, and lockfile hashes.
+2. Container image and network-policy evidence is captured when available.
+3. PR title/body, linked issue context, and changed public APIs feed claim-scope receipts.
+4. Python, TypeScript, and Rust static tools run when configured and skip honestly when absent.
+5. Hallucination failures are classified with stable categories.
+
+## Phase 12: Oracle Integrity Engine
+
+**Goal:** Detect realistic test-oracle tampering across Python, TypeScript, and Rust.
+
+**Requirements:** ORCL-06, ORCL-07, ORCL-08, ORCL-09
+
+**Success Criteria:**
+
+1. Python pytest assertion, skip, xfail, raises, and parametrized-case changes are detected.
+2. Jest/Vitest expectation weakening is detected.
+3. Rust assertion and snapshot weakening is detected.
+4. Deleted/renamed tests are tracked through stable fingerprints.
+5. Fixture, snapshot, boundary-case, and error-case removals produce clear reviewer summaries.
+
+## Phase 13: Mutation and Differential Fuzz Adapters
+
+**Goal:** Wrap real mutation and property-testing tools with budgets, replay metadata, and honest skipped/timeout receipts.
+
+**Requirements:** MUTN-06, MUTN-07, FUZZ-05, FUZZ-06
+
+**Success Criteria:**
+
+1. mutmut, StrykerJS, and cargo-mutants adapters run on changed scopes.
+2. Mutation receipts record mutant counts, thresholds, timeouts, cache state, and filtering mode.
+3. Hypothesis and fast-check differential checks run for eligible pure functions.
+4. Fuzz receipts include seeds, replay data, minimized counterexamples, corpus hashes, and divergence classification.
+
+## Phase 14: Attestation, Corpus, and Evals
+
+**Goal:** Make proof bundles durable and measurable through signing/attestation plus adversarial evaluation.
+
+**Requirements:** BNDL-07, BNDL-08, EVAL-01, EVAL-02
+
+**Success Criteria:**
+
+1. Sigstore and GitHub artifact attestation paths are available.
+2. Bundle manifests map cleanly to in-toto/SLSA-compatible predicates.
+3. Offline verification works for downloaded bundles.
+4. Adversarial corpus reaches 100+ risk-mapped scenarios.
+5. Benchmark reports track false positives, false negatives, runtime, and reviewer time-to-understand.
+
+## Phase 15: Documentation, Language Expansion, and Adapter Gates
+
+**Goal:** Prepare Pramaan for external adoption while keeping PR verification as the primary product.
+
+**Requirements:** DOCS-01, DOCS-02, LANG-01, LANG-02, ADPT-05
+
+**Success Criteria:**
+
+1. Operator, plugin-author, security-model, threat-model, enterprise-deployment, and troubleshooting guides exist.
+2. PR-summary and bundle-inspection examples are rendered for reviewers.
+3. Python, TypeScript, and Rust plugin readiness gates are defined.
+4. Go and Java support wait for protocol stability and first-language depth.
+5. Adapter certification remains bounded and does not distract from core PR verification.
+
 ## Coverage
 
 | Phase | Requirements | Count |
@@ -123,8 +232,16 @@
 | Phase 5 | RCPT-04, RISK-03, BNDL-01, BNDL-02, BNDL-03, BNDL-04 | 6 |
 | Phase 6 | GHAC-01, GHAC-02, GHAC-03, GHAC-04, RISK-04, DEMO-01, DEMO-02, DEMO-03 | 8 |
 | Phase 7 | ADPT-01, ADPT-02, ADPT-03, ADPT-04 | 4 |
+| Phase 8 | DEMO-04, DEMO-05, DEMO-06, RISK-05 | 4 |
+| Phase 9 | RCPT-06, RCPT-07, BNDL-05, BNDL-06 | 4 |
+| Phase 10 | GHAC-05, GHAC-06, GHAC-07, GHAC-08 | 4 |
+| Phase 11 | SNDB-04, SNDB-05, SCOP-04, SCOP-05, STAT-06, STAT-07 | 6 |
+| Phase 12 | ORCL-06, ORCL-07, ORCL-08, ORCL-09 | 4 |
+| Phase 13 | MUTN-06, MUTN-07, FUZZ-05, FUZZ-06 | 4 |
+| Phase 14 | BNDL-07, BNDL-08, EVAL-01, EVAL-02 | 4 |
+| Phase 15 | DOCS-01, DOCS-02, LANG-01, LANG-02, ADPT-05 | 5 |
 
-**Total mapped:** 52 / 52
+**Total mapped:** 87 / 87
 
 ---
-*Roadmap updated: 2026-05-18 after top-100 flaw research*
+*Roadmap updated: 2026-05-19 after Serious v1 task planning*

@@ -6,15 +6,15 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** v1 autonomous build complete through Phase 7
+**Current focus:** Serious v1 planning complete through Phase 15
 
 ## Current Phase
 
-Phase 7: Adapter Certification Expansion
+Phase 8: Killer Demo and Proof Bundles
 
 ## Status
 
-Phases 1-7 are implemented and validated. Pramaan now has a Rust CLI, receipt/risk/claim/bundle schemas, sandbox/static/oracle/mutation/fuzz/bundle/GitHub Action paths, public demo/corpus, and a bounded adapter-certification expansion pack.
+Phases 1-7 are implemented and validated. Phases 8-15 are now planned as the Serious v1 execution path: killer demos, receipt/bundle hardening, GitHub Action readiness, sandbox/claim/static depth, oracle integrity, mutation/fuzz adapters, attestation/corpus/evals, and adoption/language/adapter gates.
 
 ## Open Questions
 
@@ -41,3 +41,5 @@ Phases 1-7 are implemented and validated. Pramaan now has a Rust CLI, receipt/ri
 | 2026-05-18 | Completed Phase 5 implementation. | Bundle verification and signing/attestation metadata are green under full workspace tests and CLI manifest verification. |
 | 2026-05-18 | Completed Phase 6 implementation. | GitHub Action, demo docs, and starter adversarial corpus are green under Node tests, Rust tests, and demo oracle verification. |
 | 2026-05-18 | Completed Phase 7 implementation. | Adapter certification docs, schema, fixture, and risk register are in place while registry/Sutra remain deferred. |
+| 2026-05-19 | Made the GitHub repository public. | Pramaan needs public proof, public research grounding, and public demo credibility. |
+| 2026-05-19 | Added Serious v1 GSD plans for Phases 8-15. | The marketing README now has an execution map behind it, with P0/P1/P2/P3 tasks converted into phase plans. |
