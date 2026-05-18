@@ -1,10 +1,19 @@
-# Pramaan Python Plugin
+# Pramaan Python Static Adapter
 
-This directory is reserved for the future Python verification plugin.
+Phase 2 static skeleton implemented by `pramaan static-checks`.
 
-Phase 1 does not implement real Python checks. The intended boundary is:
+Discovery:
 
-- run configured Python compile, type, lint, mutation, and differential checks;
-- convert tool output into Pramaan stage receipts;
-- report skipped or not-applicable checks explicitly when tooling is absent;
-- never replace execution evidence with an LLM-only judgment.
+- `compileall`: applicable when `*.py` files are present; command is
+  `python -m compileall -q .`.
+- `ruff`: applicable only when Ruff config is found in `pyproject.toml`,
+  `ruff.toml`, or `.ruff.toml`; command is `ruff check .`.
+- `mypy`: applicable only when Mypy config is found in `pyproject.toml`,
+  `mypy.ini`, or `.mypy.ini`; command is `mypy .`.
+
+Receipt behavior:
+
+- no Python files => `not_applicable`;
+- configured check with missing executable => `skipped` with residual risk;
+- command failure => `failed`, with broken import or undefined symbol metadata
+  when diagnostics support that classification.

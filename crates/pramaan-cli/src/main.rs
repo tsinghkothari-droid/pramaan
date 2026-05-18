@@ -4,9 +4,12 @@ use pramaan_bundle::sha256_hex;
 use pramaan_core::{
     risk_family, ArtifactRef, ClaimScope, OutputRef, Receipt, ReceiptSummary, RiskRefs, StageStatus,
 };
+use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+mod static_checks;
 
 #[derive(Debug, Parser)]
 #[command(name = "pramaan")]
@@ -19,6 +22,7 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Commands {
     Verify(VerifyArgs),
+    StaticChecks(StaticChecksArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -31,11 +35,20 @@ struct VerifyArgs {
     out: PathBuf,
 }
 
+#[derive(Debug, Parser)]
+struct StaticChecksArgs {
+    #[arg(long, default_value = ".")]
+    repo: PathBuf,
+    #[arg(long, default_value = "target/pramaan/static")]
+    out: PathBuf,
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
         Commands::Verify(args) => run_verify(args),
+        Commands::StaticChecks(args) => static_checks::run_static_checks(args.repo, args.out),
     }
 }
 
@@ -75,6 +88,85 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     );
     write_json(&claim_receipt_path, &claim_receipt)?;
 
+    let sandbox_dir = args.out.join("sandbox");
+    let mut sandbox_runner = SandboxRunner::new(
+        std::env::current_dir().context("resolving current repository directory")?,
+        &sandbox_dir,
+    );
+    if let Ok(image_digest) = std::env::var("PRAMAAN_IMAGE_DIGEST") {
+        if !image_digest.trim().is_empty() {
+            sandbox_runner = sandbox_runner.with_image_digest(image_digest);
+        }
+    }
+    let sandbox_run = sandbox_runner
+        .prepare(&SandboxPlan::isolated_worktree(&args.base, &args.head))
+        .context("preparing isolated base/head sandbox worktrees")?;
+    let sandbox_evidence_path = sandbox_dir.join("sandbox-evidence.json");
+    write_json(&sandbox_evidence_path, &sandbox_run.evidence)?;
+    let sandbox_evidence_digest = digest_file(&sandbox_evidence_path)?;
+
+    let sandbox_receipt_path = receipt_dir.join("sandbox-setup.receipt.json");
+    let sandbox_receipt = Receipt {
+        schema_version: pramaan_core::RECEIPT_SCHEMA_VERSION.to_string(),
+        stage: "sandbox_setup".to_string(),
+        status: StageStatus::Passed,
+        tool: pramaan_core::ToolIdentity::new("pramaan-sandbox", env!("CARGO_PKG_VERSION")),
+        started_at: claim_receipt.ended_at.clone(),
+        ended_at: claim_receipt.ended_at.clone(),
+        exit_code: Some(0),
+        inputs: vec![
+            pramaan_core::InputRef {
+                name: "base".to_string(),
+                value: args.base.clone(),
+                digest: Some(sandbox_run.evidence.base.commit_sha.clone()),
+            },
+            pramaan_core::InputRef {
+                name: "head".to_string(),
+                value: args.head.clone(),
+                digest: Some(sandbox_run.evidence.head.commit_sha.clone()),
+            },
+        ],
+        outputs: vec![OutputRef {
+            name: "sandbox_evidence".to_string(),
+            path: portable_path(&sandbox_evidence_path),
+            digest: Some(sandbox_evidence_digest),
+        }],
+        artifacts: vec![ArtifactRef {
+            name: "sandbox_evidence_json".to_string(),
+            path: portable_path(&sandbox_evidence_path),
+            media_type: Some("application/json".to_string()),
+            digest: None,
+        }],
+        summary: ReceiptSummary {
+            title: "Sandbox worktrees prepared".to_string(),
+            details: format!(
+                "Base {} and head {} were materialized into isolated worktrees; hermetic={}.",
+                sandbox_run.evidence.base.commit_sha,
+                sandbox_run.evidence.head.commit_sha,
+                sandbox_run.evidence.hermetic
+            ),
+        },
+        limitations: sandbox_run.evidence.limitations.clone(),
+        mitigated_risks: sandbox_run.evidence.mitigated_risks.clone(),
+        residual_risks: sandbox_run.evidence.residual_risks.clone(),
+        not_applicable_risks: sandbox_run.evidence.not_applicable_risks.clone(),
+        metadata: BTreeMap::from([
+            (
+                "base_worktree".to_string(),
+                sandbox_run.evidence.base.path.clone(),
+            ),
+            (
+                "head_worktree".to_string(),
+                sandbox_run.evidence.head.path.clone(),
+            ),
+            (
+                "source_dirty".to_string(),
+                sandbox_run.evidence.source_dirty_state.is_dirty.to_string(),
+            ),
+        ]),
+    };
+    write_json(&sandbox_receipt_path, &sandbox_receipt)?;
+
     let synthetic_receipt_path = receipt_dir.join("synthetic-verification.receipt.json");
     let synthetic_receipt = Receipt::synthetic(
         "synthetic_verification",
@@ -106,6 +198,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
         &args,
         &[
             (&claim_receipt, &claim_receipt_path),
+            (&sandbox_receipt, &sandbox_receipt_path),
             (&synthetic_receipt, &synthetic_receipt_path),
         ],
     );

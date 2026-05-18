@@ -1,10 +1,16 @@
-# Pramaan Rust Plugin
+# Pramaan Rust Static Adapter
 
-This directory is reserved for the future Rust verification plugin.
+Phase 2 static skeleton implemented by `pramaan static-checks`.
 
-Phase 1 does not implement real Rust checks. The intended boundary is:
+Discovery:
 
-- run configured `cargo check`, test-build, mutation, and property checks;
-- convert tool output into Pramaan stage receipts;
-- report skipped or not-applicable checks explicitly when tooling is absent;
-- preserve Pramaan's receipt-first contract for every stage outcome.
+- `cargo check`: applicable when Rust files and `Cargo.toml` are present.
+- `cargo test --no-run`: applicable when Rust files and `Cargo.toml` are
+  present.
+
+Receipt behavior:
+
+- no Rust files or missing manifest => `not_applicable`;
+- missing Cargo executable => `skipped`;
+- command failures are normalized into Pramaan receipts and classified as
+  broken imports or undefined symbols when diagnostics support it.

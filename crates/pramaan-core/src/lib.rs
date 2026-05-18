@@ -29,6 +29,54 @@ impl StageStatus {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StaticHallucinationCategory {
+    BrokenImport,
+    UndefinedSymbol,
+}
+
+impl StaticHallucinationCategory {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::BrokenImport => "broken_import",
+            Self::UndefinedSymbol => "undefined_symbol",
+        }
+    }
+}
+
+pub fn classify_static_hallucinations(output: &str) -> Vec<StaticHallucinationCategory> {
+    let lower = output.to_lowercase();
+    let mut categories = Vec::new();
+
+    if lower.contains("modulenotfounderror")
+        || lower.contains("importerror")
+        || lower.contains("no module named")
+        || lower.contains("unresolved import")
+        || lower.contains("cannot find module")
+        || lower.contains("failed to resolve")
+        || lower.contains("unresolved module")
+        || lower.contains("could not find")
+    {
+        categories.push(StaticHallucinationCategory::BrokenImport);
+    }
+
+    if lower.contains("nameerror")
+        || lower.contains("undefined name")
+        || lower.contains("cannot find name")
+        || lower.contains("not found in this scope")
+        || lower.contains("cannot find function")
+        || lower.contains("cannot find value")
+        || lower.contains("unresolved name")
+    {
+        categories.push(StaticHallucinationCategory::UndefinedSymbol);
+    }
+
+    categories.sort_by_key(|category| category.as_str());
+    categories.dedup();
+    categories
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ToolIdentity {
     pub name: String,
@@ -341,6 +389,21 @@ mod tests {
         assert_eq!(risk_family("R-038"), "static_hallucination");
         assert_eq!(risk_family("R-090"), "bundle_integrity");
         assert_eq!(risk_family("R-999"), "unknown");
+    }
+
+    #[test]
+    fn static_hallucination_classifier_finds_imports_and_symbols() {
+        let categories = classify_static_hallucinations(
+            "ModuleNotFoundError: No module named 'ghost'\nerror[E0425]: cannot find value `x` in this scope",
+        );
+
+        assert_eq!(
+            categories,
+            vec![
+                StaticHallucinationCategory::BrokenImport,
+                StaticHallucinationCategory::UndefinedSymbol
+            ]
+        );
     }
 
     fn assert_no_correctness_claims(value: &serde_json::Value) {

@@ -6,15 +6,15 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Phase 2 - Sandbox and Static Checks
+**Current focus:** Phase 3 - Oracle Integrity and Killer Demo
 
 ## Current Phase
 
-Phase 2: Sandbox and Static Checks
+Phase 3: Oracle Integrity and Killer Demo
 
 ## Status
 
-Phase 1 is implemented and validated: schemas, risk taxonomy, claim scope, Rust workspace, synthetic CLI verify path, smoke test, and receipt/risk docs are in place. Proceeding to Phase 2.
+Phase 2 is implemented and validated: sandbox worktree evidence, environment/config hashing, static adapter skeletons, and hallucination classification receipts are in place. Proceeding to Phase 3.
 
 ## Open Questions
 
@@ -35,3 +35,4 @@ Phase 1 is implemented and validated: schemas, risk taxonomy, claim scope, Rust 
 | 2026-05-18 | Add top-100 flaw register and risk-ID references to receipts. | Reviewers need risk-family evidence and residual risk, not a single opaque score. |
 | 2026-05-18 | Planned all six v1 phases and added autonomous build command. | The project now has an end-to-end build path from schemas through GitHub Action and demo corpus. |
 | 2026-05-18 | Completed Phase 1 implementation. | The receipt-first skeleton is green under `cargo fmt --check`, `cargo test`, and synthetic CLI smoke verification. |
+| 2026-05-18 | Completed Phase 2 implementation. | Sandbox and static-check paths are green under `cargo fmt --check`, full workspace tests, and CLI smoke verification. |
