@@ -221,6 +221,15 @@ fn fuzz_receipt(
         } else {
             vec![]
         },
+        agent_author: None,
+        reviewer_override: None,
+        multi_agent_provenance: Vec::new(),
+        plugin_identity: None,
+        plugin_permissions: None,
+        evidence_sensitivity: None,
+        redaction_manifest: None,
+        policy_decision: None,
+        stage_budget: None,
         metadata: BTreeMap::from([
             ("adapter".to_string(), evidence.adapter.as_str().to_string()),
             ("seed".to_string(), evidence.seed.to_string()),

@@ -95,6 +95,23 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     assert_eq!(claim_receipt["stage"], "claim_scope");
     assert_eq!(claim_receipt["status"], "passed");
     assert!(claim_receipt["residual_risks"].is_array());
+    assert_eq!(claim_receipt["agent_author"]["product"], "Codex");
+    assert_eq!(claim_receipt["plugin_identity"]["name"], "pramaan-core");
+    assert_eq!(claim_receipt["evidence_sensitivity"], "internal");
+    assert_eq!(
+        claim_receipt["policy_decision"]["decision"],
+        "informational"
+    );
+    assert_eq!(claim_receipt["stage_budget"]["partial_evidence"], true);
+
+    let manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(manifest_path).expect("read manifest"))
+            .expect("manifest json");
+    assert_eq!(manifest["agent_attribution"][0]["product"], "Codex");
+    assert_eq!(manifest["plugin_identities"][0]["name"], "pramaan-core");
+    assert_eq!(manifest["redaction_manifest"]["profile"], "internal-full");
+    assert_eq!(manifest["policy_decision"]["decision"], "informational");
+    assert_eq!(manifest["stage_budgets"][0]["partial_evidence"], true);
 }
 
 #[test]

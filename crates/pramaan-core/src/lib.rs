@@ -1106,6 +1106,117 @@ impl ToolIdentity {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AttributionConfidence {
+    Low,
+    Medium,
+    High,
+    Unknown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AgentAttribution {
+    pub product: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_family: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_version: Option<String>,
+    pub execution_mode: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prompt_context_hash: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub commit_provenance: Option<String>,
+    pub source: String,
+    pub confidence: AttributionConfidence,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OverrideDecision {
+    ApprovedDespiteRisk,
+    Rejected,
+    NeedsFollowUp,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReviewerOverride {
+    pub decision: OverrideDecision,
+    pub accepted_risk_ids: Vec<String>,
+    pub reviewer_identity_source: String,
+    pub timestamp: String,
+    pub reason: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub linked_outcome: Option<String>,
+    pub update_calibration: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AgentProvenanceEntry {
+    pub role: String,
+    pub agent: AgentAttribution,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub commit_sha: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub handoff_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PluginPermissions {
+    pub may_emit_receipts: bool,
+    pub may_emit_artifacts: bool,
+    pub may_read_previous_receipts: bool,
+    pub may_modify_previous_receipts: bool,
+    pub may_modify_manifest: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PluginIdentity {
+    pub name: String,
+    pub version: String,
+    pub provenance: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub signature: Option<String>,
+    pub sandbox_boundary: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EvidenceSensitivity {
+    Public,
+    Internal,
+    SecretDerived,
+    Redacted,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RedactionManifest {
+    pub profile: String,
+    pub redacted_fields: Vec<String>,
+    pub hashed_fields: Vec<String>,
+    pub policy: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PolicyDecision {
+    pub decision: String,
+    pub policy_id: String,
+    pub hard_failures: Vec<String>,
+    pub warnings: Vec<String>,
+    pub waived: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StageBudget {
+    pub target_ms: u64,
+    pub max_ms: u64,
+    pub consumed_ms: u64,
+    pub exhausted: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout_reason: Option<String>,
+    pub partial_evidence: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InputRef {
     pub name: String,
     pub value: String,
@@ -1155,6 +1266,24 @@ pub struct Receipt {
     pub mitigated_risks: Vec<String>,
     pub residual_risks: Vec<String>,
     pub not_applicable_risks: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub agent_author: Option<AgentAttribution>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reviewer_override: Option<ReviewerOverride>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub multi_agent_provenance: Vec<AgentProvenanceEntry>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_identity: Option<PluginIdentity>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_permissions: Option<PluginPermissions>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub evidence_sensitivity: Option<EvidenceSensitivity>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub redaction_manifest: Option<RedactionManifest>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_decision: Option<PolicyDecision>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stage_budget: Option<StageBudget>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub metadata: BTreeMap<String, String>,
 }
@@ -1203,6 +1332,15 @@ impl Receipt {
             mitigated_risks: risks.mitigated,
             residual_risks: risks.residual,
             not_applicable_risks: risks.not_applicable,
+            agent_author: None,
+            reviewer_override: None,
+            multi_agent_provenance: Vec::new(),
+            plugin_identity: None,
+            plugin_permissions: None,
+            evidence_sensitivity: None,
+            redaction_manifest: None,
+            policy_decision: None,
+            stage_budget: None,
             metadata: BTreeMap::new(),
         }
     }
@@ -1329,7 +1467,7 @@ mod tests {
 
     #[test]
     fn receipt_serializes_contract_fields() {
-        let receipt = Receipt::synthetic(
+        let mut receipt = Receipt::synthetic(
             "synthetic",
             StageStatus::Passed,
             "HEAD~1",
@@ -1346,6 +1484,42 @@ mod tests {
             },
             RiskRefs::sample(),
         );
+        receipt.agent_author = Some(AgentAttribution {
+            product: "Codex".to_string(),
+            model_family: Some("gpt-5".to_string()),
+            model_version: Some("fixture".to_string()),
+            execution_mode: "autonomous_phase".to_string(),
+            prompt_context_hash: Some(
+                "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    .to_string(),
+            ),
+            commit_provenance: Some("commit:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_string()),
+            source: "ci_metadata".to_string(),
+            confidence: AttributionConfidence::Medium,
+        });
+        receipt.plugin_permissions = Some(PluginPermissions {
+            may_emit_receipts: true,
+            may_emit_artifacts: true,
+            may_read_previous_receipts: false,
+            may_modify_previous_receipts: false,
+            may_modify_manifest: false,
+        });
+        receipt.evidence_sensitivity = Some(EvidenceSensitivity::Internal);
+        receipt.policy_decision = Some(PolicyDecision {
+            decision: "warning".to_string(),
+            policy_id: "pramaan-default-v0".to_string(),
+            hard_failures: vec![],
+            warnings: vec!["residual_risk:R-049".to_string()],
+            waived: vec![],
+        });
+        receipt.stage_budget = Some(StageBudget {
+            target_ms: 30_000,
+            max_ms: 60_000,
+            consumed_ms: 1_000,
+            exhausted: false,
+            timeout_reason: None,
+            partial_evidence: false,
+        });
 
         let value = serde_json::to_value(receipt).expect("receipt serializes");
 
@@ -1354,6 +1528,11 @@ mod tests {
         assert_eq!(value["mitigated_risks"][0], "R-001");
         assert_eq!(value["residual_risks"][0], "R-049");
         assert_eq!(value["not_applicable_risks"][0], "R-081");
+        assert_eq!(value["agent_author"]["product"], "Codex");
+        assert_eq!(value["plugin_permissions"]["may_modify_manifest"], false);
+        assert_eq!(value["evidence_sensitivity"], "internal");
+        assert_eq!(value["policy_decision"]["decision"], "warning");
+        assert_eq!(value["stage_budget"]["partial_evidence"], false);
     }
 
     #[test]

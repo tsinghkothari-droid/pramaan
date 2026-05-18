@@ -4,7 +4,9 @@ use pramaan_bundle::{
     build_manifest, sha256_hex, verify_bundle, write_manifest, BundleBuildOptions,
 };
 use pramaan_core::{
-    risk_family, ArtifactRef, ClaimScope, OutputRef, Receipt, ReceiptSummary, RiskRefs, StageStatus,
+    risk_family, AgentAttribution, ArtifactRef, AttributionConfidence, ClaimScope,
+    EvidenceSensitivity, OutputRef, PluginIdentity, PluginPermissions, PolicyDecision, Receipt,
+    ReceiptSummary, RedactionManifest, RiskRefs, StageBudget, StageStatus,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use std::collections::BTreeMap;
@@ -155,7 +157,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     let claim_scope_digest = digest_file(&claim_scope_path)?;
 
     let claim_receipt_path = receipt_dir.join("claim-scope.receipt.json");
-    let claim_receipt = Receipt::synthetic(
+    let mut claim_receipt = Receipt::synthetic(
         "claim_scope",
         StageStatus::Passed,
         &args.base,
@@ -178,6 +180,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
         },
         RiskRefs::claim_scope_sample(),
     );
+    add_synthetic_trust_hooks(&mut claim_receipt);
     write_json(&claim_receipt_path, &claim_receipt)?;
 
     let sandbox_dir = args.out.join("sandbox");
@@ -242,6 +245,15 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
         mitigated_risks: sandbox_run.evidence.mitigated_risks.clone(),
         residual_risks: sandbox_run.evidence.residual_risks.clone(),
         not_applicable_risks: sandbox_run.evidence.not_applicable_risks.clone(),
+        agent_author: None,
+        reviewer_override: None,
+        multi_agent_provenance: Vec::new(),
+        plugin_identity: None,
+        plugin_permissions: None,
+        evidence_sensitivity: None,
+        redaction_manifest: None,
+        policy_decision: None,
+        stage_budget: None,
         metadata: BTreeMap::from([
             (
                 "base_worktree".to_string(),
@@ -304,6 +316,55 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     );
 
     Ok(())
+}
+
+fn add_synthetic_trust_hooks(receipt: &mut Receipt) {
+    receipt.agent_author = Some(AgentAttribution {
+        product: "Codex".to_string(),
+        model_family: Some("gpt-5".to_string()),
+        model_version: None,
+        execution_mode: "synthetic_verify".to_string(),
+        prompt_context_hash: None,
+        commit_provenance: None,
+        source: "local_cli".to_string(),
+        confidence: AttributionConfidence::Unknown,
+    });
+    receipt.plugin_identity = Some(PluginIdentity {
+        name: "pramaan-core".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        provenance: "workspace".to_string(),
+        signature: None,
+        sandbox_boundary: "in_process".to_string(),
+    });
+    receipt.plugin_permissions = Some(PluginPermissions {
+        may_emit_receipts: true,
+        may_emit_artifacts: true,
+        may_read_previous_receipts: false,
+        may_modify_previous_receipts: false,
+        may_modify_manifest: false,
+    });
+    receipt.evidence_sensitivity = Some(EvidenceSensitivity::Internal);
+    receipt.redaction_manifest = Some(RedactionManifest {
+        profile: "internal-full".to_string(),
+        redacted_fields: Vec::new(),
+        hashed_fields: Vec::new(),
+        policy: "pramaan-redaction-v0".to_string(),
+    });
+    receipt.policy_decision = Some(PolicyDecision {
+        decision: "informational".to_string(),
+        policy_id: "pramaan-default-v0".to_string(),
+        hard_failures: Vec::new(),
+        warnings: vec!["synthetic_evidence_only".to_string()],
+        waived: Vec::new(),
+    });
+    receipt.stage_budget = Some(StageBudget {
+        target_ms: 30_000,
+        max_ms: 60_000,
+        consumed_ms: 0,
+        exhausted: false,
+        timeout_reason: None,
+        partial_evidence: true,
+    });
 }
 
 fn render_summary(args: &VerifyArgs, receipts: &[(&Receipt, &Path)], manifest_path: &Path) {

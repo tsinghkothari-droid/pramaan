@@ -1,5 +1,8 @@
 use chrono::Utc;
-use pramaan_core::{timestamp, Receipt};
+use pramaan_core::{
+    timestamp, AgentAttribution, AgentProvenanceEntry, EvidenceSensitivity, PluginIdentity,
+    PolicyDecision, Receipt, RedactionManifest, ReviewerOverride, StageBudget,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest as ShaDigest, Sha256};
 use std::collections::BTreeSet;
@@ -96,6 +99,14 @@ pub struct StageManifest {
     pub seeds: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub corpus_hashes: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_identity: Option<PluginIdentity>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_decision: Option<PolicyDecision>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stage_budget: Option<StageBudget>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub evidence_sensitivity: Option<EvidenceSensitivity>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -218,6 +229,20 @@ pub struct BundleManifest {
     pub risk_summary: RiskSummary,
     pub summary: BundleSummary,
     pub integrity: BundleIntegrity,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub agent_attribution: Vec<AgentAttribution>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reviewer_overrides: Vec<ReviewerOverride>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub multi_agent_provenance: Vec<AgentProvenanceEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub plugin_identities: Vec<PluginIdentity>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub redaction_manifest: Option<RedactionManifest>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_decision: Option<PolicyDecision>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub stage_budgets: Vec<StageBudget>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -265,6 +290,13 @@ pub fn build_manifest(bundle_root: &Path, options: BundleBuildOptions) -> Result
     let mut residual = BTreeSet::new();
     let mut skipped = BTreeSet::new();
     let mut not_applicable = BTreeSet::new();
+    let mut agent_attribution = Vec::new();
+    let mut reviewer_overrides = Vec::new();
+    let mut multi_agent_provenance = Vec::new();
+    let mut plugin_identities = Vec::new();
+    let mut redaction_manifest = None;
+    let mut policy_decision = None;
+    let mut stage_budgets = Vec::new();
 
     for receipt_path in receipt_paths {
         let receipt = read_receipt(&receipt_path)?;
@@ -288,6 +320,25 @@ pub fn build_manifest(bundle_root: &Path, options: BundleBuildOptions) -> Result
         }
 
         tools.insert((receipt.tool.name.clone(), receipt.tool.version.clone()));
+        if let Some(agent) = receipt.agent_author.clone() {
+            agent_attribution.push(agent);
+        }
+        if let Some(reviewer_override) = receipt.reviewer_override.clone() {
+            reviewer_overrides.push(reviewer_override);
+        }
+        multi_agent_provenance.extend(receipt.multi_agent_provenance.clone());
+        if let Some(plugin_identity) = receipt.plugin_identity.clone() {
+            plugin_identities.push(plugin_identity);
+        }
+        if redaction_manifest.is_none() {
+            redaction_manifest = receipt.redaction_manifest.clone();
+        }
+        if policy_decision.is_none() {
+            policy_decision = receipt.policy_decision.clone();
+        }
+        if let Some(stage_budget) = receipt.stage_budget.clone() {
+            stage_budgets.push(stage_budget);
+        }
         stages.push(stage_manifest(&receipt, relative_receipt_path));
         receipts.push(receipt_ref);
 
@@ -369,6 +420,13 @@ pub fn build_manifest(bundle_root: &Path, options: BundleBuildOptions) -> Result
                 transparency_mode: None,
             }),
         },
+        agent_attribution,
+        reviewer_overrides,
+        multi_agent_provenance,
+        plugin_identities,
+        redaction_manifest,
+        policy_decision,
+        stage_budgets,
     };
     let signable_digest = manifest_digest(&manifest)?;
     if let Some(signing) = manifest.integrity.signing.as_mut() {
@@ -526,6 +584,10 @@ fn stage_manifest(receipt: &Receipt, receipt_path: String) -> StageManifest {
         not_applicable_risks: receipt.not_applicable_risks.clone(),
         seeds,
         corpus_hashes,
+        plugin_identity: receipt.plugin_identity.clone(),
+        policy_decision: receipt.policy_decision.clone(),
+        stage_budget: receipt.stage_budget.clone(),
+        evidence_sensitivity: receipt.evidence_sensitivity.clone(),
     }
 }
 
@@ -728,7 +790,10 @@ fn portable_relative_path(root: &Path, path: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pramaan_core::{OutputRef, ReceiptSummary, RiskRefs, StageStatus};
+    use pramaan_core::{
+        AgentAttribution, AttributionConfidence, EvidenceSensitivity, OutputRef, PluginIdentity,
+        PolicyDecision, ReceiptSummary, RedactionManifest, RiskRefs, StageBudget, StageStatus,
+    };
 
     #[test]
     fn hashes_with_sha256_prefix() {
@@ -825,6 +890,103 @@ mod tests {
         fs::write(&receipt_path, b"{\"tampered\":true}").expect("tamper receipt");
         let error = verify_bundle(&root).expect_err("tamper should fail");
         assert!(error.to_string().contains("digest mismatch"));
+
+        fs::remove_dir_all(&root).expect("cleanup temp bundle");
+    }
+
+    #[test]
+    fn manifest_aggregates_phase_16a_trust_hooks() {
+        let root =
+            std::env::temp_dir().join(format!("pramaan-phase16a-test-{}", std::process::id()));
+        if root.exists() {
+            fs::remove_dir_all(&root).expect("clean temp bundle");
+        }
+        fs::create_dir_all(root.join("receipts")).expect("receipt dir");
+
+        let mut receipt = Receipt::synthetic(
+            "claim_scope",
+            StageStatus::Passed,
+            "HEAD",
+            "HEAD",
+            vec![],
+            vec![],
+            ReceiptSummary {
+                title: "Synthetic".to_string(),
+                details: "Synthetic receipt with trust hooks.".to_string(),
+            },
+            RiskRefs::sample(),
+        );
+        receipt.agent_author = Some(AgentAttribution {
+            product: "Codex".to_string(),
+            model_family: Some("gpt-5".to_string()),
+            model_version: None,
+            execution_mode: "autonomous_phase".to_string(),
+            prompt_context_hash: None,
+            commit_provenance: None,
+            source: "local_cli".to_string(),
+            confidence: AttributionConfidence::Unknown,
+        });
+        receipt.plugin_identity = Some(PluginIdentity {
+            name: "pramaan-core".to_string(),
+            version: "0.1.0".to_string(),
+            provenance: "workspace".to_string(),
+            signature: None,
+            sandbox_boundary: "in_process".to_string(),
+        });
+        receipt.evidence_sensitivity = Some(EvidenceSensitivity::Internal);
+        receipt.redaction_manifest = Some(RedactionManifest {
+            profile: "reviewer-redacted".to_string(),
+            redacted_fields: vec!["environment.variables.SECRET_TOKEN".to_string()],
+            hashed_fields: vec!["repository.path".to_string()],
+            policy: "pramaan-redaction-v0".to_string(),
+        });
+        receipt.policy_decision = Some(PolicyDecision {
+            decision: "warning".to_string(),
+            policy_id: "pramaan-default-v0".to_string(),
+            hard_failures: vec![],
+            warnings: vec!["synthetic_evidence_only".to_string()],
+            waived: vec![],
+        });
+        receipt.stage_budget = Some(StageBudget {
+            target_ms: 30_000,
+            max_ms: 60_000,
+            consumed_ms: 1_000,
+            exhausted: false,
+            timeout_reason: None,
+            partial_evidence: true,
+        });
+
+        fs::write(
+            root.join("receipts").join("claim.receipt.json"),
+            serde_json::to_vec_pretty(&receipt).expect("receipt json"),
+        )
+        .expect("write receipt");
+
+        let manifest =
+            build_manifest(&root, BundleBuildOptions::synthetic("HEAD", "HEAD")).expect("manifest");
+
+        assert_eq!(manifest.agent_attribution.len(), 1);
+        assert_eq!(manifest.agent_attribution[0].product, "Codex");
+        assert_eq!(manifest.plugin_identities.len(), 1);
+        assert_eq!(manifest.plugin_identities[0].name, "pramaan-core");
+        assert_eq!(
+            manifest
+                .redaction_manifest
+                .as_ref()
+                .expect("redaction")
+                .profile,
+            "reviewer-redacted"
+        );
+        assert_eq!(
+            manifest.policy_decision.as_ref().expect("policy").decision,
+            "warning"
+        );
+        assert_eq!(manifest.stage_budgets.len(), 1);
+        assert!(manifest.stage_budgets[0].partial_evidence);
+        assert_eq!(
+            manifest.stages[0].evidence_sensitivity,
+            Some(EvidenceSensitivity::Internal)
+        );
 
         fs::remove_dir_all(&root).expect("cleanup temp bundle");
     }

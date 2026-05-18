@@ -157,6 +157,36 @@
     "not_applicable_risks": {
       "$ref": "#/$defs/risk_id_array"
     },
+    "agent_author": {
+      "$ref": "#/$defs/agent_attribution"
+    },
+    "reviewer_override": {
+      "$ref": "#/$defs/reviewer_override"
+    },
+    "multi_agent_provenance": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/provenance_entry"
+      }
+    },
+    "plugin_identity": {
+      "$ref": "#/$defs/plugin_identity"
+    },
+    "plugin_permissions": {
+      "$ref": "#/$defs/plugin_permissions"
+    },
+    "evidence_sensitivity": {
+      "$ref": "#/$defs/evidence_sensitivity"
+    },
+    "redaction_manifest": {
+      "$ref": "#/$defs/redaction_manifest"
+    },
+    "policy_decision": {
+      "$ref": "#/$defs/policy_decision"
+    },
+    "stage_budget": {
+      "$ref": "#/$defs/stage_budget"
+    },
     "limitations": {
       "type": "array",
       "items": {
@@ -301,6 +331,144 @@
         "risk_ids": {
           "$ref": "#/$defs/risk_id_array"
         }
+      }
+    },
+    "agent_attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["product", "execution_mode", "source", "confidence"],
+      "properties": {
+        "product": { "type": "string", "minLength": 1 },
+        "model_family": { "type": "string" },
+        "model_version": { "type": "string" },
+        "execution_mode": { "type": "string", "minLength": 1 },
+        "prompt_context_hash": { "type": "string" },
+        "commit_provenance": { "type": "string" },
+        "source": { "type": "string", "minLength": 1 },
+        "confidence": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "unknown"]
+        }
+      }
+    },
+    "reviewer_override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "accepted_risk_ids",
+        "reviewer_identity_source",
+        "timestamp",
+        "reason",
+        "update_calibration"
+      ],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": ["approved_despite_risk", "rejected", "needs_follow_up"]
+        },
+        "accepted_risk_ids": { "$ref": "#/$defs/risk_id_array" },
+        "reviewer_identity_source": { "type": "string", "minLength": 1 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "reason": { "type": "string", "minLength": 1 },
+        "linked_outcome": { "type": "string" },
+        "update_calibration": { "type": "boolean" }
+      }
+    },
+    "provenance_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "agent"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "agent": { "$ref": "#/$defs/agent_attribution" },
+        "commit_sha": { "type": "string", "pattern": "^[a-fA-F0-9]{7,64}$" },
+        "handoff_id": { "type": "string" }
+      }
+    },
+    "plugin_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "provenance", "sandbox_boundary"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "provenance": { "type": "string", "minLength": 1 },
+        "signature": { "type": "string" },
+        "sandbox_boundary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "plugin_permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "may_emit_receipts",
+        "may_emit_artifacts",
+        "may_read_previous_receipts",
+        "may_modify_previous_receipts",
+        "may_modify_manifest"
+      ],
+      "properties": {
+        "may_emit_receipts": { "type": "boolean" },
+        "may_emit_artifacts": { "type": "boolean" },
+        "may_read_previous_receipts": { "type": "boolean" },
+        "may_modify_previous_receipts": { "type": "boolean" },
+        "may_modify_manifest": { "type": "boolean" }
+      }
+    },
+    "evidence_sensitivity": {
+      "type": "string",
+      "enum": ["public", "internal", "secret_derived", "redacted"]
+    },
+    "redaction_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "redacted_fields", "hashed_fields", "policy"],
+      "properties": {
+        "profile": { "type": "string", "minLength": 1 },
+        "redacted_fields": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "hashed_fields": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "policy": { "type": "string", "minLength": 1 }
+      }
+    },
+    "policy_decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "policy_id", "hard_failures", "warnings", "waived"],
+      "properties": {
+        "decision": { "type": "string", "minLength": 1 },
+        "policy_id": { "type": "string", "minLength": 1 },
+        "hard_failures": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "waived": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "stage_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_ms", "max_ms", "consumed_ms", "exhausted", "partial_evidence"],
+      "properties": {
+        "target_ms": { "type": "integer", "minimum": 0 },
+        "max_ms": { "type": "integer", "minimum": 0 },
+        "consumed_ms": { "type": "integer", "minimum": 0 },
+        "exhausted": { "type": "boolean" },
+        "timeout_reason": { "type": "string" },
+        "partial_evidence": { "type": "boolean" }
       }
     }
   }

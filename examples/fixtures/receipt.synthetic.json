@@ -75,6 +75,73 @@
   "mitigated_risks": ["R-001"],
   "residual_risks": ["R-002", "R-003", "R-045"],
   "not_applicable_risks": ["R-090"],
+  "agent_author": {
+    "product": "Codex",
+    "model_family": "gpt-5",
+    "model_version": "synthetic-fixture",
+    "execution_mode": "autonomous_phase",
+    "prompt_context_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "commit_provenance": "commit:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "source": "ci_metadata",
+    "confidence": "medium"
+  },
+  "reviewer_override": {
+    "decision": "approved_despite_risk",
+    "accepted_risk_ids": ["R-045"],
+    "reviewer_identity_source": "github_review",
+    "timestamp": "2026-05-18T17:31:00Z",
+    "reason": "Synthetic fixture records override shape only.",
+    "linked_outcome": "merge_blocked_in_fixture",
+    "update_calibration": false
+  },
+  "multi_agent_provenance": [
+    {
+      "role": "code_author",
+      "agent": {
+        "product": "Codex",
+        "model_family": "gpt-5",
+        "execution_mode": "autonomous_phase",
+        "source": "ci_metadata",
+        "confidence": "medium"
+      },
+      "commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "handoff_id": "handoff_synthetic_001"
+    }
+  ],
+  "plugin_identity": {
+    "name": "pramaan-core",
+    "version": "0.1.0-synthetic",
+    "provenance": "workspace",
+    "sandbox_boundary": "in_process_fixture"
+  },
+  "plugin_permissions": {
+    "may_emit_receipts": true,
+    "may_emit_artifacts": true,
+    "may_read_previous_receipts": false,
+    "may_modify_previous_receipts": false,
+    "may_modify_manifest": false
+  },
+  "evidence_sensitivity": "internal",
+  "redaction_manifest": {
+    "profile": "reviewer-redacted",
+    "redacted_fields": ["environment.variables.SECRET_TOKEN"],
+    "hashed_fields": ["repository.path"],
+    "policy": "pramaan-redaction-v0"
+  },
+  "policy_decision": {
+    "decision": "warning",
+    "policy_id": "pramaan-default-v0",
+    "hard_failures": [],
+    "warnings": ["residual_risk:R-045"],
+    "waived": []
+  },
+  "stage_budget": {
+    "target_ms": 30000,
+    "max_ms": 60000,
+    "consumed_ms": 1000,
+    "exhausted": false,
+    "partial_evidence": false
+  },
   "limitations": [
     {
       "code": "synthetic_fixture",

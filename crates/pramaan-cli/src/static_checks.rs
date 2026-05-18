@@ -382,6 +382,15 @@ fn receipt(
         mitigated_risks,
         residual_risks,
         not_applicable_risks,
+        agent_author: None,
+        reviewer_override: None,
+        multi_agent_provenance: Vec::new(),
+        plugin_identity: None,
+        plugin_permissions: None,
+        evidence_sensitivity: None,
+        redaction_manifest: None,
+        policy_decision: None,
+        stage_budget: None,
         metadata: metadata
             .into_iter()
             .chain([(
