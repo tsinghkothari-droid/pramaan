@@ -1,56 +1,311 @@
 # Pramaan
 
-Pramaan is a receipt-first verification system for AI-generated code changes.
+**Verification infrastructure for AI-authored pull requests.**
 
-It does not claim that code is correct. It creates an auditable proof bundle
-showing what was checked, what evidence was produced, which risk families were
+AI coding agents are becoming fast enough to write a meaningful share of the
+world's software. The bottleneck is no longer generation. The bottleneck is
+trust.
+
+Pramaan turns an AI-generated code change into an auditable proof bundle:
+structured receipts, execution evidence, risk IDs, replay data, and signed
+artifacts that show what was checked and what still needs human judgment.
+
+It does not sell the fantasy that a tool can prove arbitrary software correct.
+It solves the real problem engineering teams face every day:
+
+> "This pull request is green. Can we trust what green means?"
+
+## The Problem
+
+Modern AI agents can produce code that looks polished, passes CI, and still
+breaks production behavior.
+
+The failure mode is subtle:
+
+- the agent weakens the test instead of fixing the bug;
+- a snapshot or fixture is updated to approve the wrong behavior;
+- the original failing case is never reproduced;
+- a fake API, import, parameter, or symbol is invented;
+- a new test checks that something exists, not that the behavior is correct;
+- the fix works for the narrow prompt but regresses adjacent paths;
+- CI logs disappear into a build system with no durable evidence trail.
+
+Traditional CI answers one question: did these commands exit successfully?
+
+Pramaan answers the question reviewers actually need answered:
+
+> What evidence exists that this code change did what it claimed, and what
+> risks remain?
+
+## The Pramaan Answer
+
+Pramaan is a receipt-first verification layer for code review. For each pull
+request, it builds a signed, inspectable bundle of stage receipts:
+
+```text
+PR diff
+  -> Sandbox and environment evidence
+  -> Claim scope
+  -> Static and hallucination checks
+  -> Oracle integrity
+  -> Delta mutation
+  -> Property, fuzz, and differential checks
+  -> Bundle signing and verification
+  -> GitHub Action summary
+```
+
+Every stage emits a receipt, including skipped and failed stages. A reviewer can
+see exactly what ran, which tools and versions were used, which files and
+artifacts were hashed, which seeds or corpora were used, which risks were
 mitigated, and which risks remain.
 
-The product thesis is simple:
+Pramaan is not another vague AI critic. It is execution-grounded verification
+infrastructure.
 
-> AI coding agents can make pull requests that look green while hiding real
-> regressions. Pramaan gives reviewers a compact, execution-grounded evidence
-> bundle instead of another vague "looks good" signal.
+## What a Bundle Proves
 
-## Current Status
+A Pramaan bundle is a bounded claim, not a magic certificate.
 
-Pramaan is currently a working prototype foundation:
+It can prove things like:
 
-- Rust CLI and workspace skeleton.
-- JSON receipt, bundle, claim-scope, risk-taxonomy, and adapter-certification schemas.
-- Sandbox/worktree evidence model.
-- Static/hallucination receipt paths for Python, TypeScript, and Rust fixtures.
-- Oracle-integrity demo for weakened tests, fixtures, and snapshots.
-- Diff-scoped mutation and differential fuzz receipt models.
-- Bundle verification with artifact hashes and local signing/signable metadata.
-- GitHub Action wrapper and PR-summary renderer.
-- Starter adversarial corpus and top-100 risk register.
+- the claimed failing test now passes unchanged;
+- existing tests still pass;
+- tests were not skipped, deleted, or obviously weakened;
+- fixture and snapshot changes were flagged as oracle-sensitive;
+- static checks found no invented imports or undefined symbols;
+- mutation testing exercised changed behavior and recorded surviving mutants;
+- fuzz/property runs used recorded seeds and replay data;
+- the proof bundle itself has not been tampered with.
 
-Approximate current size:
+It does not claim:
 
-- Total tracked repo: about 12.8k lines.
-- Product code plus schemas: about 7.6k lines.
-- Rust source: about 6.0k lines.
+- "this code is correct";
+- "all bugs are impossible";
+- "LLM critics agree, so merge it";
+- "seven checks means seven independent probabilities."
 
-This is not yet Serious v1. The remaining gap is depth, determinism, hostile
-fixture coverage, real tool integrations, and reliability on real pull requests.
+That restraint is the product. Pramaan gives teams stronger evidence without
+pretending uncertainty has disappeared.
+
+## Why This Matters Now
+
+AI code generation changes the economics of software review. A human reviewer
+can no longer inspect every generated line with the same attention as hand-made
+code, especially when agents produce many small PRs per day.
+
+The next layer of the developer toolchain needs to be:
+
+- **auditable**: every conclusion has an artifact behind it;
+- **execution-grounded**: checks run against real base/head code, not only prose;
+- **risk-aware**: the output says what remains dangerous;
+- **replayable**: failures and fuzz cases can be reproduced;
+- **signed**: evidence can survive outside one CI run;
+- **honest**: no false claim of full correctness.
+
+Pramaan is built as that layer.
+
+## Core Capabilities
+
+### Receipt-First Verification
+
+Every stage writes structured JSON receipts with:
+
+- stage name and status;
+- tool identity and version;
+- input and artifact hashes;
+- start/end timestamps;
+- exit code and summary;
+- mitigated, residual, skipped, and not-applicable risk IDs.
+
+### Claim Scope
+
+Pramaan records what the pull request claims to change before judging whether
+the tests and execution evidence are aligned with that claim.
+
+This catches a major AI-code failure mode: a PR that passes tests while solving
+the wrong problem, overfitting the prompt, or approving behavior outside the
+intended scope.
+
+### Oracle Integrity
+
+Pramaan treats tests, fixtures, and snapshots as part of the trust boundary.
+
+It is designed to detect:
+
+- skipped tests;
+- removed assertions;
+- weakened assertions;
+- changed snapshots;
+- changed fixtures;
+- missing original failing tests;
+- suspicious oracle drift.
+
+This is the killer use case: normal CI can go green because the agent weakened
+the test. Pramaan should turn that into a clear red receipt.
+
+### Static and Hallucination Checks
+
+AI-generated code often fails by inventing plausible names:
+
+- non-existent imports;
+- undefined variables;
+- invented APIs;
+- invalid parameters;
+- wrong file or resource names.
+
+Pramaan classifies these failures instead of flattening them into generic
+"lint failed" output.
+
+### Delta Mutation
+
+Coverage is not enough. A test can execute code without asserting the behavior
+that matters.
+
+Pramaan uses diff-scoped mutation testing to ask a sharper question:
+
+> If we perturb the changed logic, do the tests actually notice?
+
+Mutation receipts record created, killed, survived, timed-out, skipped, and
+unviable mutants, plus the threshold and budget used.
+
+### Property, Fuzz, and Differential Checks
+
+For eligible changed functions, Pramaan compares base and head behavior on
+shared generated inputs. Unexpected divergence is recorded with seeds, replay
+data, minimized counterexamples, corpus hashes, and scope classification.
+
+This is how Pramaan catches "the bug is fixed, but nearby behavior changed."
+
+### Signed Proof Bundles
+
+Receipts and artifacts are collected into a bundle manifest. The bundle can be
+verified for hash integrity and prepared for Sigstore, GitHub artifact
+attestation, and in-toto/SLSA-style provenance flows.
+
+## Example Reviewer Summary
+
+```text
+Claim
+  Fix invoice rounding for mixed tax rates.
+
+Evidence
+  PASS  Original failing test now passes unchanged.
+  PASS  Existing tests still pass.
+  PASS  No assertions were weakened.
+  PASS  Static checks found no invented imports or undefined symbols.
+  WARN  Mutation killed 87% of changed-line mutants; 3 survived.
+  PASS  Differential property checks found no unexpected divergence.
+
+Residual risks
+  R-049 concurrency not exercised.
+  R-057 performance not benchmarked.
+  R-081 formal verification not applicable.
+
+Bundle
+  Hash verified.
+  Tool versions recorded.
+  Seeds and corpus hashes recorded.
+```
+
+## Research Basis
+
+Pramaan is grounded in software testing research, AI-code evaluation failures,
+and production supply-chain tooling.
+
+### AI-code reliability
+
+- [tau2-bench](https://arxiv.org/abs/2506.07982): repeated evaluation exposes unreliable agent behavior.
+- [SWE-Lancer](https://arxiv.org/abs/2502.12115): frontier models can silently fail real software tasks.
+- [SWE-bench Verified](https://openai.com/index/introducing-swe-bench-verified/): shows why benchmark/task curation matters.
+- [SWE-bench Verified retirement analysis](https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/): motivates claim-scope and oracle-alignment receipts.
+
+### Step-level verification
+
+- [Let's Verify Step by Step](https://arxiv.org/abs/2305.20050): supports process evidence over only binary final outcomes.
+- [Lost in the Middle](https://arxiv.org/abs/2307.03172): motivates chunked receipts rather than giant context reviews.
+
+### LLM judge limitations
+
+- [Self-preference bias](https://arxiv.org/abs/2410.21819): warns against trusting model self-judgment.
+- [Position bias in LLM judges](https://arxiv.org/html/2406.07791v9): motivates careful critic design.
+- [Don't Judge by Its Cover](https://arxiv.org/abs/2505.16222): critic agreement is signal, not proof.
+- [CodeJudge](https://arxiv.org/abs/2410.02184): useful as a specialized review signal, never the sole gate.
+
+### Hallucination detection
+
+- [CodeHalu](https://arxiv.org/abs/2405.00253): supports code hallucination categories.
+- [Collu-Bench](https://arxiv.org/html/2410.09997v1): motivates detection beyond syntax failures.
+- [Delulu](https://arxiv.org/abs/2605.07024): covers invented APIs, invalid parameters, undefined variables, and non-existent imports.
+
+### Mutation and test quality
+
+- [Just et al., FSE 2014](https://homes.cs.washington.edu/~mernst/pubs/mutation-effectiveness-fse2014.pdf): mutation testing correlates with real fault detection.
+- [Papadakis et al., ICSE 2018](https://dl.acm.org/doi/pdf/10.1145/3180155.3180183): mutation testing is useful but imperfect.
+- [LLMorpheus](https://arxiv.org/abs/2404.09952): connects mutation-style testing to LLM-generated-code defects.
+- [mutmut](https://mutmut.readthedocs.io/en/latest/), [StrykerJS](https://stryker-mutator.io/docs/stryker-js/incremental/), and [cargo-mutants](https://mutants.rs/timeouts.html): practical engines for Python, TypeScript, and Rust.
+
+### Fuzzing and differential testing
+
+- [Fuzz4All](https://arxiv.org/abs/2308.04748): demonstrates broad fuzzing gains.
+- [Agentic property-based testing](https://arxiv.org/html/2510.09907v1): motivates generated property checks with replayable evidence.
+- [CodaMosa](https://dl.acm.org/doi/10.1109/ICSE48619.2023.00085): supports search-based test amplification.
+- [Metamorphic Prompt Testing](https://arxiv.org/abs/2406.06864): motivates metamorphic relations when direct assertions are hard.
+- [Hypothesis](https://hypothesis.readthedocs.io/en/latest/reference/api.html) and [fast-check](https://fast-check.dev/docs/introduction/why-property-based/): production property-testing engines.
+
+### Supply-chain attestations
+
+- [SLSA](https://slsa.dev/spec/): provenance and build-integrity framework.
+- [Sigstore](https://docs.sigstore.dev/cosign/signing/overview/): keyless signing and transparency-backed identity.
+- [in-toto](https://in-toto.io/): supply-chain attestation framework.
+- [GitHub artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations): practical CI-native signed provenance.
+- [Nix reproducibility research](https://arxiv.org/pdf/2501.15919): informs the honest boundary around bit-for-bit reproducibility.
+
+## Why Pramaan Is Different
+
+Most tools give one thin signal:
+
+- CI says commands passed.
+- Coverage says code was executed.
+- A critic says the patch looks reasonable.
+- A scanner says one class of issue was or was not found.
+
+Pramaan combines these into a risk-aware evidence bundle. The value is not any
+single check. The value is the ledger:
+
+- what was claimed;
+- what was checked;
+- what evidence supports it;
+- what changed in the oracle;
+- what was skipped;
+- what remains risky;
+- who/what signed the bundle.
+
+## Intended Users
+
+Pramaan is for teams that expect AI agents to contribute production code:
+
+- engineering leaders adopting coding agents;
+- platform teams building agent review gates;
+- security teams that need audit trails for AI-authored changes;
+- open-source maintainers reviewing AI-generated PRs;
+- enterprises that need evidence before merging automated code.
+
+## Repository Map
+
+- [crates/pramaan-cli](crates/pramaan-cli): CLI entry point and stage commands.
+- [crates/pramaan-core](crates/pramaan-core): receipt, claim-scope, risk, and shared models.
+- [crates/pramaan-sandbox](crates/pramaan-sandbox): worktree and environment evidence.
+- [crates/pramaan-bundle](crates/pramaan-bundle): bundle manifest, hashing, signing metadata, and verification.
+- [schemas](schemas): public JSON Schemas.
+- [docs](docs): product and operator documentation.
+- [examples](examples): fixtures, demos, and synthetic receipts.
+- [plugins](plugins): language plugin plans and adapters.
+- [.planning](.planning): GSD planning, requirements, research, and phase validation.
 
 ## Quickstart
 
-From the repository root:
-
 ```powershell
 cargo run -p pramaan-cli -- verify --base HEAD --head HEAD --out target/pramaan-smoke
-```
-
-The CLI writes a bundle directory:
-
-```text
-target/pramaan-smoke/
-  claim_scope.synthetic.json
-  receipts/
-    claim-scope.receipt.json
-    synthetic-verification.receipt.json
 ```
 
 Validate the workspace:
@@ -61,253 +316,9 @@ cargo test --workspace
 cargo run -p pramaan-cli -- verify --base HEAD --head HEAD --out target/pramaan-smoke
 ```
 
-## Why This Exists
-
-AI coding agents can make changes that pass CI while still being unsafe to
-merge:
-
-- tests were weakened, skipped, or deleted;
-- the original bug was never reproduced;
-- snapshots or fixtures changed the oracle silently;
-- a fake API, import, symbol, or parameter was invented;
-- a shallow test was added that does not actually test the fix;
-- a refactor works for one path but breaks another;
-- CI passed, but the evidence cannot be audited later.
-
-Pramaan is built for this review gap.
-
-## What Pramaan Does
-
-For a pull request, Pramaan should:
-
-1. Capture what the PR claims to change.
-2. Create isolated base/head worktrees.
-3. Record dependency, environment, tool, seed, corpus, and artifact hashes.
-4. Run static and hallucination checks.
-5. Detect test-oracle tampering.
-6. Run diff-scoped mutation checks.
-7. Run replayable property/fuzz/differential checks.
-8. Emit signed or signable receipts for every stage.
-9. Summarize mitigated, residual, skipped, and not-applicable risks using stable risk IDs.
-
-Example summary:
-
-```text
-Claim: Fix invoice rounding for mixed tax rates.
-
-Evidence:
-- Original failing test now passes unchanged.
-- No assertions were weakened.
-- Static checks found no invented imports or undefined symbols.
-- Mutation killed 91% of changed-line mutants.
-- Differential property checks found no unexpected divergence.
-
-Residual risks:
-- R-049 concurrency not exercised.
-- R-057 performance not benchmarked.
-- R-081 formal verification not applicable.
-```
-
-## Product Boundary
-
-Pramaan says:
-
-> Here is the evidence for this code change.
-
-Pramaan does not say:
-
-> This code is definitely correct.
-
-That distinction is the product.
-
-The stages are intentionally diverse, so their failure modes should be less
-correlated than a single test pass or critic review. They are not statistically
-independent, and Pramaan should never claim that the probability of failure is
-the product of stage failure rates.
-
-## Planned v1 Pipeline
-
-```text
-PR diff
-  -> Sandbox and environment evidence
-  -> Claim scope
-  -> Static/hallucination checks
-  -> Oracle integrity
-  -> Delta mutation
-  -> Property/fuzz/differential checks
-  -> Bundle signing and verification
-  -> GitHub Action summary
-```
-
-## What Is Missing for Serious v1
-
-Serious v1 is not "more stages." Serious v1 means the receipts are trusted,
-fast enough, deterministic enough, and hard to game.
-
-| Area | Current State | Missing for Serious v1 |
-| --- | --- | --- |
-| CLI/orchestrator | Prototype commands and stage receipts exist | Stable plugin protocol, resumable runs, parallel scheduling, stage budgets, robust error taxonomy |
-| Receipts/schemas | Core schemas exist | Schema versioning policy, compatibility tests, richer artifact graph, full in-toto/SLSA predicate mapping |
-| Sandbox | Worktree/environment evidence exists | Pinned OCI image support, network policy capture, dependency tree hashing, dirty-tree after-run detection across real repos |
-| Claim scope | Schema exists | PR/issue ingestion, changed public API extraction, low-confidence scope warnings, reviewer override notes |
-| Static/hallucination | Fixture-based paths exist | Real pyright/mypy/ruff, tsc/eslint, cargo/clippy integration; hallucination taxonomy coverage |
-| Oracle integrity | Weakened-test demo exists | Strong AST diff for pytest/Jest/Vitest/Rust tests, snapshot/fixture review UX, test fingerprinting, parametrized-case diffs |
-| Mutation | Receipt model exists | Real mutmut/StrykerJS/cargo-mutants adapters, changed-file targeting, equivalent-mutant handling, incremental cache receipts |
-| Property/fuzz | Receipt model exists | Real Hypothesis and fast-check discovery, replay corpus storage, differential base/head execution, minimized counterexamples |
-| GitHub Action | Wrapper exists | Marketplace-ready action, PR comments, artifact upload/attestation, permissions hardening, failure-mode docs |
-| Bundle signing | Local signable metadata exists | Sigstore keyless path, GitHub artifact attestation path, verification summary, tamper-evident artifact tree |
-| Corpus/evals | Starter fixtures exist | 100+ adversarial PR scenarios, real-world replay set, flaky-case quarantine, benchmark dashboard |
-| Tests | Unit and smoke tests exist | Full golden-receipt suite, cross-platform CI, property tests for schemas, integration tests against toy repos |
-| Documentation | Product docs exist | Operator guide, security model, threat model, contributor plugin guide, demo walkthrough with screenshots |
-
-## Roadmap
-
-### Prototype: 8k-15k LOC
-
-Goal: Prove the core thesis.
-
-- CLI can run locally.
-- Receipts are emitted for every stage, including failures and skips.
-- Weakened-test demo passes normal CI but fails Pramaan.
-- Claim scope, receipt, bundle, and risk-taxonomy schemas exist.
-- Basic bundle verification catches tampering.
-
-Status: mostly present in this repository, but still needs more real-world polish.
-
-### Alpha MVP: 15k-30k LOC
-
-Goal: Work on selected real repositories.
-
-- Real Python, TypeScript, and Rust static checks.
-- Real oracle-integrity checks for pytest and Jest/Vitest.
-- Basic GitHub Action usable on pull requests.
-- Local bundle signing/signable output.
-- First 25 adversarial PR fixtures.
-- Clear reviewer summary: failed stages, residual risks, replay commands.
-
-### Real MVP: 30k-60k LOC
-
-Goal: Be useful in serious engineering teams.
-
-- Diff-scoped mutmut, StrykerJS, and cargo-mutants adapters.
-- Hypothesis and fast-check differential testing for eligible pure functions.
-- Deterministic seeds, replay data, corpus hashes, minimized counterexamples.
-- Pinned container image and lockfile/dependency evidence.
-- GitHub artifact upload and optional attestation.
-- Stable schema versioning and compatibility tests.
-- 75+ adversarial fixtures and at least 10 real-repo case studies.
-
-### Serious v1: 80k-140k LOC
-
-Goal: Become a credible trust layer for AI-authored pull requests.
-
-- Production-grade orchestrator with parallel scheduling and stage budgets.
-- Hardened sandboxing with OCI digest capture, network policy evidence, and dependency provenance.
-- Deep Python, TypeScript, and Rust plugin coverage; Go/Java only after protocol stability.
-- Full oracle integrity engine across assertions, skips, snapshots, fixtures, mocks, and parametrized cases.
-- Mutation and fuzz stages that are fast, replayable, and honest about timeouts/skips.
-- in-toto/SLSA-compatible proof bundle with Sigstore/GitHub attestation support.
-- Large adversarial corpus mapped to stable risk IDs.
-- Public demo repository showing "GitHub green, Pramaan red" in under 30 seconds.
-- Security model, threat model, operator guide, plugin authoring guide, and enterprise deployment notes.
-
-## Research Basis
-
-Pramaan is intentionally built from existing research and production tooling
-rather than a new claim of correctness.
-
-### AI-code reliability and benchmark evidence
-
-- [tau2-bench](https://arxiv.org/abs/2506.07982): motivates repeated, process-aware evaluation rather than one lucky pass.
-- [SWE-Lancer](https://arxiv.org/abs/2502.12115): highlights how frontier models can silently fail real software tasks.
-- [SWE-bench Verified](https://openai.com/index/introducing-swe-bench-verified/): motivates stronger task and oracle curation.
-- [SWE-bench Verified retirement analysis](https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/): motivates claim-scope and oracle-alignment receipts.
-
-### Process supervision and auditability
-
-- [Let's Verify Step by Step](https://arxiv.org/abs/2305.20050): supports step-level evidence over only final outcome labels.
-- [Lost in the Middle](https://arxiv.org/abs/2307.03172): motivates chunked, per-file/per-stage receipts instead of giant context reviews.
-
-### LLM judge and critic limitations
-
-- [Self-preference bias](https://arxiv.org/abs/2410.21819): warns against trusting a model's own style preferences.
-- [Position bias in LLM judges](https://arxiv.org/html/2406.07791v9): motivates position-swap and non-critic execution stages.
-- [Don't Judge by Its Cover](https://arxiv.org/abs/2505.16222): reinforces that critic agreement is only a signal, not a gate.
-- [CodeJudge](https://arxiv.org/abs/2410.02184): useful as a specialized review signal, but not as the sole pass/fail mechanism.
-
-### Hallucination and static failure detection
-
-- [CodeHalu](https://arxiv.org/abs/2405.00253): supports classifying invented APIs, resource mismatches, naming errors, and logic issues.
-- [Collu-Bench](https://arxiv.org/html/2410.09997v1): motivates detecting hallucinated code behavior beyond simple syntax failures.
-- [Delulu](https://arxiv.org/abs/2605.07024): motivates fill-in-the-middle hallucination categories such as invented APIs, invalid parameters, undefined variables, and non-existent imports.
-
-### Mutation testing
-
-- [Just et al., FSE 2014](https://homes.cs.washington.edu/~mernst/pubs/mutation-effectiveness-fse2014.pdf): mutation score correlates with real fault detection.
-- [Papadakis et al., ICSE 2018](https://dl.acm.org/doi/pdf/10.1145/3180155.3180183): confirms mutation testing is useful but imperfect.
-- [LLMorpheus](https://arxiv.org/abs/2404.09952): connects mutation-style testing with LLM-generated-code defect discovery.
-- [mutmut](https://mutmut.readthedocs.io/en/latest/), [StrykerJS](https://stryker-mutator.io/docs/stryker-js/incremental/), and [cargo-mutants](https://mutants.rs/timeouts.html): production tools Pramaan can wrap with budget and timeout receipts.
-
-### Property, fuzz, and differential testing
-
-- [Fuzz4All](https://arxiv.org/abs/2308.04748): motivates broad fuzzing for compiler/interpreter-style systems.
-- [Agentic property-based testing](https://arxiv.org/html/2510.09907v1): motivates generated properties with replayable evidence.
-- [CodaMosa](https://dl.acm.org/doi/10.1109/ICSE48619.2023.00085): supports search-based test amplification for coverage gaps.
-- [Metamorphic Prompt Testing](https://arxiv.org/abs/2406.06864): motivates metamorphic relations where exact assertions are hard.
-- [Hypothesis](https://hypothesis.readthedocs.io/en/latest/reference/api.html) and [fast-check](https://fast-check.dev/docs/introduction/why-property-based/): production property-testing engines for replayable Python and TypeScript checks.
-
-### Formal and semi-formal verification
-
-- [Kani](https://github.com/model-checking/kani): Rust model checking where harnesses and bounds are available.
-- [CBMC](https://www.cprover.org/cbmc/): C/C++ bounded model checking for selected safety properties.
-- [Dafny](https://dafny.org/): specification-oriented verification where projects already have specs.
-- [SpecGen](https://arxiv.org/abs/2401.08807): useful as a bonus spec-generation signal, not a v1 merge gate.
-
-### Supply-chain attestations and reproducibility
-
-- [SLSA](https://slsa.dev/spec/): provenance and build-integrity framework.
-- [Sigstore](https://docs.sigstore.dev/cosign/signing/overview/): keyless signing and transparency-log-backed identity.
-- [in-toto](https://in-toto.io/): supply-chain layout and attestation framework.
-- [GitHub artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations): practical Sigstore-backed artifact provenance path for GitHub Actions.
-- [Nix reproducibility research](https://arxiv.org/pdf/2501.15919): informs the honest boundary around bit-for-bit reproducibility.
-
-### Agent-safe coding and adjacent future work
-
-- [Quasar](https://arxiv.org/abs/2506.12202): motivates constrained generation for agent-friendly code.
-- [Type-Constrained Code Generation](https://arxiv.org/abs/2504.09246): supports strict typing and grammar/type-constrained generation instead of inventing a new general-purpose language.
-- [MCP](https://modelcontextprotocol.io/): relevant to Pramaan Adapter Certification, where agent tools need typed, auditable, replayable behavior.
-
-## Risk Register
-
-Pramaan tracks risks with stable IDs rather than a single opaque score.
-
-Examples:
-
-- `R-001`: no explicit PR claim.
-- `R-006`: original failing test absent.
-- `R-010`: test skip added.
-- `R-011`: assertion weakened.
-- `R-025`: lockfile changed without notice.
-- `R-038`: invented API.
-- `R-049`: concurrency race introduced.
-- `R-057`: performance regression.
-
-See [.planning/research/TOP_100_FLAWS_AND_MITIGATIONS_2026-05-18.md](.planning/research/TOP_100_FLAWS_AND_MITIGATIONS_2026-05-18.md) and [docs/risk-taxonomy.md](docs/risk-taxonomy.md).
-
-## Repository Map
-
-- [crates/pramaan-cli](crates/pramaan-cli): CLI entry point and stage commands.
-- [crates/pramaan-core](crates/pramaan-core): receipt, claim-scope, risk, and shared models.
-- [crates/pramaan-sandbox](crates/pramaan-sandbox): worktree and environment evidence.
-- [crates/pramaan-bundle](crates/pramaan-bundle): bundle manifest, hashing, signing metadata, and verification.
-- [schemas](schemas): public JSON Schemas.
-- [docs](docs): public product and operator documentation.
-- [examples](examples): fixtures, demos, and synthetic receipts.
-- [plugins](plugins): language plugin plans and adapters.
-- [.planning](.planning): GSD planning, requirements, roadmap, research, and phase validation.
-
 ## Documentation
 
+- [Tasks to Serious v1](TASKS.md)
 - [Receipt model](docs/receipt-model.md)
 - [Risk taxonomy](docs/risk-taxonomy.md)
 - [Bundle verification](docs/bundle-verification.md)
@@ -316,12 +327,6 @@ See [.planning/research/TOP_100_FLAWS_AND_MITIGATIONS_2026-05-18.md](.planning/r
 - [Killer demo](docs/demo.md)
 - [Research index](docs/RESEARCH_INDEX.md)
 - [Roadmap](.planning/ROADMAP.md)
-
-## Autonomous Build
-
-The planned autonomous build sequence is documented here:
-
-[.planning/AUTONOMOUS_BUILD_COMMAND.md](.planning/AUTONOMOUS_BUILD_COMMAND.md)
 
 ## License
 
