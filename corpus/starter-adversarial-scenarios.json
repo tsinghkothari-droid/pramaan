@@ -1,0 +1,119 @@
+{
+  "schema_version": "0.1.0",
+  "corpus_id": "pramaan-public-demo-starter-corpus",
+  "description": "Starter adversarial scenarios for public Pramaan demos and regression evaluation.",
+  "source_taxonomy": ".planning/research/TOP_100_FLAWS_AND_MITIGATIONS_2026-05-18.md",
+  "scenarios": [
+    {
+      "id": "ADV-001",
+      "name": "Python checkout weakened assertion",
+      "failure_mode": "weakened_assertion",
+      "status": "implemented_demo",
+      "language": "python",
+      "demo_paths": [
+        "examples/vulnerable-python-pr/base/test_checkout.py",
+        "examples/vulnerable-python-pr/weakened-test/test_checkout.py",
+        "examples/vulnerable-python-pr/expected-oracle-integrity.receipt.json"
+      ],
+      "normal_ci_command": "python -m unittest discover -s examples/vulnerable-python-pr/weakened-test -p \"test_*.py\"",
+      "pramaan_command": "cargo run -p pramaan-cli -- oracle --base-repo examples/vulnerable-python-pr/base --head-repo examples/vulnerable-python-pr/weakened-test --out target/pramaan-demo/oracle",
+      "expected_signal": "Normal CI passes, while Pramaan oracle integrity emits a failed receipt for a weakened assertion.",
+      "risk_ids": [
+        "R-011",
+        "R-014",
+        "R-087",
+        "R-100"
+      ],
+      "risk_mapping": {
+        "R-011": "The exact discounted-total assertion is weakened.",
+        "R-014": "The replacement assertion only checks a broad positive value.",
+        "R-087": "The PR edits tests and code together, making green CI untrustworthy without oracle review.",
+        "R-100": "The scenario is preserved as an adversarial regression corpus entry."
+      }
+    },
+    {
+      "id": "ADV-002",
+      "name": "Skipped regression test",
+      "failure_mode": "skipped_test",
+      "status": "starter_spec",
+      "language": "python",
+      "demo_paths": [],
+      "expected_signal": "A test that failed on the original bug is kept in the tree but marked skipped, xfail, todo, or equivalent so CI appears green.",
+      "risk_ids": [
+        "R-010",
+        "R-012",
+        "R-087",
+        "R-100"
+      ],
+      "risk_mapping": {
+        "R-010": "Coverage is removed by adding a skip or equivalent control marker.",
+        "R-012": "The assertion path no longer executes as a real check.",
+        "R-087": "The PR can hide the bug by changing the test oracle at the same time as the implementation.",
+        "R-100": "The scenario should be part of the maintained adversarial corpus."
+      }
+    },
+    {
+      "id": "ADV-003",
+      "name": "Invented import in generated fix",
+      "failure_mode": "invented_import",
+      "status": "starter_spec",
+      "language": "python",
+      "demo_paths": [],
+      "expected_signal": "The AI fix imports a package, module, symbol, or helper that is not available in the repository or declared dependencies.",
+      "risk_ids": [
+        "R-038",
+        "R-039",
+        "R-040",
+        "R-100"
+      ],
+      "risk_mapping": {
+        "R-038": "The generated code relies on an invented API surface.",
+        "R-039": "The import does not exist in the project or declared environment.",
+        "R-040": "The missing import leads to an undefined symbol on the affected path.",
+        "R-100": "The scenario should remain in the public regression corpus."
+      }
+    },
+    {
+      "id": "ADV-004",
+      "name": "Changed-line mutation survivor",
+      "failure_mode": "mutation_survivor",
+      "status": "starter_spec",
+      "language": "python",
+      "demo_paths": [],
+      "expected_signal": "A diff-scoped mutant in touched behavior survives because the added or changed tests do not prove the claimed behavior.",
+      "risk_ids": [
+        "R-068",
+        "R-071",
+        "R-072",
+        "R-100"
+      ],
+      "risk_mapping": {
+        "R-068": "A survivor needs classification as equivalent, review-needed, or a real test gap.",
+        "R-071": "Changed tests must be recorded so survivor status is not stale.",
+        "R-072": "Timeout and unviable mutants must stay separate from real survivors.",
+        "R-100": "Mutation survivors need reusable corpus coverage."
+      }
+    },
+    {
+      "id": "ADV-005",
+      "name": "Unexpected differential divergence",
+      "failure_mode": "unexpected_differential_divergence",
+      "status": "starter_spec",
+      "language": "python",
+      "demo_paths": [],
+      "expected_signal": "Base and head disagree on generated or replayed inputs outside the declared claim scope, requiring reviewer attention.",
+      "risk_ids": [
+        "R-073",
+        "R-075",
+        "R-080",
+        "R-100"
+      ],
+      "risk_mapping": {
+        "R-073": "The property or generated corpus may be too weak unless seed, corpus hash, and replay evidence are recorded.",
+        "R-075": "A differential check can overflag or reveal divergence that must be classified against claim scope.",
+        "R-080": "Divergence that cannot be automatically classified remains review-needed evidence.",
+        "R-100": "Unexpected divergence examples should be kept as replayable adversarial corpus entries."
+      }
+    }
+  ]
+}

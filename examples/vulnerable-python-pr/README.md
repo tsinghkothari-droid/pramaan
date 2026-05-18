@@ -10,6 +10,7 @@ This demo is intentionally small:
 - `expected-oracle-integrity.receipt.json` documents the Pramaan behavior
   expected from the Phase 3 oracle engine: fail the PR and name the weakened
   assertion.
+- `risk-map.json` maps the public demo to stable risk IDs.
 
 Run from the repository root:
 
@@ -20,3 +21,18 @@ python -m unittest discover -s examples/vulnerable-python-pr/weakened-test -p "t
 
 The first command is expected to fail. The second command is expected to pass,
 which is the point of the demo.
+
+Run Pramaan oracle integrity:
+
+```powershell
+cargo run -p pramaan-cli -- oracle --base-repo examples/vulnerable-python-pr/base --head-repo examples/vulnerable-python-pr/weakened-test --out target/pramaan-demo/oracle
+```
+
+The generated proof bundle inspection path is:
+
+```text
+target/pramaan-demo/oracle/receipts/oracle-integrity.receipt.json
+target/pramaan-demo/oracle/oracle-diff.json
+```
+
+For the public corpus index, see `corpus/starter-adversarial-scenarios.json`.

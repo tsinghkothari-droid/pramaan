@@ -1,0 +1,120 @@
+name: Pramaan
+description: Run Pramaan on pull requests and publish a risk-aware proof bundle summary.
+
+inputs:
+  base-ref:
+    description: Base commit/ref to compare. Defaults to pull_request.base.sha when available.
+    required: false
+    default: ""
+  head-ref:
+    description: Head commit/ref to compare. Defaults to pull_request.head.sha when available.
+    required: false
+    default: ""
+  bundle-path:
+    description: Directory where Pramaan writes the proof bundle.
+    required: false
+    default: target/pramaan
+  artifact-name:
+    description: Name for the uploaded proof bundle artifact.
+    required: false
+    default: pramaan-proof-bundle
+  upload-artifact:
+    description: Upload the proof bundle with actions/upload-artifact.
+    required: false
+    default: "true"
+  attest:
+    description: Create a GitHub artifact attestation for the uploaded bundle. Requires id-token: write and attestations: write.
+    required: false
+    default: "false"
+  pramaan-args:
+    description: Extra arguments appended to `pramaan verify`.
+    required: false
+    default: ""
+
+outputs:
+  bundle-path:
+    description: Directory containing the proof bundle.
+    value: ${{ steps.paths.outputs.bundle_path }}
+  manifest-path:
+    description: Path to bundle.manifest.json.
+    value: ${{ steps.paths.outputs.manifest_path }}
+  summary-path:
+    description: Path to the rendered GitHub summary markdown.
+    value: ${{ steps.paths.outputs.summary_path }}
+  final-status:
+    description: Final bundle status reported by the Pramaan manifest.
+    value: ${{ steps.final-status.outputs.final_status }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve PR refs
+      id: refs
+      shell: bash
+      run: |
+        set -euo pipefail
+        node "$GITHUB_ACTION_PATH/resolve-refs.mjs" \
+          --base "${{ inputs.base-ref }}" \
+          --head "${{ inputs.head-ref }}" \
+          --github-output "$GITHUB_OUTPUT"
+
+    - name: Run Pramaan CLI
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "${{ inputs.bundle-path }}"
+        log_path="${{ inputs.bundle-path }}/pramaan.log"
+        cargo run -p pramaan-cli -- verify \
+          --base "${{ steps.refs.outputs.base_ref }}" \
+          --head "${{ steps.refs.outputs.head_ref }}" \
+          --out "${{ inputs.bundle-path }}" \
+          ${{ inputs.pramaan-args }} 2>&1 | tee "$log_path"
+
+    - name: Render risk summary
+      shell: bash
+      run: |
+        set -euo pipefail
+        summary_path="${{ inputs.bundle-path }}/github-step-summary.md"
+        node "$GITHUB_ACTION_PATH/render-summary.mjs" \
+          --manifest "${{ inputs.bundle-path }}/bundle.manifest.json" \
+          --log "${{ inputs.bundle-path }}/pramaan.log" \
+          --out "$summary_path" \
+          --base "${{ steps.refs.outputs.base_ref }}" \
+          --head "${{ steps.refs.outputs.head_ref }}"
+        if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+          cat "$summary_path" >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+    - name: Record wrapper outputs
+      id: paths
+      shell: bash
+      run: |
+        set -euo pipefail
+        {
+          echo "bundle_path=${{ inputs.bundle-path }}"
+          echo "manifest_path=${{ inputs.bundle-path }}/bundle.manifest.json"
+          echo "summary_path=${{ inputs.bundle-path }}/github-step-summary.md"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Record final status
+      id: final-status
+      shell: bash
+      run: |
+        set -euo pipefail
+        final_status="$(node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); process.stdout.write(m.final_status || 'unknown')" "${{ inputs.bundle-path }}/bundle.manifest.json")"
+        echo "final_status=$final_status" >> "$GITHUB_OUTPUT"
+
+    - name: Upload proof bundle
+      if: ${{ inputs.upload-artifact == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.bundle-path }}
+        if-no-files-found: error
+        retention-days: 14
+
+    - name: Attest proof bundle
+      if: ${{ inputs.attest == 'true' }}
+      uses: actions/attest-build-provenance@v2
+      with:
+        subject-path: ${{ inputs.bundle-path }}/bundle.manifest.json

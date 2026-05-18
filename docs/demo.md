@@ -36,14 +36,43 @@ python -m unittest discover -s examples/vulnerable-python-pr/weakened-test -p "t
 
 Expected result: passes, even though the bug is still present.
 
-Expected Pramaan behavior once the Phase 3 oracle engine is wired:
+Pramaan oracle integrity:
 
 ```powershell
-cargo run -p pramaan-cli -- verify --base examples/vulnerable-python-pr/base --head examples/vulnerable-python-pr/weakened-test --out target/pramaan-demo
+cargo run -p pramaan-cli -- oracle --base-repo examples/vulnerable-python-pr/base --head-repo examples/vulnerable-python-pr/weakened-test --out target/pramaan-demo/oracle
 ```
 
-Expected result: oracle integrity fails and writes a receipt equivalent to
-`examples/vulnerable-python-pr/expected-oracle-integrity.receipt.json`.
+Expected result: oracle integrity completes with findings and writes a failed
+receipt at:
+
+```text
+target/pramaan-demo/oracle/receipts/oracle-integrity.receipt.json
+```
+
+The checked-in expected receipt is:
+
+```text
+examples/vulnerable-python-pr/expected-oracle-integrity.receipt.json
+```
+
+Use the checked-in receipt as the stable public-demo expectation. Use the
+generated receipt as the local proof that the current engine still finds the
+weakened assertion.
+
+## 30-Second Proof Bundle Inspection
+
+After running the Pramaan command above, inspect these files:
+
+| File | What to check |
+| --- | --- |
+| `target/pramaan-demo/oracle/receipts/oracle-integrity.receipt.json` | `stage` is `oracle_integrity`, `status` is `failed`, and `residual_risks` contains the finding risk IDs. |
+| `target/pramaan-demo/oracle/oracle-diff.json` | The finding kind is `weakened_assertion` for `test_applies_percentage_discount`. |
+| `examples/vulnerable-python-pr/risk-map.json` | The public demo maps normal CI green and Pramaan red to stable risk IDs. |
+| `corpus/starter-adversarial-scenarios.json` | `ADV-001` links the implemented demo to the broader adversarial corpus. |
+
+If the local receipt path is absent, rerun the Pramaan oracle command. If the
+normal CI command fails, the demo no longer proves the intended "CI green,
+Pramaan red" contrast.
 
 ## Risk Map
 
@@ -64,3 +93,7 @@ The proof is visible in two files:
 
 The production code is intentionally identical and still wrong in both branches.
 Only the test oracle changes.
+
+The adversarial corpus index lives in
+`corpus/starter-adversarial-scenarios.json`, with a reviewer guide in
+`docs/adversarial-corpus.md`.

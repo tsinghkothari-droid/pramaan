@@ -6,15 +6,15 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Phase 6 - GitHub Action and Public Demo Loop
+**Current focus:** Phase 7 - Adapter Certification Expansion
 
 ## Current Phase
 
-Phase 6: GitHub Action and Public Demo Loop
+Phase 7: Adapter Certification Expansion
 
 ## Status
 
-Phase 5 is implemented and validated: bundle manifests hash receipts/artifacts, `pramaan bundle verify` catches tampering, and signing/attestation metadata plus risk summaries are in place. Proceeding to Phase 6.
+Phase 6 is implemented and validated: GitHub Action wrapper, risk-aware summary, public demo docs, and starter adversarial corpus are in place. Proceeding to Phase 7 because it was explicitly requested.
 
 ## Open Questions
 
@@ -39,3 +39,4 @@ Phase 5 is implemented and validated: bundle manifests hash receipts/artifacts, 
 | 2026-05-18 | Completed Phase 3 implementation. | Oracle integrity catches the weakened-test demo while the weakened PR's normal unit test passes. |
 | 2026-05-18 | Completed Phase 4 implementation. | Mutation and differential fuzz commands emit budgeted, replayable, risk-mapped receipts and pass workspace tests. |
 | 2026-05-18 | Completed Phase 5 implementation. | Bundle verification and signing/attestation metadata are green under full workspace tests and CLI manifest verification. |
+| 2026-05-18 | Completed Phase 6 implementation. | GitHub Action, demo docs, and starter adversarial corpus are green under Node tests, Rust tests, and demo oracle verification. |

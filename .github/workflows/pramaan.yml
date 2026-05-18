@@ -1,0 +1,32 @@
+name: Pramaan
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+
+jobs:
+  pramaan:
+    name: Proof bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run Pramaan
+        uses: ./
+        with:
+          base-ref: ${{ github.event.pull_request.base.sha || 'HEAD~1' }}
+          head-ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          bundle-path: target/pramaan
+          artifact-name: pramaan-proof-bundle
