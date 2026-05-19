@@ -36,12 +36,13 @@ verification layer for AI-authored pull requests.
 
 ## P1: Sandbox and Environment Evidence
 
-- [ ] Capture OS, architecture, shell, timezone, locale, and toolchain versions.
-- [ ] Record base/head commit IDs and dirty/untracked file state.
-- [ ] Hash dependency manifests and lockfiles.
-- [ ] Detect lockfile changes and mark dependency-drift risks.
-- [ ] Capture container image names and digests when running inside OCI containers.
-- [ ] Add network policy evidence: disabled, allowed, observed, or unknown.
+- [x] Capture OS, architecture, shell, timezone, locale, and toolchain versions.
+- [x] Record base/head commit IDs and dirty/untracked file state.
+- [x] Hash dependency manifests and lockfiles.
+- [x] Detect lockfile changes and mark dependency-drift risks.
+- [x] Capture container image names and digests when supplied by CI/container environment metadata.
+- [ ] Auto-detect OCI/container identity when CI does not provide image metadata explicitly.
+- [x] Add network policy evidence: disabled, allowed, observed, or unknown.
 - [ ] Detect source changes after a stage runs and mark dirty-after-run risk.
 - [ ] Threat-model the verifier as an attack target, including malicious PR code exploiting mutation engines, fuzzers, parsers, test runners, or plugin hooks.
 - [ ] Add PII/secrets scrubbing rules for environment evidence, logs, network endpoints, internal hostnames, paths, and artifact metadata before bundle emission.
@@ -49,9 +50,9 @@ verification layer for AI-authored pull requests.
 
 ## P1: Claim Scope
 
-- [ ] Parse PR title and body from GitHub Actions context.
+- [x] Parse PR title and body from GitHub Actions context.
 - [ ] Ingest linked issue text when available.
-- [ ] Detect changed public APIs for Python, TypeScript, and Rust.
+- [x] Detect changed public APIs for Python, TypeScript, and Rust.
 - [ ] Add low-confidence claim-scope warnings for vague or missing PR descriptions.
 - [ ] Allow maintainers to provide a scope note file for expected and out-of-scope behavior.
 - [ ] Map claim-scope warnings to stable risk IDs.
@@ -59,12 +60,12 @@ verification layer for AI-authored pull requests.
 
 ## P1: Static and Hallucination Checks
 
-- [ ] Python: integrate `compileall`, `ruff`, `mypy`, and `pyright` when configured.
-- [ ] TypeScript: integrate package-manager detection, `tsc --noEmit`, and ESLint when configured.
-- [ ] Rust: integrate `cargo check`, `cargo test --no-run`, and `cargo clippy` when configured.
-- [ ] Classify failures as `invented_api`, `invalid_parameter`, `undefined_symbol`, `nonexistent_import`, `resource_mismatch`, `logic_mismatch`, or `unknown`.
+- [x] Python: integrate `compileall`, `ruff`, `mypy`, and `pyright` when configured.
+- [x] TypeScript: integrate package-manager detection, `tsc --noEmit`, and ESLint when configured.
+- [x] Rust: integrate `cargo check`, `cargo test --no-run`, and `cargo clippy` when configured.
+- [x] Classify failures as `invented_api`, `invalid_parameter`, `undefined_symbol`, `nonexistent_import`, `resource_mismatch`, `logic_mismatch`, or `unknown`.
 - [ ] Detect relaxed static-check configuration in the PR.
-- [ ] Emit skipped receipts when tools are unavailable instead of hiding missing checks.
+- [x] Emit skipped receipts when tools are unavailable instead of hiding missing checks.
 - [ ] Add security-sensitive diff classification for auth, authorization, cryptography, SQL/query construction, subprocess, filesystem, deserialization, secrets, network, and permissions.
 
 ## P1: Oracle Integrity

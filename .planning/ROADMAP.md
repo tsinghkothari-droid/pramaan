@@ -154,6 +154,8 @@
 
 ## Phase 11: Sandbox, Claim Scope, and Static Depth
 
+**Status:** Completed 2026-05-19 as PASS_WITH_RISKS. See `.planning/reports/phase-11-aggregate-report.md`.
+
 **Goal:** Produce practical environment, claim-scope, and static evidence for real Python, TypeScript, and Rust repositories.
 
 **Requirements:** SNDB-04, SNDB-05, SCOP-04, SCOP-05, STAT-06, STAT-07
