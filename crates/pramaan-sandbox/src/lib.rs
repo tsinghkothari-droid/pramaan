@@ -48,7 +48,10 @@ pub struct SandboxEvidence {
     pub source_dirty_state: DirtyState,
     pub repository: RepositoryEvidence,
     pub environment: EnvironmentEvidence,
+    pub network_policy: NetworkPolicyEvidence,
     pub hermetic: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub image_digest: Option<String>,
     pub limitations: Vec<String>,
@@ -75,7 +78,16 @@ pub struct DirtyState {
 pub struct RepositoryEvidence {
     pub lockfiles: Vec<FileHash>,
     pub missing_lockfiles: Vec<String>,
+    pub lockfile_drift: Vec<LockfileDrift>,
     pub config_files: Vec<FileHash>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LockfileDrift {
+    pub path: String,
+    pub base_digest: Option<String>,
+    pub head_digest: Option<String>,
+    pub changed: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -89,9 +101,21 @@ pub struct EnvironmentEvidence {
     pub os: String,
     pub arch: String,
     pub family: String,
+    pub shell: Option<String>,
+    pub timezone: Option<String>,
+    pub locale: Option<String>,
     pub git_version: String,
     pub rustc_version: Option<String>,
     pub cargo_version: Option<String>,
+    pub node_version: Option<String>,
+    pub npm_version: Option<String>,
+    pub python_version: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NetworkPolicyEvidence {
+    pub policy: String,
+    pub source: String,
 }
 
 pub struct SandboxRun {
@@ -109,7 +133,9 @@ impl SandboxRun {
 pub struct SandboxRunner {
     repo_path: PathBuf,
     out_dir: PathBuf,
+    image_name: Option<String>,
     image_digest: Option<String>,
+    network_policy: Option<String>,
 }
 
 impl SandboxRunner {
@@ -117,12 +143,24 @@ impl SandboxRunner {
         Self {
             repo_path: repo_path.into(),
             out_dir: out_dir.into(),
+            image_name: None,
             image_digest: None,
+            network_policy: None,
         }
+    }
+
+    pub fn with_image_name(mut self, image_name: impl Into<String>) -> Self {
+        self.image_name = Some(image_name.into());
+        self
     }
 
     pub fn with_image_digest(mut self, image_digest: impl Into<String>) -> Self {
         self.image_digest = Some(image_digest.into());
+        self
+    }
+
+    pub fn with_network_policy(mut self, network_policy: impl Into<String>) -> Self {
+        self.network_policy = Some(network_policy.into());
         self
     }
 
@@ -151,10 +189,16 @@ impl SandboxRunner {
         let base_guard = add_worktree(&self.repo_path, worktree_root.join("base"), &plan.base_ref)?;
         let head_guard = add_worktree(&self.repo_path, worktree_root.join("head"), &plan.head_ref)?;
 
-        let repository = repository_evidence(&self.repo_path)?;
+        let repository = repository_evidence(&self.repo_path, &base_guard.path, &head_guard.path)?;
         let environment = environment_evidence()?;
+        let network_policy = network_policy_evidence(self.network_policy.as_deref());
         let hermetic = self.image_digest.is_some() && !source_dirty_state.is_dirty;
-        let limitations = limitations(hermetic, self.image_digest.is_some(), &source_dirty_state);
+        let limitations = limitations(
+            hermetic,
+            self.image_digest.is_some(),
+            &source_dirty_state,
+            &repository,
+        );
         let (mitigated_risks, residual_risks, not_applicable_risks) =
             sandbox_risks(hermetic, self.image_digest.is_some(), &repository);
 
@@ -176,7 +220,9 @@ impl SandboxRunner {
             source_dirty_state,
             repository,
             environment,
+            network_policy,
             hermetic,
+            image_name: self.image_name.clone(),
             image_digest: self.image_digest.clone(),
             limitations,
             mitigated_risks,
@@ -315,7 +361,11 @@ fn dirty_state(repo_path: &Path) -> Result<DirtyState, SandboxError> {
     })
 }
 
-fn repository_evidence(repo_path: &Path) -> Result<RepositoryEvidence, SandboxError> {
+fn repository_evidence(
+    repo_path: &Path,
+    base_path: &Path,
+    head_path: &Path,
+) -> Result<RepositoryEvidence, SandboxError> {
     let lockfile_candidates = [
         "Cargo.lock",
         "package-lock.json",
@@ -344,8 +394,48 @@ fn repository_evidence(repo_path: &Path) -> Result<RepositoryEvidence, SandboxEr
     Ok(RepositoryEvidence {
         lockfiles,
         missing_lockfiles,
+        lockfile_drift: lockfile_drift(base_path, head_path, &lockfile_candidates)?,
         config_files: existing_hashes(repo_path, &config_candidates)?,
     })
+}
+
+fn lockfile_drift(
+    base_path: &Path,
+    head_path: &Path,
+    candidates: &[&str],
+) -> Result<Vec<LockfileDrift>, SandboxError> {
+    let mut drift = Vec::new();
+    for candidate in candidates {
+        let base_digest = file_digest(base_path, candidate)?;
+        let head_digest = file_digest(head_path, candidate)?;
+        if base_digest.is_some() || head_digest.is_some() {
+            let changed = base_digest != head_digest;
+            drift.push(LockfileDrift {
+                path: candidate.replace('\\', "/"),
+                base_digest,
+                head_digest,
+                changed,
+            });
+        }
+    }
+    Ok(drift)
+}
+
+fn file_digest(repo_path: &Path, relative_path: &str) -> Result<Option<String>, SandboxError> {
+    let path = repo_path.join(relative_path);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let digest = run_command(
+        repo_path,
+        "git",
+        &[
+            "hash-object".to_string(),
+            "--".to_string(),
+            relative_path.to_string(),
+        ],
+    )?;
+    Ok(Some(format!("git-blob:{digest}")))
 }
 
 fn existing_hashes(repo_path: &Path, candidates: &[&str]) -> Result<Vec<FileHash>, SandboxError> {
@@ -378,10 +468,35 @@ fn environment_evidence() -> Result<EnvironmentEvidence, SandboxError> {
         os: std::env::consts::OS.to_string(),
         arch: std::env::consts::ARCH.to_string(),
         family: std::env::consts::FAMILY.to_string(),
+        shell: std::env::var("SHELL")
+            .ok()
+            .or_else(|| std::env::var("ComSpec").ok()),
+        timezone: std::env::var("TZ").ok(),
+        locale: std::env::var("LC_ALL")
+            .ok()
+            .or_else(|| std::env::var("LANG").ok()),
         git_version: run_command(Path::new("."), "git", &["--version".to_string()])?,
         rustc_version: optional_command("rustc", &["--version".to_string()]),
         cargo_version: optional_command("cargo", &["--version".to_string()]),
+        node_version: optional_command("node", &["--version".to_string()]),
+        npm_version: optional_command("npm", &["--version".to_string()]),
+        python_version: optional_command("python", &["--version".to_string()]),
     })
+}
+
+fn network_policy_evidence(policy: Option<&str>) -> NetworkPolicyEvidence {
+    let policy = policy
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("unknown");
+    NetworkPolicyEvidence {
+        policy: policy.to_string(),
+        source: if policy == "unknown" {
+            "default_unknown".to_string()
+        } else {
+            "PRAMAAN_NETWORK_POLICY".to_string()
+        },
+    }
 }
 
 fn optional_command(program: &str, args: &[String]) -> Option<String> {
@@ -415,6 +530,7 @@ fn limitations(
     hermetic: bool,
     has_image_digest: bool,
     source_dirty_state: &DirtyState,
+    repository: &RepositoryEvidence,
 ) -> Vec<String> {
     let mut limitations = Vec::new();
 
@@ -435,6 +551,13 @@ fn limitations(
     if !hermetic {
         limitations.push(
             "Sandbox worktrees isolate Git refs, but this run is not fully hermetic.".to_string(),
+        );
+    }
+
+    if repository.lockfile_drift.iter().any(|entry| entry.changed) {
+        limitations.push(
+            "One or more dependency lockfiles changed between base and head; dependency drift may affect verification results."
+                .to_string(),
         );
     }
 
@@ -472,7 +595,8 @@ fn sandbox_risks(
         ]);
     }
 
-    if repository.missing_lockfiles.is_empty() {
+    let has_lockfile_drift = repository.lockfile_drift.iter().any(|entry| entry.changed);
+    if repository.missing_lockfiles.is_empty() && !has_lockfile_drift {
         mitigated.push("R-030".to_string());
     } else {
         residual.push("R-030".to_string());
@@ -516,7 +640,9 @@ mod tests {
         repo.commit("head");
 
         let run = SandboxRunner::new(repo.path(), repo.path().join("target/pramaan-sandbox"))
+            .with_image_name("ghcr.io/pramaan/test:latest")
             .with_image_digest("sha256:test-image")
+            .with_network_policy("disabled")
             .prepare(&SandboxPlan::isolated_worktree("HEAD~1", "HEAD"))
             .expect("prepare sandbox");
         let (base_path, head_path) = run.worktree_paths();
@@ -535,6 +661,12 @@ mod tests {
             .iter()
             .any(|file| file.path == "Cargo.lock"));
         assert!(run.evidence.hermetic);
+        assert_eq!(
+            run.evidence.image_name.as_deref(),
+            Some("ghcr.io/pramaan/test:latest")
+        );
+        assert_eq!(run.evidence.network_policy.policy, "disabled");
+        assert!(run.evidence.environment.shell.is_some());
         assert!(run.evidence.residual_risks.is_empty());
 
         drop(run);
@@ -590,6 +722,34 @@ mod tests {
             vec!["no recognized lockfile found".to_string()]
         );
         assert!(run.evidence.residual_risks.contains(&"R-030".to_string()));
+    }
+
+    #[test]
+    fn lockfile_drift_is_captured_between_base_and_head() {
+        let repo = FixtureRepo::new("lockfile-drift");
+        repo.write(
+            "Cargo.toml",
+            "[package]\nname = \"lockfile_drift\"\nversion = \"0.1.0\"\n",
+        );
+        repo.write("Cargo.lock", "# lock v1\n");
+        repo.commit("initial");
+        repo.write("Cargo.lock", "# lock v2\n");
+        repo.commit("head");
+
+        let run = SandboxRunner::new(repo.path(), repo.path().join("target/pramaan-sandbox"))
+            .with_image_digest("sha256:test-image")
+            .prepare(&SandboxPlan::isolated_worktree("HEAD~1", "HEAD"))
+            .expect("prepare sandbox");
+
+        let drift = run
+            .evidence
+            .repository
+            .lockfile_drift
+            .iter()
+            .find(|entry| entry.path == "Cargo.lock")
+            .expect("Cargo.lock drift");
+        assert!(drift.changed);
+        assert_ne!(drift.base_digest, drift.head_digest);
     }
 
     #[test]

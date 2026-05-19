@@ -36,6 +36,12 @@ impl StageStatus {
 #[serde(rename_all = "snake_case")]
 pub enum StaticHallucinationCategory {
     BrokenImport,
+    InventedApi,
+    InvalidParameter,
+    LogicMismatch,
+    NonexistentImport,
+    ResourceMismatch,
+    Unknown,
     UndefinedSymbol,
 }
 
@@ -43,6 +49,12 @@ impl StaticHallucinationCategory {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::BrokenImport => "broken_import",
+            Self::InventedApi => "invented_api",
+            Self::InvalidParameter => "invalid_parameter",
+            Self::LogicMismatch => "logic_mismatch",
+            Self::NonexistentImport => "nonexistent_import",
+            Self::ResourceMismatch => "resource_mismatch",
+            Self::Unknown => "unknown",
             Self::UndefinedSymbol => "undefined_symbol",
         }
     }
@@ -64,6 +76,15 @@ pub fn classify_static_hallucinations(output: &str) -> Vec<StaticHallucinationCa
         categories.push(StaticHallucinationCategory::BrokenImport);
     }
 
+    if lower.contains("no module named")
+        || lower.contains("cannot find module")
+        || lower.contains("unresolved import")
+        || lower.contains("failed to resolve")
+        || lower.contains("unresolved module")
+    {
+        categories.push(StaticHallucinationCategory::NonexistentImport);
+    }
+
     if lower.contains("nameerror")
         || lower.contains("undefined name")
         || lower.contains("cannot find name")
@@ -73,6 +94,47 @@ pub fn classify_static_hallucinations(output: &str) -> Vec<StaticHallucinationCa
         || lower.contains("unresolved name")
     {
         categories.push(StaticHallucinationCategory::UndefinedSymbol);
+    }
+
+    if lower.contains("no method named")
+        || lower.contains("has no attribute")
+        || lower.contains("property does not exist")
+        || lower.contains("method does not exist")
+        || lower.contains("unknown field")
+        || lower.contains("no field")
+    {
+        categories.push(StaticHallucinationCategory::InventedApi);
+    }
+
+    if lower.contains("unexpected keyword argument")
+        || lower.contains("missing required")
+        || lower.contains("required positional argument")
+        || lower.contains("incorrect number of arguments")
+        || lower.contains("expected ")
+            && (lower.contains(" arguments") || lower.contains(" argument"))
+    {
+        categories.push(StaticHallucinationCategory::InvalidParameter);
+    }
+
+    if lower.contains("file not found")
+        || lower.contains("no such file or directory")
+        || lower.contains("couldn't read")
+        || lower.contains("could not read")
+        || lower.contains("resource not found")
+    {
+        categories.push(StaticHallucinationCategory::ResourceMismatch);
+    }
+
+    if lower.contains("assertion failed")
+        || lower.contains("assertion `left")
+        || lower.contains("assert.strict")
+        || lower.contains("expected:") && (lower.contains("actual:") || lower.contains("received:"))
+    {
+        categories.push(StaticHallucinationCategory::LogicMismatch);
+    }
+
+    if output.trim().is_empty() {
+        categories.push(StaticHallucinationCategory::Unknown);
     }
 
     categories.sort_by_key(|category| category.as_str());
@@ -1640,6 +1702,7 @@ mod tests {
             categories,
             vec![
                 StaticHallucinationCategory::BrokenImport,
+                StaticHallucinationCategory::NonexistentImport,
                 StaticHallucinationCategory::UndefinedSymbol
             ]
         );

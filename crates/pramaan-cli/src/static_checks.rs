@@ -65,7 +65,9 @@ fn discover_python(repo: &Path) -> Result<Vec<StaticCheckPlan>> {
     let ruff_config = first_existing(repo, &["ruff.toml", ".ruff.toml"])
         .or_else(|| contains_text(&pyproject, "[tool.ruff]").then_some(pyproject.clone()));
     let mypy_config = first_existing(repo, &["mypy.ini", ".mypy.ini"])
-        .or_else(|| contains_text(&pyproject, "[tool.mypy]").then_some(pyproject));
+        .or_else(|| contains_text(&pyproject, "[tool.mypy]").then_some(pyproject.clone()));
+    let pyright_config = first_existing(repo, &["pyrightconfig.json"])
+        .or_else(|| contains_text(&pyproject, "[tool.pyright]").then_some(pyproject));
 
     Ok(vec![
         StaticCheckPlan {
@@ -118,6 +120,23 @@ fn discover_python(repo: &Path) -> Result<Vec<StaticCheckPlan>> {
                 Some("no Python files were discovered".to_string())
             },
             config_path: mypy_config,
+        },
+        StaticCheckPlan {
+            id: "python-pyright".to_string(),
+            language: "python",
+            title: "Python pyright".to_string(),
+            tool: "pyright".to_string(),
+            command: vec!["pyright".to_string(), ".".to_string()],
+            configured: pyright_config.is_some(),
+            applicable: has_python && pyright_config.is_some(),
+            skip_reason: if has_python {
+                pyright_config
+                    .is_none()
+                    .then(|| "pyright is not configured".to_string())
+            } else {
+                Some("no Python files were discovered".to_string())
+            },
+            config_path: pyright_config,
         },
     ])
 }
@@ -209,6 +228,26 @@ fn discover_rust(repo: &Path) -> Result<Vec<StaticCheckPlan>> {
                 Some("no Rust files were discovered".to_string())
             },
             config_path: has_manifest.then_some(cargo_toml),
+        },
+        StaticCheckPlan {
+            id: "rust-cargo-clippy".to_string(),
+            language: "rust",
+            title: "Rust cargo clippy".to_string(),
+            tool: "cargo".to_string(),
+            command: vec![
+                "cargo".to_string(),
+                "clippy".to_string(),
+                "--all-targets".to_string(),
+                "--no-deps".to_string(),
+            ],
+            configured: has_manifest,
+            applicable: has_rust && has_manifest,
+            skip_reason: if has_rust {
+                (!has_manifest).then(|| "Cargo.toml was not found".to_string())
+            } else {
+                Some("no Rust files were discovered".to_string())
+            },
+            config_path: has_manifest.then_some(repo.join("Cargo.toml")),
         },
     ])
 }

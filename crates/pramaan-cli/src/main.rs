@@ -12,6 +12,7 @@ use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 mod fuzz;
 mod mutation;
@@ -151,12 +152,28 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     fs::create_dir_all(&receipt_dir)
         .with_context(|| format!("creating output directory {}", receipt_dir.display()))?;
 
-    let claim_scope = ClaimScope::synthetic(&args.base, &args.head);
+    let claim_scope = claim_scope_from_context(&args.base, &args.head)?;
     let claim_scope_path = args.out.join("claim_scope.synthetic.json");
     write_json(&claim_scope_path, &claim_scope)?;
     let claim_scope_digest = digest_file(&claim_scope_path)?;
 
     let claim_receipt_path = receipt_dir.join("claim-scope.receipt.json");
+    let claim_summary = if claim_scope.extraction_method == "synthetic_cli_arguments" {
+        ReceiptSummary {
+            title: "Synthetic claim scope emitted".to_string(),
+            details: "Claim scope was generated from CLI refs only; no PR metadata was inspected."
+                .to_string(),
+        }
+    } else {
+        ReceiptSummary {
+            title: "PR-grounded claim scope emitted".to_string(),
+            details: format!(
+                "Claim scope used {} source references and detected {} touched public API entries.",
+                claim_scope.source_refs.len(),
+                claim_scope.touched_public_apis.len()
+            ),
+        }
+    };
     let mut claim_receipt = Receipt::synthetic(
         "claim_scope",
         StageStatus::Passed,
@@ -164,20 +181,16 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
         &args.head,
         vec![OutputRef {
             name: "claim_scope".to_string(),
-            path: portable_path(&claim_scope_path),
+            path: bundle_path(&args.out, &claim_scope_path),
             digest: Some(claim_scope_digest),
         }],
         vec![ArtifactRef {
             name: "claim_scope_json".to_string(),
-            path: portable_path(&claim_scope_path),
+            path: bundle_path(&args.out, &claim_scope_path),
             media_type: Some("application/json".to_string()),
             digest: None,
         }],
-        ReceiptSummary {
-            title: "Synthetic claim scope emitted".to_string(),
-            details: "Claim scope was generated from CLI refs only; no PR metadata was inspected."
-                .to_string(),
-        },
+        claim_summary,
         RiskRefs::claim_scope_sample(),
     );
     add_synthetic_trust_hooks(&mut claim_receipt);
@@ -188,9 +201,19 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
         std::env::current_dir().context("resolving current repository directory")?,
         &sandbox_dir,
     );
+    if let Ok(image_name) = std::env::var("PRAMAAN_IMAGE_NAME") {
+        if !image_name.trim().is_empty() {
+            sandbox_runner = sandbox_runner.with_image_name(image_name);
+        }
+    }
     if let Ok(image_digest) = std::env::var("PRAMAAN_IMAGE_DIGEST") {
         if !image_digest.trim().is_empty() {
             sandbox_runner = sandbox_runner.with_image_digest(image_digest);
+        }
+    }
+    if let Ok(network_policy) = std::env::var("PRAMAAN_NETWORK_POLICY") {
+        if !network_policy.trim().is_empty() {
+            sandbox_runner = sandbox_runner.with_network_policy(network_policy);
         }
     }
     let sandbox_run = sandbox_runner
@@ -223,12 +246,12 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
         ],
         outputs: vec![OutputRef {
             name: "sandbox_evidence".to_string(),
-            path: portable_path(&sandbox_evidence_path),
+            path: bundle_path(&args.out, &sandbox_evidence_path),
             digest: Some(sandbox_evidence_digest),
         }],
         artifacts: vec![ArtifactRef {
             name: "sandbox_evidence_json".to_string(),
-            path: portable_path(&sandbox_evidence_path),
+            path: bundle_path(&args.out, &sandbox_evidence_path),
             media_type: Some("application/json".to_string()),
             digest: None,
         }],
@@ -284,7 +307,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
         }],
         vec![ArtifactRef {
             name: "phase_1_contract".to_string(),
-            path: portable_path(&args.out),
+            path: bundle_path(&args.out, &args.out),
             media_type: Some("inode/directory".to_string()),
             digest: None,
         }],
@@ -367,8 +390,171 @@ fn add_synthetic_trust_hooks(receipt: &mut Receipt) {
     });
 }
 
+fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope> {
+    let mut scope = ClaimScope::synthetic(base_ref, head_ref);
+    let mut source_refs = scope.source_refs.clone();
+    let mut expected_behavior = Vec::new();
+    let mut limitations = Vec::new();
+
+    if let Ok(event_path) = std::env::var("GITHUB_EVENT_PATH") {
+        if !event_path.trim().is_empty() {
+            let path = PathBuf::from(&event_path);
+            if path.exists() {
+                let event: serde_json::Value = serde_json::from_slice(
+                    &fs::read(&path)
+                        .with_context(|| format!("reading GitHub event {}", path.display()))?,
+                )
+                .context("parsing GitHub event JSON")?;
+                if let Some(title) = event
+                    .pointer("/pull_request/title")
+                    .and_then(serde_json::Value::as_str)
+                {
+                    expected_behavior.push(format!("PR title: {title}"));
+                }
+                if let Some(body) = event
+                    .pointer("/pull_request/body")
+                    .and_then(serde_json::Value::as_str)
+                    .filter(|value| !value.trim().is_empty())
+                {
+                    expected_behavior.push(format!("PR body: {}", body.trim()));
+                    for issue in linked_issue_refs(body) {
+                        source_refs.push(pramaan_core::SourceRef {
+                            kind: "linked_issue".to_string(),
+                            reference: issue,
+                        });
+                    }
+                }
+                source_refs.push(pramaan_core::SourceRef {
+                    kind: "github_event".to_string(),
+                    reference: event_path,
+                });
+            }
+        }
+    }
+
+    if let Ok(title) = std::env::var("PRAMAAN_PR_TITLE") {
+        if !title.trim().is_empty() {
+            expected_behavior.push(format!("PR title: {}", title.trim()));
+        }
+    }
+    if let Ok(body) = std::env::var("PRAMAAN_PR_BODY") {
+        if !body.trim().is_empty() {
+            expected_behavior.push(format!("PR body: {}", body.trim()));
+            for issue in linked_issue_refs(&body) {
+                source_refs.push(pramaan_core::SourceRef {
+                    kind: "linked_issue".to_string(),
+                    reference: issue,
+                });
+            }
+        }
+    }
+
+    let public_apis = changed_public_apis(base_ref, head_ref).unwrap_or_else(|error| {
+        limitations.push(format!("Changed public API detection failed: {error}"));
+        Vec::new()
+    });
+
+    if !expected_behavior.is_empty() {
+        scope.expected_behavior = expected_behavior;
+        scope.extraction_method = "github_event_or_environment".to_string();
+        scope.confidence = pramaan_core::ClaimConfidence::High;
+    }
+    if public_apis.is_empty() {
+        scope.touched_public_apis = Vec::new();
+        limitations.push("No changed public APIs were detected by deterministic scan.".to_string());
+    } else {
+        scope.touched_public_apis = public_apis;
+    }
+    scope.source_refs = source_refs;
+    scope.limitations = limitations;
+    Ok(scope)
+}
+
+fn linked_issue_refs(text: &str) -> Vec<String> {
+    let tokens = text
+        .split_whitespace()
+        .map(|token| {
+            token.trim_matches(|ch: char| {
+                matches!(ch, ',' | '.' | ')' | '(' | '[' | ']' | ':' | ';')
+            })
+        })
+        .collect::<Vec<_>>();
+    let mut refs = Vec::new();
+    for (index, token) in tokens.iter().enumerate() {
+        let lower = token.to_ascii_lowercase();
+        if lower.starts_with('#') || lower.contains("/issues/") {
+            refs.push((*token).to_string());
+        } else if matches!(lower.as_str(), "fixes" | "closes" | "refs" | "references") {
+            if let Some(next) = tokens.get(index + 1) {
+                if next.starts_with('#') || next.contains("/issues/") {
+                    refs.push((*next).to_string());
+                }
+            }
+        }
+    }
+    refs.sort();
+    refs.dedup();
+    refs
+}
+
+fn changed_public_apis(base_ref: &str, head_ref: &str) -> Result<Vec<String>> {
+    let output = Command::new("git")
+        .args(["diff", "--name-only", base_ref, head_ref])
+        .output()
+        .context("running git diff for changed public APIs")?;
+    if !output.status.success() {
+        anyhow::bail!(
+            "git diff failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
+    }
+    let mut apis = Vec::new();
+    for relative in String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+    {
+        let path = PathBuf::from(relative);
+        if matches!(
+            path.extension().and_then(|extension| extension.to_str()),
+            Some("py" | "ts" | "tsx" | "rs")
+        ) {
+            apis.extend(public_symbols_in_file(relative, &path));
+        }
+    }
+    apis.sort();
+    apis.dedup();
+    Ok(apis)
+}
+
+fn public_symbols_in_file(relative: &str, path: &Path) -> Vec<String> {
+    let Ok(text) = fs::read_to_string(path) else {
+        return vec![relative.to_string()];
+    };
+    let extension = path.extension().and_then(|extension| extension.to_str());
+    let mut symbols = Vec::new();
+    for line in text.lines().map(str::trim) {
+        match extension {
+            Some("py") if line.starts_with("def ") || line.starts_with("class ") => {
+                symbols.push(format!("{relative}::{line}"));
+            }
+            Some("ts" | "tsx") if line.starts_with("export ") => {
+                symbols.push(format!("{relative}::{line}"));
+            }
+            Some("rs") if line.starts_with("pub ") => {
+                symbols.push(format!("{relative}::{line}"));
+            }
+            _ => {}
+        }
+    }
+    if symbols.is_empty() {
+        vec![relative.to_string()]
+    } else {
+        symbols
+    }
+}
+
 fn render_summary(args: &VerifyArgs, receipts: &[(&Receipt, &Path)], manifest_path: &Path) {
-    println!("Pramaan synthetic verification complete");
+    println!("Pramaan verification bundle emitted");
     println!("base: {}", args.base);
     println!("head: {}", args.head);
     println!("bundle: {}", args.out.display());
@@ -407,7 +593,9 @@ fn render_summary(args: &VerifyArgs, receipts: &[(&Receipt, &Path)], manifest_pa
         format_family_counts(&risks.not_applicable)
     );
     println!();
-    println!("Note: synthetic Phase 1 receipts record evidence shape only; they do not prove the code correct.");
+    println!(
+        "Note: Pramaan records evidence and residual risk; it does not prove the code correct."
+    );
 }
 
 #[derive(Default)]
@@ -469,4 +657,16 @@ fn digest_file(path: &Path) -> Result<String> {
 
 fn portable_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
+}
+
+fn bundle_path(bundle_root: &Path, path: &Path) -> String {
+    path.strip_prefix(bundle_root)
+        .map(|relative| {
+            if relative.as_os_str().is_empty() {
+                ".".to_string()
+            } else {
+                portable_path(relative)
+            }
+        })
+        .unwrap_or_else(|_| portable_path(path))
 }

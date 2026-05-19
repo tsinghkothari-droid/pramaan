@@ -40,7 +40,7 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     );
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("Pramaan synthetic verification complete"));
+    assert!(stdout.contains("Pramaan verification bundle emitted"));
     assert!(stdout.contains("bundle:"));
     assert!(stdout.contains("claim_scope"));
     assert!(stdout.contains("synthetic_verification"));
@@ -50,7 +50,7 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     assert!(stdout.contains("mitigated"));
     assert!(stdout.contains("residual"));
     assert!(stdout.contains("skipped"));
-    assert!(stdout.contains("do not prove the code correct"));
+    assert!(stdout.contains("does not prove the code correct"));
 
     let claim_scope_path = out.join("claim_scope.synthetic.json");
     let claim_receipt_path = out.join("receipts").join("claim-scope.receipt.json");
@@ -235,7 +235,7 @@ fn static_checks_emit_fixture_receipts_and_classify_broken_imports() {
     assert_eq!(rust_receipt["status"], "failed");
     assert_eq!(
         rust_receipt["metadata"]["hallucination_categories"],
-        "broken_import"
+        "broken_import,nonexistent_import"
     );
 }
 
