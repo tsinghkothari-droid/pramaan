@@ -70,13 +70,14 @@ verification layer for AI-authored pull requests.
 
 ## P1: Oracle Integrity
 
-- [ ] Python: implement AST diff for `pytest` assertions, skips, xfails, raises, and parametrized cases.
-- [ ] TypeScript: implement AST diff for Jest, Vitest, and common `expect` patterns.
-- [ ] Rust: detect weakened `assert!`, `assert_eq!`, panic tests, and snapshot changes.
-- [ ] Detect deleted tests and renamed tests through stable body fingerprints.
-- [ ] Classify fixture and snapshot diffs as oracle-sensitive.
-- [ ] Detect removed boundary cases, error cases, and parameter values.
-- [ ] Add reviewer-facing summaries that explain exactly which assertion changed.
+- [x] Python: implement deterministic diff for `pytest` assertions, skips, xfails, raises, and parametrized cases.
+- [x] TypeScript: implement deterministic diff for Jest, Vitest, and common `expect` patterns.
+- [x] Rust: detect weakened `assert!`, `assert_eq!`, panic tests, `#[ignore]`, and snapshot/fixture changes.
+- [x] Detect deleted tests and renamed tests through stable body fingerprints.
+- [x] Classify fixture and snapshot diffs as oracle-sensitive.
+- [x] Detect removed boundary cases, error cases, and parameter values.
+- [x] Add reviewer-facing summaries that explain exactly which assertion or oracle artifact changed.
+- [ ] Replace heuristic oracle scanning with AST-backed Python, TypeScript, and Rust extractors.
 
 ## P1: Mutation Adapters
 

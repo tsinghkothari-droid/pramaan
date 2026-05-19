@@ -53,6 +53,19 @@ Every stage receipt may include:
 These arrays are review signals, not a mathematical proof. A risk can move from
 residual to mitigated only when the stage has concrete evidence for that claim.
 
+## Oracle Integrity Notes
+
+The Phase 12 oracle engine treats `R-011..R-020` as partially mitigated when it
+extracts concrete test-oracle evidence: deleted tests, renamed tests, added
+skips/todos/xfails/ignores, parametrized case reductions, weakened assertion
+signals, removed error paths, removed boundary cases, and changed or deleted
+fixture/snapshot artifacts.
+
+Current oracle extraction is deterministic and framework-aware by pattern, not
+yet a complete AST proof. Receipts should therefore keep heuristic limitations
+visible and may list the same family as both mitigated and residual when a
+specific finding remains open for reviewer judgment.
+
 ## Top-100 Mapping
 
 The top-100 register is the planning source of truth for risk ID meaning. The

@@ -170,6 +170,8 @@
 
 ## Phase 12: Oracle Integrity Engine
 
+**Status:** Completed 2026-05-19 as PASS_WITH_RISKS. See `.planning/reports/phase-12-aggregate-report.md`.
+
 **Goal:** Detect realistic test-oracle tampering across Python, TypeScript, and Rust.
 
 **Requirements:** ORCL-06, ORCL-07, ORCL-08, ORCL-09
