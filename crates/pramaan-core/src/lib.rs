@@ -146,6 +146,7 @@ pub fn classify_static_hallucinations(output: &str) -> Vec<StaticHallucinationCa
 #[serde(rename_all = "snake_case")]
 pub enum OracleLanguage {
     Python,
+    Rust,
     TypeScript,
 }
 
@@ -153,6 +154,7 @@ impl OracleLanguage {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Python => "python",
+            Self::Rust => "rust",
             Self::TypeScript => "typescript",
         }
     }
@@ -197,8 +199,11 @@ pub struct OracleDiff {
 #[serde(rename_all = "snake_case")]
 pub enum OracleFindingKind {
     DeletedTest,
+    RenamedTest,
     AddedSkip,
     ParametrizedCaseReduction,
+    RemovedBoundaryCase,
+    RemovedErrorPath,
     WeakenedAssertion,
     SensitiveArtifactChanged,
     SensitiveArtifactDeleted,
@@ -208,8 +213,11 @@ impl OracleFindingKind {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::DeletedTest => "deleted_test",
+            Self::RenamedTest => "renamed_test",
             Self::AddedSkip => "added_skip",
             Self::ParametrizedCaseReduction => "parametrized_case_reduction",
+            Self::RemovedBoundaryCase => "removed_boundary_case",
+            Self::RemovedErrorPath => "removed_error_path",
             Self::WeakenedAssertion => "weakened_assertion",
             Self::SensitiveArtifactChanged => "sensitive_artifact_changed",
             Self::SensitiveArtifactDeleted => "sensitive_artifact_deleted",
@@ -249,6 +257,7 @@ pub fn discover_oracle_snapshot(root: &Path) -> std::io::Result<OracleSnapshot> 
         let text = fs::read_to_string(&path)?;
         tests.extend(match language {
             OracleLanguage::Python => discover_python_tests(&relative, &text),
+            OracleLanguage::Rust => discover_rust_tests(&relative, &text),
             OracleLanguage::TypeScript => discover_typescript_tests(&relative, &text),
         });
     }
@@ -270,9 +279,31 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
         .iter()
         .map(|test| (test.stable_id.clone(), test))
         .collect::<BTreeMap<_, _>>();
+    let head_tests_by_fingerprint = head
+        .tests
+        .iter()
+        .map(|test| (test.fingerprint.clone(), test))
+        .collect::<BTreeMap<_, _>>();
 
     for base_test in &base.tests {
         let Some(head_test) = head_tests.get(&base_test.stable_id) else {
+            if let Some(renamed_test) = head_tests_by_fingerprint.get(&base_test.fingerprint) {
+                findings.push(OracleFinding {
+                    kind: OracleFindingKind::RenamedTest,
+                    path: renamed_test.path.clone(),
+                    test_name: Some(renamed_test.name.clone()),
+                    details: format!(
+                        "Test body fingerprint moved from {} to {}; review whether this is a rename or coverage hiding.",
+                        base_test.stable_id, renamed_test.stable_id
+                    ),
+                    risk_ids: vec![
+                        "R-011".to_string(),
+                        "R-012".to_string(),
+                        "R-087".to_string(),
+                    ],
+                });
+                continue;
+            }
             findings.push(OracleFinding {
                 kind: OracleFindingKind::DeletedTest,
                 path: base_test.path.clone(),
@@ -320,6 +351,54 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
             });
         }
 
+        let removed_error_tokens = removed_tokens(base_test, head_test, &["raises", "throws"]);
+        if !removed_error_tokens.is_empty() {
+            findings.push(OracleFinding {
+                kind: OracleFindingKind::RemovedErrorPath,
+                path: head_test.path.clone(),
+                test_name: Some(head_test.name.clone()),
+                details: format!(
+                    "Error-path oracle signal removed: {}.",
+                    removed_error_tokens.join(",")
+                ),
+                risk_ids: vec![
+                    "R-013".to_string(),
+                    "R-018".to_string(),
+                    "R-020".to_string(),
+                    "R-087".to_string(),
+                ],
+            });
+        }
+
+        let removed_boundary_tokens = removed_tokens(
+            base_test,
+            head_test,
+            &[
+                "boundary_negative",
+                "boundary_zero",
+                "boundary_empty",
+                "boundary_null",
+                "boundary_extreme",
+            ],
+        );
+        if !removed_boundary_tokens.is_empty() {
+            findings.push(OracleFinding {
+                kind: OracleFindingKind::RemovedBoundaryCase,
+                path: head_test.path.clone(),
+                test_name: Some(head_test.name.clone()),
+                details: format!(
+                    "Boundary-case oracle signal removed: {}.",
+                    removed_boundary_tokens.join(",")
+                ),
+                risk_ids: vec![
+                    "R-018".to_string(),
+                    "R-019".to_string(),
+                    "R-020".to_string(),
+                    "R-087".to_string(),
+                ],
+            });
+        }
+
         if assertion_weakened(base_test, head_test) {
             findings.push(OracleFinding {
                 kind: OracleFindingKind::WeakenedAssertion,
@@ -357,8 +436,8 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                     path: head_artifact.path.clone(),
                     test_name: None,
                     details: format!(
-                        "{} artifact changed and can redefine expected behavior.",
-                        head_artifact.kind
+                        "{} artifact changed and can redefine expected behavior: {} -> {}.",
+                        head_artifact.kind, base_artifact.fingerprint, head_artifact.fingerprint
                     ),
                     risk_ids: vec![
                         "R-008".to_string(),
@@ -770,6 +849,20 @@ fn assertion_weakened(base: &OracleTestCase, head: &OracleTestCase) -> bool {
         || (!base_tokens.contains("always_true") && head_tokens.contains("always_true"))
 }
 
+fn removed_tokens(
+    base: &OracleTestCase,
+    head: &OracleTestCase,
+    token_names: &[&str],
+) -> Vec<String> {
+    let base_tokens = base.signal_tokens.iter().cloned().collect::<BTreeSet<_>>();
+    let head_tokens = head.signal_tokens.iter().cloned().collect::<BTreeSet<_>>();
+    token_names
+        .iter()
+        .filter(|token| base_tokens.contains(**token) && !head_tokens.contains(**token))
+        .map(|token| (*token).to_string())
+        .collect()
+}
+
 fn discover_python_tests(path: &str, text: &str) -> Vec<OracleTestCase> {
     let lines = text.lines().collect::<Vec<_>>();
     let mut tests = Vec::new();
@@ -845,6 +938,43 @@ fn discover_typescript_tests(path: &str, text: &str) -> Vec<OracleTestCase> {
     tests
 }
 
+fn discover_rust_tests(path: &str, text: &str) -> Vec<OracleTestCase> {
+    let lines = text.lines().collect::<Vec<_>>();
+    let mut tests = Vec::new();
+    let mut index = 0;
+
+    while index < lines.len() {
+        let trimmed = lines[index].trim_start();
+        if rust_test_attribute(trimmed) {
+            let attr_start = index;
+            index += 1;
+            while index < lines.len() && !lines[index].trim_start().starts_with("fn ") {
+                index += 1;
+            }
+            if index >= lines.len() {
+                break;
+            }
+            let Some(name) = rust_test_name(lines[index].trim_start()) else {
+                index += 1;
+                continue;
+            };
+            let fn_start = index;
+            index += 1;
+            let mut brace_depth = brace_delta(lines[fn_start]);
+            while index < lines.len() && brace_depth > 0 {
+                brace_depth += brace_delta(lines[index]);
+                index += 1;
+            }
+            let block = lines[attr_start..index.min(lines.len())].join("\n");
+            tests.push(build_test_case(OracleLanguage::Rust, path, name, &block));
+        } else {
+            index += 1;
+        }
+    }
+
+    tests
+}
+
 fn build_test_case(
     language: OracleLanguage,
     path: &str,
@@ -858,7 +988,11 @@ fn build_test_case(
         language,
         path: path.to_string(),
         stable_id: format!("{}::{}", path.replace('\\', "/"), name),
-        fingerprint: stable_hash_text(&format!("{}:{}:{normalized}", language.as_str(), name)),
+        fingerprint: stable_hash_text(&format!(
+            "{}:{}",
+            language.as_str(),
+            normalize_test_body_for_fingerprint(language, &normalized)
+        )),
         name,
         assertion_count: assertion_count(language, block),
         parametrized_case_count: parametrized_case_count(language, block),
@@ -898,11 +1032,49 @@ fn typescript_test_name(line: &str) -> Option<String> {
     None
 }
 
+fn rust_test_attribute(line: &str) -> bool {
+    line == "#[test]" || line.starts_with("#[tokio::test") || line.starts_with("#[async_std::test")
+}
+
+fn rust_test_name(line: &str) -> Option<String> {
+    let rest = line.strip_prefix("fn ")?;
+    let end = rest.find('(')?;
+    Some(rest[..end].to_string())
+}
+
+fn brace_delta(line: &str) -> i32 {
+    let opens = line.chars().filter(|character| *character == '{').count() as i32;
+    let closes = line.chars().filter(|character| *character == '}').count() as i32;
+    opens - closes
+}
+
 fn normalize_test_block(block: &str) -> String {
     block
         .lines()
         .map(str::trim)
         .filter(|line| !line.is_empty() && !line.starts_with('#') && !line.starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn normalize_test_body_for_fingerprint(language: OracleLanguage, normalized: &str) -> String {
+    normalized
+        .lines()
+        .filter(|line| match language {
+            OracleLanguage::Python => {
+                !line.starts_with("def test_") && !line.starts_with("async def test_")
+            }
+            OracleLanguage::TypeScript => {
+                let trimmed = line.trim_start();
+                !(trimmed.starts_with("test(")
+                    || trimmed.starts_with("it(")
+                    || trimmed.starts_with("test.skip(")
+                    || trimmed.starts_with("it.skip(")
+                    || trimmed.starts_with("test.todo(")
+                    || trimmed.starts_with("it.todo("))
+            }
+            OracleLanguage::Rust => !line.starts_with("fn "),
+        })
         .collect::<Vec<_>>()
         .join("\n")
 }
@@ -922,6 +1094,13 @@ fn assertion_count(language: OracleLanguage, block: &str) -> usize {
             count_occurrences(block, "expect(")
                 + count_occurrences(block, "assert.")
                 + count_occurrences(block, "assert(")
+        }
+        OracleLanguage::Rust => {
+            count_occurrences(block, "assert!(")
+                + count_occurrences(block, "assert_eq!(")
+                + count_occurrences(block, "assert_ne!(")
+                + count_occurrences(block, "matches!(")
+                + count_occurrences(block, "panic!(")
         }
     }
 }
@@ -945,6 +1124,7 @@ fn parametrized_case_count(language: OracleLanguage, block: &str) -> usize {
                 1
             }
         }
+        OracleLanguage::Rust => 1,
     }
 }
 
@@ -961,6 +1141,7 @@ fn skipped_test(language: OracleLanguage, block: &str) -> bool {
                 || block.contains("test.todo(")
                 || block.contains("it.todo(")
         }
+        OracleLanguage::Rust => block.contains("#[ignore]"),
     }
 }
 
@@ -980,6 +1161,7 @@ fn skip_reason(language: OracleLanguage, block: &str) -> String {
                 "JS/TS skip test marker added".to_string()
             }
         }
+        OracleLanguage::Rust => "Rust #[ignore] marker added".to_string(),
     }
 }
 
@@ -997,10 +1179,14 @@ fn signal_tokens(language: OracleLanguage, block: &str) -> Vec<String> {
             .collect::<Vec<_>>()
             .join("\n"),
         OracleLanguage::TypeScript => block.to_string(),
+        OracleLanguage::Rust => block.to_string(),
     };
     let lower = signal_text.to_lowercase();
 
-    if lower.contains("assert true") || lower.contains("expect(true)") {
+    if lower.contains("assert true")
+        || lower.contains("expect(true)")
+        || lower.contains("assert!(true)")
+    {
         tokens.insert("always_true".to_string());
     }
     if lower.contains("assert ") && !lower.contains("==") && !lower.contains("!=") {
@@ -1018,6 +1204,8 @@ fn signal_tokens(language: OracleLanguage, block: &str) -> Vec<String> {
         || lower.contains("assertnotequal")
         || lower.contains(".tobe(")
         || lower.contains(".toequal(")
+        || lower.contains("assert_eq!")
+        || lower.contains("assert_ne!")
     {
         tokens.insert("equals".to_string());
     }
@@ -1035,23 +1223,56 @@ fn signal_tokens(language: OracleLanguage, block: &str) -> Vec<String> {
         || lower.contains('<')
         || lower.contains(".tobegreater")
         || lower.contains(".tobeless")
+        || lower.contains(" > ")
+        || lower.contains(" < ")
     {
         tokens.insert("comparison".to_string());
     }
-    if lower.contains(" in ") || lower.contains(".tocontain") || lower.contains(".tomatch(") {
+    if lower.contains(" in ")
+        || lower.contains(".tocontain")
+        || lower.contains(".tomatch(")
+        || lower.contains("matches!(")
+    {
         tokens.insert("contains".to_string());
     }
     if lower.contains("pytest.raises") {
         tokens.insert("raises".to_string());
     }
-    if lower.contains("tothrow") || lower.contains("assert.throws") {
+    if lower.contains("tothrow")
+        || lower.contains("assert.throws")
+        || lower.contains("should_panic")
+        || lower.contains("panic!(")
+    {
         tokens.insert("throws".to_string());
     }
-    if lower.contains("snapshot") || lower.contains(".tomatchsnapshot(") {
+    if lower.contains("snapshot")
+        || lower.contains(".tomatchsnapshot(")
+        || lower.contains("assert_snapshot!")
+    {
         tokens.insert("snapshot".to_string());
     }
     if language == OracleLanguage::Python && lower.contains("pytest.approx") {
         tokens.insert("approximate".to_string());
+    }
+    if lower.contains("-1") || lower.contains("negative") || lower.contains("below_zero") {
+        tokens.insert("boundary_negative".to_string());
+    }
+    if lower.contains("(0") || lower.contains(", 0") || lower.contains(" zero") {
+        tokens.insert("boundary_zero".to_string());
+    }
+    if lower.contains("\"\"") || lower.contains("[]") || lower.contains("empty") {
+        tokens.insert("boundary_empty".to_string());
+    }
+    if lower.contains("none") || lower.contains("null") || lower.contains("undefined") {
+        tokens.insert("boundary_null".to_string());
+    }
+    if lower.contains("max_value")
+        || lower.contains("min_value")
+        || lower.contains("usize::max")
+        || lower.contains("i32::max")
+        || lower.contains("i64::max")
+    {
+        tokens.insert("boundary_extreme".to_string());
     }
 
     tokens.into_iter().collect()
@@ -1074,6 +1295,12 @@ fn test_language(path: &Path, relative: &str) -> Option<OracleLanguage> {
             || lower.contains("\\__tests__\\"))
     {
         return Some(OracleLanguage::TypeScript);
+    }
+
+    if extension.eq_ignore_ascii_case("rs")
+        && (relative.replace('\\', "/").contains("/tests/") || file_name.ends_with("_test.rs"))
+    {
+        return Some(OracleLanguage::Rust);
     }
 
     None
@@ -1727,14 +1954,33 @@ mod tests {
             .collect::<BTreeSet<_>>();
 
         assert!(kinds.contains(&OracleFindingKind::DeletedTest));
+        assert!(kinds.contains(&OracleFindingKind::RenamedTest));
         assert!(kinds.contains(&OracleFindingKind::AddedSkip));
         assert!(kinds.contains(&OracleFindingKind::ParametrizedCaseReduction));
+        assert!(kinds.contains(&OracleFindingKind::RemovedBoundaryCase));
+        assert!(kinds.contains(&OracleFindingKind::RemovedErrorPath));
         assert!(kinds.contains(&OracleFindingKind::WeakenedAssertion));
         assert!(kinds.contains(&OracleFindingKind::SensitiveArtifactChanged));
+        assert!(diff
+            .base
+            .tests
+            .iter()
+            .any(|test| test.language == OracleLanguage::Rust));
+        assert!(diff
+            .head
+            .tests
+            .iter()
+            .any(|test| test.language == OracleLanguage::Rust));
         assert!(diff
             .findings
             .iter()
             .any(|finding| finding.risk_ids.contains(&"R-087".to_string())));
+        assert!(
+            diff.findings
+                .iter()
+                .any(|finding| finding.details.contains("git-blob:")
+                    || finding.details.contains("->"))
+        );
         assert!(oracle_mitigated_risks().contains(&"R-020".to_string()));
         assert!(oracle_mitigated_risks().contains(&"R-089".to_string()));
     }

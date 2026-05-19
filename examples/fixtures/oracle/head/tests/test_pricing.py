@@ -20,3 +20,7 @@ def test_rejects_negative_quantity():
 )
 def test_bulk_price(quantity, expected):
     assert quantity * 100 == expected
+
+
+def test_rename_without_loss_new_name():
+    assert 2 + 2 == 4

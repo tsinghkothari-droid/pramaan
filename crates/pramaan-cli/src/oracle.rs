@@ -172,6 +172,7 @@ fn render_oracle_summary(
                 finding.test_name.as_deref().unwrap_or("-"),
                 finding.path
             );
+            println!("  {}", finding.details);
         }
     }
 }

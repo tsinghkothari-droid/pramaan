@@ -343,8 +343,13 @@ fn oracle_emits_failed_receipt_for_weakened_fixture_pair() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("Pramaan oracle integrity complete"));
     assert!(stdout.contains("deleted_test"));
+    assert!(stdout.contains("renamed_test"));
+    assert!(stdout.contains("removed_error_path"));
+    assert!(stdout.contains("removed_boundary_case"));
     assert!(stdout.contains("weakened_assertion"));
     assert!(stdout.contains("sensitive_artifact_changed"));
+    assert!(stdout.contains("Assertion signal weakened"));
+    assert!(stdout.contains("fnv64:"));
 
     let diff_path = out.join("oracle-diff.json");
     let receipt_path = out.join("receipts").join("oracle-integrity.receipt.json");

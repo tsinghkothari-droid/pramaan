@@ -25,3 +25,7 @@ def test_bulk_price(quantity, expected):
 
 def test_deleted_regression():
     assert "paid" in {"paid", "pending"}
+
+
+def test_rename_without_loss():
+    assert 2 + 2 == 4
