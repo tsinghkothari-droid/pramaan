@@ -36,6 +36,27 @@ Tamper checks are intentionally local and deterministic. If a receipt, artifact,
 or signing metadata field is edited after manifest emission,
 `pramaan bundle verify` exits non-zero and reports the mismatched path or digest.
 
+Explain the default policy decision with:
+
+```powershell
+cargo run -p pramaan-cli -- policy explain target/pramaan
+```
+
+`policy explain` reads the bundle manifest and reports:
+
+- the default policy ID;
+- required stages;
+- hard gate statuses;
+- warning statuses;
+- SLA classes;
+- hard failures, warnings, and waivers.
+
+The default policy is intentionally conservative. Failed, errored, or timed-out
+stages are hard failures. Missing or skipped required stages are hard failures.
+Skipped and not-applicable non-required stages are warnings. Residual risk,
+not-applicable risk, and partial evidence are warnings unless a later policy
+profile elevates them.
+
 ## Path Policy
 
 Bundle manifest paths must stay inside the bundle root. The verifier rejects

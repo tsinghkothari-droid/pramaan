@@ -123,6 +123,9 @@ runs:
       run: |
         set -euo pipefail
         summary_path="${{ steps.config.outputs.out_dir }}/github-step-summary.md"
+        target/debug/pramaan policy explain "${{ steps.config.outputs.out_dir }}" \
+          | tee "${{ steps.config.outputs.out_dir }}/policy.log"
+        cat "${{ steps.config.outputs.out_dir }}/policy.log" >> "${{ steps.config.outputs.out_dir }}/pramaan.log"
         node "$GITHUB_ACTION_PATH/render-summary.mjs" \
           --manifest "${{ steps.config.outputs.out_dir }}/bundle.manifest.json" \
           --log "${{ steps.config.outputs.out_dir }}/pramaan.log" \

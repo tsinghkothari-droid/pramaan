@@ -36,6 +36,12 @@ test("renderSummary emphasizes failed stages and residual risk families", () => 
         not_applicable: ["R-090"],
       },
       summary: { residual_risk_note: "Static check failed." },
+      policy_decision: {
+        decision: "failed",
+        policy_id: "pramaan-default-v0",
+        hard_failures: ["stage_status:static_python:failed"],
+        warnings: ["residual_risk:static_python:R-031,R-045,R-087"],
+      },
       integrity: {
         manifest_digest: { value: "a".repeat(64) },
         artifact_attestation: { provider: "github_actions", status: "not_requested" },
@@ -50,6 +56,8 @@ test("renderSummary emphasizes failed stages and residual risk families", () => 
   assert.match(markdown, /Receipts: 1/);
   assert.match(markdown, /Artifacts: 2/);
   assert.match(markdown, /github_actions: not_requested/);
+  assert.match(markdown, /Policy decision: \*\*failed\*\*/);
+  assert.match(markdown, /stage_status:static_python:failed/);
   assert.doesNotMatch(markdown, /\| claim_scope \| OK passed/);
 });
 
@@ -98,6 +106,7 @@ test("composite action exposes production gate inputs and uploads before failing
   assert.match(actionYaml, /fail-on:/);
   assert.match(actionYaml, /cargo build --locked -p pramaan-cli/);
   assert.match(actionYaml, /target\/debug\/pramaan verify/);
+  assert.match(actionYaml, /target\/debug\/pramaan policy explain/);
 
   const uploadIndex = actionYaml.indexOf("name: Upload proof bundle");
   const failIndex = actionYaml.indexOf("name: Apply failure policy");

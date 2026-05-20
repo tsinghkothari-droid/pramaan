@@ -35,10 +35,13 @@ The wrapper runs:
 ```bash
 cargo build --locked -p pramaan-cli
 target/debug/pramaan verify --base "$BASE_REF" --head "$HEAD_REF" --out target/pramaan
+target/debug/pramaan policy explain target/pramaan
 ```
 
 It then uploads `target/pramaan` as the `pramaan-proof-bundle` artifact and
-appends a summary to `GITHUB_STEP_SUMMARY`.
+appends a summary to `GITHUB_STEP_SUMMARY`. The policy explanation is appended
+to the run log before summary rendering so reviewers can see the default gate
+reasoning without opening raw JSON.
 
 ## Inputs
 
@@ -119,6 +122,18 @@ The job summary highlights failed, skipped, timed-out, or errored stages first.
 It also groups risk IDs by family across `mitigated`, `residual`, `skipped`, and
 `not_applicable` buckets. This keeps open risk visible without turning Pramaan
 into a single trust score.
+
+The summary also shows the manifest policy decision when present. Phase 20's
+default policy profile uses:
+
+- required stages: `claim_scope`, `sandbox_setup`;
+- hard statuses: `failed`, `error`, `timed_out`;
+- warning statuses: `skipped`, `not_applicable`;
+- SLA classes: small PRs target 4 minutes, medium PRs target 8 minutes, large
+  PRs target 15 minutes, with stricter per-stage budgets recorded in receipts.
+
+Skipped, missing-tool, not-applicable, and timed-out stages must remain visible;
+they are never rewritten as successful mitigation.
 
 ## Minimal Workflow Examples
 

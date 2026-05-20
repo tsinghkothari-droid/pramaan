@@ -6,12 +6,12 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** P0/P1 completion track. Phase 19 is complete; the next
-execution phase is Phase 20: P0 SLA and Policy Gates.
+**Current focus:** P0/P1 completion track. Phase 20 is complete; the next
+execution phase is Phase 21: P1 Sandbox, Threat Model, and Redaction.
 
 ## Current Phase
 
-Phase 20: P0 SLA and Policy Gates
+Phase 21: P1 Sandbox, Threat Model, and Redaction
 
 ## Status
 
@@ -60,3 +60,4 @@ pilot gate before P2 expansion.
 | 2026-05-21 | Added P0/P1 GSD completion track for Phases 18-25. | Remaining P0/P1 tasks are now mapped to execution phases, with a Phase 25 pilot gate before P2/P3 expansion. |
 | 2026-05-21 | Completed Phase 18 product honesty and direction. | `STATUS.md`, README status language, non-goals, ICP, killer workflow, research sufficiency, and pivot criteria now keep the public surface ambitious but honest. |
 | 2026-05-21 | Completed Phase 19 receipt golden tests and canonical evidence. | Generated claim-scope receipts now have a normalized golden contract test, bundle manifest digests use canonical JSON bytes, and receipt docs explain fixture update discipline. |
+| 2026-05-21 | Completed Phase 20 SLA and policy gates. | Pramaan now has a default policy profile, core policy evaluation tests, `pramaan policy explain`, GitHub Action policy summary output, and documented SLA/gate behavior. |

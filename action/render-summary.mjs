@@ -69,6 +69,54 @@ function statusIcon(status) {
   return "CHECK";
 }
 
+function evaluateDefaultPolicy(manifest) {
+  const requiredStages = ["claim_scope", "sandbox_setup"];
+  const hardStatuses = new Set(["failed", "error", "timed_out"]);
+  const warningStatuses = new Set(["skipped", "not_applicable"]);
+  const stages = manifest.stages ?? [];
+  const stageIds = new Set(stages.map((stage) => stage.id));
+  const hardFailures = [];
+  const warnings = [];
+
+  for (const requiredStage of requiredStages) {
+    if (!stageIds.has(requiredStage)) {
+      hardFailures.push(`missing_required_stage:${requiredStage}`);
+    }
+  }
+
+  for (const stage of stages) {
+    const status = stage.status ?? "unknown";
+    const required = requiredStages.includes(stage.id);
+    if (hardStatuses.has(status)) {
+      hardFailures.push(`stage_status:${stage.id}:${status}`);
+    } else if (required && warningStatuses.has(status)) {
+      hardFailures.push(`required_stage_incomplete:${stage.id}:${status}`);
+    } else if (warningStatuses.has(status)) {
+      warnings.push(`stage_incomplete:${stage.id}:${status}`);
+    }
+    if ((stage.residual_risks ?? []).length) {
+      warnings.push(`residual_risk:${stage.id}:${stage.residual_risks.join(",")}`);
+    }
+    if ((stage.not_applicable_risks ?? []).length) {
+      warnings.push(`not_applicable_risk:${stage.id}:${stage.not_applicable_risks.join(",")}`);
+    }
+    if (stage.stage_budget?.exhausted) {
+      hardFailures.push(`stage_budget_exhausted:${stage.id}`);
+    } else if (stage.stage_budget?.partial_evidence) {
+      warnings.push(`partial_evidence:${stage.id}`);
+    }
+  }
+
+  const uniqueHardFailures = [...new Set(hardFailures)].sort();
+  const uniqueWarnings = [...new Set(warnings)].sort();
+  return {
+    policy_id: "pramaan-default-v0",
+    decision: uniqueHardFailures.length ? "failed" : uniqueWarnings.length ? "warning" : "passed",
+    hard_failures: uniqueHardFailures,
+    warnings: uniqueWarnings,
+  };
+}
+
 function tableRows(stages) {
   if (!stages.length) {
     return "| none | none | none | none |\n";
@@ -104,6 +152,14 @@ export function renderSummary({ manifest, logText = "", baseRef = "", headRef = 
   const digest = manifest.integrity?.manifest_digest?.value
     ? `sha256:${manifest.integrity.manifest_digest.value}`
     : "not recorded";
+  const policy = evaluateDefaultPolicy(manifest);
+  const policyDecision = policy?.decision ?? "not evaluated";
+  const hardFailures = policy?.hard_failures?.length
+    ? policy.hard_failures.map((item) => `- ${item}`).join("\n")
+    : "none";
+  const warnings = policy?.warnings?.length
+    ? policy.warnings.map((item) => `- ${item}`).join("\n")
+    : "none";
   const tail = logTail(logText);
 
   return `# Pramaan proof bundle
@@ -115,6 +171,8 @@ Compared refs: \`${baseRef || manifest.repository?.base_ref || "unknown"}\` -> \
 Bundle: \`${manifest.bundle_id ?? "unknown"}\`
 
 Manifest digest: \`${digest}\`
+
+Policy decision: **${policyDecision}**
 
 ## Failed, skipped, or incomplete stages
 
@@ -137,6 +195,18 @@ ${stageSection}
 - Artifacts: ${(manifest.artifacts ?? []).length}
 - Artifact attestation: ${attestationText}
 - Residual risk note: ${manifest.summary?.residual_risk_note ?? "not recorded"}
+
+## Policy
+
+Policy: \`${policy?.policy_id ?? "not recorded"}\`
+
+Hard failures:
+
+${hardFailures}
+
+Warnings:
+
+${warnings}
 
 ${tail ? `## CLI tail\n\n\`\`\`text\n${tail}\n\`\`\`\n` : ""}`;
 }

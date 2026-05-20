@@ -41,3 +41,34 @@ and explainable policy outcomes.
 
 A reviewer can tell why a bundle passed, warned, or failed without reading raw
 JSON.
+
+## Completion Summary
+
+Completed on 2026-05-21.
+
+Landed:
+
+- Added a default policy profile with required stages, hard gate statuses,
+  warning statuses, security-sensitive path hints, and small/medium/large SLA
+  classes.
+- Added core policy evaluation with tests for pass, warning, failed stage,
+  skipped required stage, and budget exhaustion.
+- Added `pramaan policy explain <bundle>`.
+- Updated the GitHub Action to run policy explanation before rendering the
+  summary.
+- Updated the summary renderer to show policy decision, hard failures, and
+  warnings.
+- Documented SLA and policy behavior in GitHub Action and bundle verification
+  docs.
+
+Deferred:
+
+- Custom user-supplied policy files remain future work.
+- Policy decisions are computed by `policy explain`; embedding the final
+  computed decision back into every manifest remains future hardening.
+
+Risks discovered:
+
+- Current manifests often carry the first stage's informational policy decision.
+  Reviewers should prefer `pramaan policy explain` until bundle-level policy
+  embedding is implemented.

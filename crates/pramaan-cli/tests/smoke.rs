@@ -90,6 +90,29 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     assert!(bundle_stdout.contains("receipts_checked:"));
     assert!(bundle_stdout.contains("artifacts_checked:"));
 
+    let policy_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "policy",
+            "explain",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan policy explain");
+
+    assert!(
+        policy_output.status.success(),
+        "policy explain failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&policy_output.stdout),
+        String::from_utf8_lossy(&policy_output.stderr)
+    );
+    let policy_stdout = String::from_utf8_lossy(&policy_output.stdout);
+    assert!(policy_stdout.contains("Pramaan policy explanation"));
+    assert!(policy_stdout.contains("policy: pramaan-default-v0"));
+    assert!(policy_stdout.contains("decision: warning"));
+    assert!(policy_stdout.contains("required_stages: claim_scope, sandbox_setup"));
+    assert!(policy_stdout.contains("partial_evidence:claim_scope"));
+
     let claim_receipt: serde_json::Value =
         serde_json::from_slice(&fs::read(claim_receipt_path).expect("read claim receipt"))
             .expect("claim receipt json");

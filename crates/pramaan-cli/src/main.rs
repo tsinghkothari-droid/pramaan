@@ -1,12 +1,14 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use pramaan_bundle::{
-    build_manifest, sha256_hex, verify_bundle, write_manifest, BundleBuildOptions,
+    build_manifest, read_manifest, sha256_hex, verify_bundle, write_manifest, BundleBuildOptions,
+    MANIFEST_FILE_NAME,
 };
 use pramaan_core::{
-    risk_family, AgentAttribution, ArtifactRef, AttributionConfidence, ClaimScope,
-    EvidenceSensitivity, OutputRef, PluginIdentity, PluginPermissions, PolicyDecision, Receipt,
-    ReceiptSummary, RedactionManifest, RiskRefs, StageBudget, StageStatus,
+    default_policy_profile, evaluate_default_policy, risk_family, AgentAttribution, ArtifactRef,
+    AttributionConfidence, ClaimScope, EvidenceSensitivity, OutputRef, PluginIdentity,
+    PluginPermissions, PolicyDecision, PolicyStageEvidence, Receipt, ReceiptSummary,
+    RedactionManifest, RiskRefs, StageBudget, StageStatus,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use std::collections::BTreeMap;
@@ -35,6 +37,7 @@ enum Commands {
     Oracle(OracleArgs),
     Mutation(MutationArgs),
     Fuzz(FuzzArgs),
+    Policy(PolicyArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -61,6 +64,22 @@ enum BundleCommands {
 #[derive(Debug, Parser)]
 struct BundleVerifyArgs {
     path: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct PolicyArgs {
+    #[command(subcommand)]
+    command: PolicyCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum PolicyCommands {
+    Explain(PolicyExplainArgs),
+}
+
+#[derive(Debug, Parser)]
+struct PolicyExplainArgs {
+    bundle: PathBuf,
 }
 
 #[derive(Debug, Parser)]
@@ -131,6 +150,68 @@ fn main() -> Result<()> {
             args.out,
             args.seed,
         ),
+        Commands::Policy(args) => run_policy(args),
+    }
+}
+
+fn run_policy(args: PolicyArgs) -> Result<()> {
+    match args.command {
+        PolicyCommands::Explain(args) => run_policy_explain(args.bundle),
+    }
+}
+
+fn run_policy_explain(bundle: PathBuf) -> Result<()> {
+    let manifest_path = if bundle.is_dir() {
+        bundle.join(MANIFEST_FILE_NAME)
+    } else {
+        bundle
+    };
+    let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
+    let stages = manifest
+        .stages
+        .iter()
+        .map(|stage| PolicyStageEvidence {
+            id: stage.id.clone(),
+            status: stage.status.clone(),
+            residual_risks: stage.residual_risks.clone(),
+            not_applicable_risks: stage.not_applicable_risks.clone(),
+            stage_budget: stage.stage_budget.clone(),
+        })
+        .collect::<Vec<_>>();
+    let profile = default_policy_profile();
+    let evaluation = evaluate_default_policy(&stages);
+
+    println!("Pramaan policy explanation");
+    println!("manifest: {}", manifest_path.display());
+    println!("policy: {}", evaluation.decision.policy_id);
+    println!("decision: {}", evaluation.decision.decision);
+    println!("required_stages: {}", profile.required_stages.join(", "));
+    println!(
+        "hard_gate_statuses: {}",
+        profile.hard_gate_statuses.join(", ")
+    );
+    println!("warning_statuses: {}", profile.warning_statuses.join(", "));
+    println!("sla_classes:");
+    for class in &profile.sla_classes {
+        println!(
+            "  {}: <= {} changed lines, target {}ms, max {}ms",
+            class.name, class.changed_lines_max, class.target_ms, class.max_ms
+        );
+    }
+    print_policy_items("hard_failures", &evaluation.decision.hard_failures);
+    print_policy_items("warnings", &evaluation.decision.warnings);
+    print_policy_items("waived", &evaluation.decision.waived);
+    Ok(())
+}
+
+fn print_policy_items(label: &str, items: &[String]) {
+    println!("{label}:");
+    if items.is_empty() {
+        println!("  none");
+    } else {
+        for item in items {
+            println!("  - {item}");
+        }
     }
 }
 

@@ -112,9 +112,9 @@ enough for external users.
 
 - [x] Make the action install or download the Pramaan CLI deterministically.
 - [x] Add `base-ref`, `head-ref`, `out-dir`, `fail-on`, and `upload-bundle` inputs.
-- [ ] Define hard performance SLA targets for PR use: target runtime, max runtime, per-stage budget, and behavior when a budget is exhausted.
-- [ ] Add default policy-as-code profile for hard gates, warning gates, waiver rules, stage requirements, and security-sensitive paths.
-- [ ] Add `pramaan policy explain` so reviewers can see why a bundle failed, warned, or passed under a policy.
+- [x] Define hard performance SLA targets for PR use: target runtime, max runtime, per-stage budget, and behavior when a budget is exhausted.
+- [x] Add default policy-as-code profile for hard gates, warning gates, waiver rules, stage requirements, and security-sensitive paths.
+- [x] Add `pramaan policy explain` so reviewers can see why a bundle failed, warned, or passed under a policy.
 - [x] Upload the proof bundle as a GitHub Actions artifact.
 - [x] Render a concise PR summary focused on failed stages and residual risks.
 - [x] Add permissions documentation for pull requests from forks.

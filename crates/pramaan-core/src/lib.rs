@@ -1506,6 +1506,188 @@ pub struct StageBudget {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PerformanceSlaClass {
+    pub name: String,
+    pub changed_lines_max: u64,
+    pub target_ms: u64,
+    pub max_ms: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PolicyProfile {
+    pub policy_id: String,
+    pub required_stages: Vec<String>,
+    pub hard_gate_statuses: Vec<String>,
+    pub warning_statuses: Vec<String>,
+    pub security_sensitive_paths: Vec<String>,
+    pub sla_classes: Vec<PerformanceSlaClass>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PolicyStageEvidence {
+    pub id: String,
+    pub status: String,
+    pub residual_risks: Vec<String>,
+    pub not_applicable_risks: Vec<String>,
+    pub stage_budget: Option<StageBudget>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PolicyOutcome {
+    Passed,
+    Warning,
+    Failed,
+}
+
+impl PolicyOutcome {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Passed => "passed",
+            Self::Warning => "warning",
+            Self::Failed => "failed",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PolicyEvaluation {
+    pub outcome: PolicyOutcome,
+    pub decision: PolicyDecision,
+}
+
+pub fn default_policy_profile() -> PolicyProfile {
+    PolicyProfile {
+        policy_id: "pramaan-default-v0".to_string(),
+        required_stages: vec!["claim_scope".to_string(), "sandbox_setup".to_string()],
+        hard_gate_statuses: vec![
+            "failed".to_string(),
+            "error".to_string(),
+            "timed_out".to_string(),
+        ],
+        warning_statuses: vec!["skipped".to_string(), "not_applicable".to_string()],
+        security_sensitive_paths: vec![
+            "auth".to_string(),
+            "authorization".to_string(),
+            "crypto".to_string(),
+            "secrets".to_string(),
+            "subprocess".to_string(),
+            "network".to_string(),
+            "deserialization".to_string(),
+        ],
+        sla_classes: vec![
+            PerformanceSlaClass {
+                name: "small".to_string(),
+                changed_lines_max: 200,
+                target_ms: 240_000,
+                max_ms: 480_000,
+            },
+            PerformanceSlaClass {
+                name: "medium".to_string(),
+                changed_lines_max: 800,
+                target_ms: 480_000,
+                max_ms: 900_000,
+            },
+            PerformanceSlaClass {
+                name: "large".to_string(),
+                changed_lines_max: 2_000,
+                target_ms: 900_000,
+                max_ms: 1_500_000,
+            },
+        ],
+    }
+}
+
+pub fn evaluate_default_policy(stages: &[PolicyStageEvidence]) -> PolicyEvaluation {
+    evaluate_policy(&default_policy_profile(), stages)
+}
+
+pub fn evaluate_policy(
+    profile: &PolicyProfile,
+    stages: &[PolicyStageEvidence],
+) -> PolicyEvaluation {
+    let mut hard_failures = Vec::new();
+    let mut warnings = Vec::new();
+    let stage_ids = stages
+        .iter()
+        .map(|stage| stage.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for required_stage in &profile.required_stages {
+        if !stage_ids.contains(required_stage.as_str()) {
+            hard_failures.push(format!("missing_required_stage:{required_stage}"));
+        }
+    }
+
+    for stage in stages {
+        let is_required = profile.required_stages.iter().any(|item| item == &stage.id);
+        if profile
+            .hard_gate_statuses
+            .iter()
+            .any(|status| status == &stage.status)
+        {
+            hard_failures.push(format!("stage_status:{}:{}", stage.id, stage.status));
+        } else if is_required && matches!(stage.status.as_str(), "skipped" | "not_applicable") {
+            hard_failures.push(format!(
+                "required_stage_incomplete:{}:{}",
+                stage.id, stage.status
+            ));
+        } else if profile
+            .warning_statuses
+            .iter()
+            .any(|status| status == &stage.status)
+        {
+            warnings.push(format!("stage_incomplete:{}:{}", stage.id, stage.status));
+        }
+
+        if !stage.residual_risks.is_empty() {
+            warnings.push(format!(
+                "residual_risk:{}:{}",
+                stage.id,
+                stage.residual_risks.join(",")
+            ));
+        }
+        if !stage.not_applicable_risks.is_empty() {
+            warnings.push(format!(
+                "not_applicable_risk:{}:{}",
+                stage.id,
+                stage.not_applicable_risks.join(",")
+            ));
+        }
+        if let Some(budget) = &stage.stage_budget {
+            if budget.exhausted {
+                hard_failures.push(format!("stage_budget_exhausted:{}", stage.id));
+            } else if budget.partial_evidence {
+                warnings.push(format!("partial_evidence:{}", stage.id));
+            }
+        }
+    }
+
+    hard_failures.sort();
+    hard_failures.dedup();
+    warnings.sort();
+    warnings.dedup();
+
+    let outcome = if !hard_failures.is_empty() {
+        PolicyOutcome::Failed
+    } else if !warnings.is_empty() {
+        PolicyOutcome::Warning
+    } else {
+        PolicyOutcome::Passed
+    };
+
+    PolicyEvaluation {
+        outcome,
+        decision: PolicyDecision {
+            decision: outcome.as_str().to_string(),
+            policy_id: profile.policy_id.clone(),
+            hard_failures,
+            warnings,
+            waived: Vec::new(),
+        },
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InputRef {
     pub name: String,
     pub value: String,
@@ -1929,6 +2111,103 @@ mod tests {
     }
 
     #[test]
+    fn default_policy_passes_clean_required_stages() {
+        let evaluation = evaluate_default_policy(&[
+            policy_stage("claim_scope", "passed", vec![], vec![], None),
+            policy_stage("sandbox_setup", "passed", vec![], vec![], None),
+        ]);
+
+        assert_eq!(evaluation.outcome, PolicyOutcome::Passed);
+        assert_eq!(evaluation.decision.decision, "passed");
+        assert!(evaluation.decision.hard_failures.is_empty());
+        assert!(evaluation.decision.warnings.is_empty());
+    }
+
+    #[test]
+    fn default_policy_warns_on_residual_and_incomplete_stages() {
+        let evaluation = evaluate_default_policy(&[
+            policy_stage("claim_scope", "passed", vec!["R-090"], vec![], None),
+            policy_stage("sandbox_setup", "passed", vec![], vec![], None),
+            policy_stage(
+                "synthetic_verification",
+                "not_applicable",
+                vec![],
+                vec!["R-081"],
+                None,
+            ),
+        ]);
+
+        assert_eq!(evaluation.outcome, PolicyOutcome::Warning);
+        assert!(evaluation
+            .decision
+            .warnings
+            .iter()
+            .any(|warning| warning.starts_with("residual_risk:claim_scope")));
+        assert!(evaluation
+            .decision
+            .warnings
+            .iter()
+            .any(|warning| warning.starts_with("stage_incomplete:synthetic_verification")));
+    }
+
+    #[test]
+    fn default_policy_fails_hard_gate_status() {
+        let evaluation = evaluate_default_policy(&[
+            policy_stage("claim_scope", "passed", vec![], vec![], None),
+            policy_stage("sandbox_setup", "passed", vec![], vec![], None),
+            policy_stage("oracle_integrity", "failed", vec!["R-020"], vec![], None),
+        ]);
+
+        assert_eq!(evaluation.outcome, PolicyOutcome::Failed);
+        assert!(evaluation
+            .decision
+            .hard_failures
+            .contains(&"stage_status:oracle_integrity:failed".to_string()));
+    }
+
+    #[test]
+    fn default_policy_fails_skipped_required_stage() {
+        let evaluation = evaluate_default_policy(&[
+            policy_stage("claim_scope", "passed", vec![], vec![], None),
+            policy_stage("sandbox_setup", "skipped", vec![], vec![], None),
+        ]);
+
+        assert_eq!(evaluation.outcome, PolicyOutcome::Failed);
+        assert!(evaluation
+            .decision
+            .hard_failures
+            .contains(&"required_stage_incomplete:sandbox_setup:skipped".to_string()));
+    }
+
+    #[test]
+    fn default_policy_fails_budget_exhaustion() {
+        let evaluation = evaluate_default_policy(&[
+            policy_stage("claim_scope", "passed", vec![], vec![], None),
+            policy_stage("sandbox_setup", "passed", vec![], vec![], None),
+            policy_stage(
+                "mutation_python_mutmut",
+                "passed",
+                vec![],
+                vec![],
+                Some(StageBudget {
+                    target_ms: 30_000,
+                    max_ms: 60_000,
+                    consumed_ms: 60_001,
+                    exhausted: true,
+                    timeout_reason: Some("stage timeout".to_string()),
+                    partial_evidence: true,
+                }),
+            ),
+        ]);
+
+        assert_eq!(evaluation.outcome, PolicyOutcome::Failed);
+        assert!(evaluation
+            .decision
+            .hard_failures
+            .contains(&"stage_budget_exhausted:mutation_python_mutmut".to_string()));
+    }
+
+    #[test]
     fn example_fixtures_use_expected_schema_versions_and_risk_ids() {
         let fixtures = [
             (
@@ -2123,6 +2402,25 @@ mod tests {
                 }
             }
             _ => {}
+        }
+    }
+
+    fn policy_stage(
+        id: &str,
+        status: &str,
+        residual_risks: Vec<&str>,
+        not_applicable_risks: Vec<&str>,
+        stage_budget: Option<StageBudget>,
+    ) -> PolicyStageEvidence {
+        PolicyStageEvidence {
+            id: id.to_string(),
+            status: status.to_string(),
+            residual_risks: residual_risks.into_iter().map(str::to_string).collect(),
+            not_applicable_risks: not_applicable_risks
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
+            stage_budget,
         }
     }
 }
