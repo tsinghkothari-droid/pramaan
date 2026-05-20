@@ -9,8 +9,10 @@ world's software. The bottleneck is no longer generation. The bottleneck is
 trust.
 
 Pramaan turns an AI-generated code change into an auditable proof bundle:
-structured receipts, execution evidence, risk IDs, replay data, and signed
-artifacts that show what was checked and what still needs human judgment.
+structured receipts, execution evidence, risk IDs, replay data, and
+hash-linked artifacts that show what was checked and what still needs human
+judgment. Sigstore/in-toto signing is on the roadmap; local hash-integrity
+verification exists today.
 
 It does not sell the fantasy that a tool can prove arbitrary software correct.
 It solves the real problem engineering teams face every day:
@@ -39,10 +41,22 @@ Pramaan answers the question reviewers actually need answered:
 > What evidence exists that this code change did what it claimed, and what
 > risks remain?
 
+## Current Implementation Status
+
+Pramaan is early-stage. The repo already ships a Rust CLI foundation, receipt
+schemas, bundle hash verification, sandbox/environment evidence, static-check
+adapters, heuristic oracle-integrity checks, demo fixtures, and a GitHub Action
+wrapper. It does **not** yet ship production-grade Sigstore signing, enforced
+container isolation, real Hypothesis/fast-check execution, complete
+mutmut/StrykerJS/cargo-mutants integration, or a fully orchestrated `verify`
+pipeline that runs every planned stage automatically.
+
+See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
+
 ## The Pramaan Answer
 
 Pramaan is a receipt-first verification layer for code review. For each pull
-request, it builds a signed, inspectable bundle of stage receipts:
+request, it is being built toward an inspectable bundle of stage receipts:
 
 ![Pramaan verification pipeline](assets/readme/pramaan-pipeline.svg)
 
@@ -54,7 +68,7 @@ PR diff
   -> Oracle integrity
   -> Delta mutation
   -> Property, fuzz, and differential checks
-  -> Bundle signing and verification
+  -> Bundle integrity and signing/attestation
   -> GitHub Action summary
 ```
 
@@ -167,26 +181,39 @@ Pramaan classifies these failures instead of flattening them into generic
 Coverage is not enough. A test can execute code without asserting the behavior
 that matters.
 
-Pramaan uses diff-scoped mutation testing to ask a sharper question:
+Pramaan is being built to use diff-scoped mutation testing to ask a sharper
+question:
 
 > If we perturb the changed logic, do the tests actually notice?
 
-Mutation receipts record created, killed, survived, timed-out, skipped, and
-unviable mutants, plus the threshold and budget used.
+Current code has mutation command wrappers and receipt normalization. Full
+production-grade mutmut, StrykerJS, and cargo-mutants integration remains
+roadmap work.
 
 ### Property, Fuzz, and Differential Checks
 
-For eligible changed functions, Pramaan compares base and head behavior on
-shared generated inputs. Unexpected divergence is recorded with seeds, replay
-data, minimized counterexamples, corpus hashes, and scope classification.
+For eligible changed functions, Pramaan is being built to compare base and head
+behavior on shared generated inputs. Current code has a deterministic simulated
+mode for narrow pure-function fixtures. Real Hypothesis and fast-check adapters
+remain roadmap work.
 
 This is how Pramaan catches "the bug is fixed, but nearby behavior changed."
 
 ### Signed Proof Bundles
 
 Receipts and artifacts are collected into a bundle manifest. The bundle can be
-verified for hash integrity and prepared for Sigstore, GitHub artifact
-attestation, and in-toto/SLSA-style provenance flows.
+verified for hash integrity today and is prepared for future Sigstore, GitHub
+artifact attestation, and in-toto/SLSA-style provenance flows.
+
+## Non-Goals
+
+Pramaan deliberately does not claim to be:
+
+- a proof that arbitrary software is correct;
+- an automatic merge authority;
+- a replacement for CI;
+- a generic agent registry;
+- a dashboard-first product before the CLI and GitHub Action are trustworthy.
 
 ## Example Reviewer Summary
 

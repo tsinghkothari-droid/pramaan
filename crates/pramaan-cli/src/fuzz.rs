@@ -107,6 +107,7 @@ pub fn run_fuzz(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn fuzz_receipt(
     base_repo: &Path,
     head_repo: &Path,
@@ -871,7 +872,7 @@ fn render_fuzz_summary(
 
     if !evidence.divergences.is_empty() {
         println!();
-        println!("{:<16} {:<28} {}", "classification", "function", "path");
+        println!("{:<16} {:<28} path", "classification", "function");
         for divergence in &evidence.divergences {
             println!(
                 "{:<16} {:<28} {}",

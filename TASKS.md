@@ -3,6 +3,92 @@
 This file tracks the concrete work needed to make Pramaan a serious production
 verification layer for AI-authored pull requests.
 
+## Strategic Re-Think: Are We on the Right Track?
+
+Current answer: **yes, if Pramaan stays narrow and evidence-first.**
+
+The strong product is not "AI proves code correct." The strong product is:
+
+> Pramaan creates an auditable evidence bundle for AI-authored pull requests so
+> reviewers can see what was checked, what was skipped, what was weakened, what
+> risks remain, and whether the bundle itself can be trusted.
+
+That direction is worth continuing because it targets a real adoption blocker:
+teams do not merely need more code generation; they need reviewable evidence
+when generated code claims to be safe. The risk is scope creep. Pramaan should
+not become a generic agent platform, a full CI replacement, a new programming
+language, or a universal security scanner before the core PR-verification loop
+is trusted.
+
+### Research Discipline
+
+For a project like this, the appropriate amount of research is **four focused
+research phases before build commitment**, then short research refreshes only
+when a phase has a concrete unknown.
+
+The four research phases are:
+
+1. **Problem and buyer validation:** who has this pain, what they currently do,
+   what would make them trust or reject Pramaan.
+2. **Technical feasibility and prior art:** papers, tools, benchmarks, CI
+   systems, mutation/fuzz/property tools, Sigstore/SLSA/in-toto, and competing
+   products.
+3. **Failure-mode and threat research:** adversarial PRs, weak oracles, poisoned
+   fixtures, hallucinated APIs, malicious CI execution, plugin poisoning,
+   redaction failures, and reviewer alert fatigue.
+4. **Pilot/eval research:** 3-5 real repositories, 25-100 adversarial fixtures,
+   runtime baselines, false-positive/false-negative measurements, and reviewer
+   time-to-understand.
+
+After those four research phases, new research must be tied to a deliverable:
+a schema field, risk ID, fixture, policy rule, plugin contract, demo, or
+benchmark. Broad "keep researching" work should pause until the alpha loop runs
+on real repositories.
+
+### P0 Product Direction Tasks
+
+- [x] Declare the narrow product thesis in `README.md`, `STATUS.md`, and
+  `.planning/STATE.md`: Pramaan is a PR evidence-bundle verifier, not a
+  correctness oracle or generic CI replacement.
+- [x] Add explicit non-goals: no automatic merge authority, no "proved correct"
+  claims, no generic agent registry work inside the core v0.1 path, and no
+  dashboard-first roadmap before CLI/Action trust is real.
+- [x] Define the first ideal customer profile: teams reviewing AI-authored PRs
+  in Python, TypeScript, or Rust repos with CI already in place.
+- [x] Define the first killer workflow: "GitHub green, Pramaan red" for a
+  weakened-test PR, with a bundle understood in under 30 seconds.
+- [x] Create a research sufficiency checklist: at least 40 source-backed notes,
+  30 mapped failure modes, 10 competing/prior-art tools, 25 adversarial
+  fixtures, 3 pilot repositories, and measured runtime/noise baselines.
+- [x] Stop broad research once the sufficiency checklist is met; convert every
+  remaining research question into an experiment, fixture, policy rule, or doc.
+- [x] Add pivot/kill criteria: if reviewers cannot understand a bundle in under
+  30 seconds, if runtime regularly exceeds the SLA, or if skipped stages look
+  like passes, pause feature expansion and fix trust/UX first.
+- [x] Review the phase plan every 4 build phases and remove or merge phases that
+  do not directly improve evidence quality, reviewer trust, runtime, or adoption.
+
+### P0/P1 GSD Completion Track
+
+The remaining P0/P1 work is now mapped to a focused GSD track. These items are
+**planned, not complete**. A checkbox below should only be marked done after the
+phase lands with tests/docs and verification evidence.
+
+| GSD phase | Priority | What it completes |
+| --- | --- | --- |
+| Phase 18 | P0 | Product thesis, non-goals, `STATUS.md`, current-vs-planned README honesty, ICP, killer workflow, research sufficiency, pivot criteria. |
+| Phase 19 | P0 | Receipt golden tests, canonical serialization/hashing plan, fixture drift controls, schema/runtime consistency guardrails. |
+| Phase 20 | P0 | Performance SLA, stage budgets, default policy profile, `pramaan policy explain`, hard-gate vs warning-gate behavior. |
+| Phase 21 | P1 | Sandbox hardening, OCI/container identity, dirty-after-run detection, verifier threat model, redaction, CI hardening checks. |
+| Phase 22 | P1 | Claim-scope issue ingestion, scope-note support, vague-claim warnings, semantic mismatch signal, relaxed static-config and security-sensitive diff classification. |
+| Phase 23 | P1 | AST-backed oracle integrity extractors for Python, TypeScript, and Rust with golden fixtures. |
+| Phase 24 | P1 | Real mutation and property/fuzz adapters for Python, TypeScript, and Rust with budgets, thresholds, replay metadata, and honest skipped/timeout receipts. |
+| Phase 25 | P0/P1 gate | Pilot validation across 3 repositories, P0/P1 acceptance report, unresolved-risk register, and go/no-go decision for Alpha MVP. |
+
+Execution rule: do not start P2 signing/attestation expansion or dashboard work
+until the Phase 25 P0/P1 gate says the core PR-verification loop is trustworthy
+enough for external users.
+
 ## P0: Killer Demo
 
 - [x] Build a standalone demo repository where normal CI passes but Pramaan fails because a test assertion was weakened.

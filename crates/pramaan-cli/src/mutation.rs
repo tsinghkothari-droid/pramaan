@@ -697,10 +697,7 @@ fn render_mutation_summary(repo: &Path, out: &Path, receipts: &[(Receipt, PathBu
     println!("bundle: {}", out.display());
     println!();
     println!("Stages");
-    println!(
-        "{:<36} {:<16} {:<10} {}",
-        "stage", "status", "mutants", "receipt"
-    );
+    println!("{:<36} {:<16} {:<10} receipt", "stage", "status", "mutants");
 
     for (receipt, path) in receipts {
         let total = receipt

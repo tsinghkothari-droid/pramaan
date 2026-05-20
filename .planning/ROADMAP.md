@@ -260,6 +260,115 @@
 8. Adversarial corpus taxonomy includes security-code, malicious-CI, policy-weakening, benchmark-overfitting, redaction-loss, critic-bias, and trend-drift cases.
 9. Non-GitHub CI abstraction captures artifacts, identity, comments, refs, merge requests, and OIDC signing.
 
+## Phase 18: P0 Product Honesty and Direction
+
+**Goal:** Lock the narrow product thesis and make the public surface honest without weakening the story.
+
+**Priority:** P0
+
+**Success Criteria:**
+
+1. `STATUS.md` exists and maps shipped, partial, stub, planned, and experimental capabilities.
+2. `README.md` links to status and avoids implying unimplemented Sigstore, in-toto, real mutation, real fuzz, or full pipeline orchestration.
+3. `.planning/STATE.md` names Pramaan as a PR evidence-bundle verifier, not a correctness oracle or generic CI replacement.
+4. First ICP, first killer workflow, non-goals, research sufficiency checklist, and pivot criteria are documented.
+
+## Phase 19: P0 Receipt Golden Tests and Canonical Evidence
+
+**Goal:** Make receipt and bundle evidence stable enough that fixture drift and hash drift are caught early.
+
+**Priority:** P0
+
+**Success Criteria:**
+
+1. Generated receipts can be compared to approved golden fixtures.
+2. Receipt and bundle serialization rules are deterministic and documented.
+3. Schema/runtime drift is visible through tests.
+4. Existing checked-in examples are migrated or explicitly labeled legacy.
+
+## Phase 20: P0 SLA and Policy Gates
+
+**Goal:** Make Pramaan usable in PR CI by giving reviewers clear runtime budgets and explainable policy outcomes.
+
+**Priority:** P0
+
+**Success Criteria:**
+
+1. Performance SLA classes and per-stage budgets are documented and represented in receipts.
+2. Default policy-as-code profile separates hard gates, warning gates, waivers, and required stages.
+3. `pramaan policy explain` explains why a bundle passes, warns, or fails.
+4. GitHub Action summaries reflect policy decisions without hiding skipped or timed-out stages.
+
+## Phase 21: P1 Sandbox, Threat Model, and Redaction
+
+**Goal:** Treat the verifier itself as an attack surface and harden the evidence boundary around untrusted PR code.
+
+**Priority:** P1
+
+**Success Criteria:**
+
+1. Sandbox evidence captures OCI/container identity where available.
+2. Source changes after stage execution are detected and surfaced.
+3. `docs/threat-model.md` covers malicious PR code, plugins, mutation tools, fuzzers, parsers, CI runners, cache poisoning, and artifact tampering.
+4. Bundle redaction policies protect secrets, internal endpoints, private paths, and sensitive CI metadata.
+5. CI hardening checks warn on unsafe workflow patterns for untrusted PRs.
+
+## Phase 22: P1 Claim Scope and Static Security Signals
+
+**Goal:** Improve the bridge between what the PR claims, what changed, and which static/security risks should raise gate severity.
+
+**Priority:** P1
+
+**Success Criteria:**
+
+1. Linked issue text can be ingested when available.
+2. Maintainer scope notes can define expected and out-of-scope behavior.
+3. Vague or missing claims produce stable risk IDs.
+4. Relaxed static-check configuration is detected.
+5. Security-sensitive diffs are classified for auth, authorization, crypto, SQL/query construction, subprocess, filesystem, deserialization, secrets, network, and permissions.
+6. Semantic claim-implementation mismatch remains bounded evidence, not a sole merge gate.
+
+## Phase 23: P1 AST Oracle Extractors
+
+**Goal:** Replace the highest-risk heuristic oracle checks with AST-backed extractors and golden fixtures.
+
+**Priority:** P1
+
+**Success Criteria:**
+
+1. Python pytest assertions, skips, xfails, raises, parametrized cases, and deleted/renamed tests are extracted through an AST-aware path.
+2. TypeScript/Jest/Vitest expectations and skip markers are extracted through an AST-aware path.
+3. Rust assertions, panic tests, `#[ignore]`, and snapshot-sensitive patterns are extracted through a parser-backed path.
+4. Golden fixtures cover positive and negative cases for each language.
+
+## Phase 24: P1 Real Mutation and Property/Fuzz Adapters
+
+**Goal:** Replace simulated/advisory execution with real tool-backed mutation and property/fuzz checks where tools are installed.
+
+**Priority:** P1
+
+**Success Criteria:**
+
+1. Python `mutmut` and Hypothesis run diff-scoped with budgets and replay metadata.
+2. TypeScript StrykerJS and fast-check run diff-scoped with budgets and replay metadata.
+3. Rust cargo-mutants runs on changed crates/modules with timeout and survivor evidence.
+4. Receipts record mutants created, killed, survived, timed out, skipped, unviable, thresholds, cache state, seeds, corpus hashes, and counterexamples.
+5. Missing tools, unsupported code, and timeouts are visible residual risk, never silent passes.
+
+## Phase 25: P0/P1 Pilot Gate and Alpha Decision
+
+**Goal:** Prove whether the P0/P1 loop is actually useful before expanding into P2/P3 features.
+
+**Priority:** P0/P1 gate
+
+**Success Criteria:**
+
+1. Pramaan runs on at least three selected real repositories.
+2. Pilot report records runtime, skipped-stage profile, false positives, false negatives, reviewer time-to-understand, and top residual risks.
+3. Alpha MVP release gates are evaluated honestly.
+4. Unfinished P0/P1 items are either closed, split, or explicitly accepted as alpha residual risk.
+5. The next roadmap decision is documented: continue to P2 signing/attestation, repeat P0/P1 hardening, or pivot.
+
 ## Coverage
 
 | Phase | Requirements | Count |
@@ -284,5 +393,9 @@
 
 **Total mapped:** 111 / 111
 
+**Supplemental P0/P1 completion track:** Phases 18-25 are a delivery overlay for
+the remaining P0/P1 tasks in `TASKS.md`; they do not change the original 111
+research-mapped requirement count.
+
 ---
-*Roadmap updated: 2026-05-19 after next-level internet research pass*
+*Roadmap updated: 2026-05-21 after P0/P1 completion-track planning*

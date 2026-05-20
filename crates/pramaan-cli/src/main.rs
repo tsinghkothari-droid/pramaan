@@ -561,7 +561,7 @@ fn render_summary(args: &VerifyArgs, receipts: &[(&Receipt, &Path)], manifest_pa
     println!("manifest: {}", manifest_path.display());
     println!();
     println!("Stages");
-    println!("{:<24} {:<16} {}", "stage", "status", "receipt");
+    println!("{:<24} {:<16} receipt", "stage", "status");
 
     for (receipt, path) in receipts {
         println!(

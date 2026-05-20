@@ -567,7 +567,7 @@ fn render_static_summary(repo: &Path, out: &Path, receipts: &[(Receipt, PathBuf)
     println!("bundle: {}", out.display());
     println!();
     println!("Stages");
-    println!("{:<32} {:<16} {}", "stage", "status", "receipt");
+    println!("{:<32} {:<16} receipt", "stage", "status");
 
     for (receipt, path) in receipts {
         let digest = digest_receipt(path)

@@ -164,7 +164,7 @@ fn render_oracle_summary(
 
     if !diff.findings.is_empty() {
         println!();
-        println!("{:<32} {:<28} {}", "kind", "test", "path");
+        println!("{:<32} {:<28} path", "kind", "test");
         for finding in &diff.findings {
             println!(
                 "{:<32} {:<28} {}",

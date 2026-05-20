@@ -6,15 +6,21 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Phase 12 oracle integrity engine completed; next step is Phase 13 mutation and fuzz adapters.
+**Current focus:** P0/P1 completion track. Phase 18 is complete; the next
+execution phase is Phase 19: P0 Receipt Golden Tests and Canonical Evidence.
 
 ## Current Phase
 
-Phase 13: Mutation and Fuzz Adapters
+Phase 19: P0 Receipt Golden Tests and Canonical Evidence
 
 ## Status
 
-Phases 1-12 and the Phase 16a schema-impact subset are implemented and validated. Phases 13-17 remain the Serious v1 execution path: mutation/fuzz adapters, attestation/corpus/evals, adoption/language/adapter gates, blind-spot closure for attribution/feedback/calibration/security, and next-level policy/CI/evaluation intelligence.
+Phases 1-12 and the Phase 16a schema-impact subset are implemented and
+validated. Phases 13-17 remain the broader Serious v1 execution path. Phases
+18-25 are now the focused P0/P1 completion track: product honesty, golden
+evidence, SLA/policy gates, sandbox/threat/redaction hardening, claim/static
+security signals, AST oracle extractors, real mutation/fuzz adapters, and a
+pilot gate before P2 expansion.
 
 ## Open Questions
 
@@ -51,3 +57,5 @@ Phases 1-12 and the Phase 16a schema-impact subset are implemented and validated
 | 2026-05-19 | Completed Phase 10 GitHub Action production readiness. | The composite action now has stable PR inputs, deterministic source build, bundle upload before failure policy, fork-permission docs, and Python/TypeScript/Rust workflow examples. |
 | 2026-05-19 | Completed Phase 11 sandbox, claim, and static depth. | Pramaan now records richer environment and lockfile-drift evidence, PR-grounded claim scope, deterministic public API scans, configured pyright/clippy receipts, and expanded static hallucination categories. |
 | 2026-05-19 | Completed Phase 12 oracle integrity engine. | Oracle receipts now detect Python, TypeScript, and Rust oracle weakening patterns, renamed/deleted tests, boundary/error removals, and fixture/snapshot hash drift with reviewer-facing details. |
+| 2026-05-21 | Added P0/P1 GSD completion track for Phases 18-25. | Remaining P0/P1 tasks are now mapped to execution phases, with a Phase 25 pilot gate before P2/P3 expansion. |
+| 2026-05-21 | Completed Phase 18 product honesty and direction. | `STATUS.md`, README status language, non-goals, ICP, killer workflow, research sufficiency, and pivot criteria now keep the public surface ambitious but honest. |
