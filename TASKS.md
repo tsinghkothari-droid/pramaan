@@ -127,12 +127,12 @@ enough for external users.
 - [x] Hash dependency manifests and lockfiles.
 - [x] Detect lockfile changes and mark dependency-drift risks.
 - [x] Capture container image names and digests when supplied by CI/container environment metadata.
-- [ ] Auto-detect OCI/container identity when CI does not provide image metadata explicitly.
+- [x] Auto-detect OCI/container identity when CI does not provide image metadata explicitly.
 - [x] Add network policy evidence: disabled, allowed, observed, or unknown.
-- [ ] Detect source changes after a stage runs and mark dirty-after-run risk.
-- [ ] Threat-model the verifier as an attack target, including malicious PR code exploiting mutation engines, fuzzers, parsers, test runners, or plugin hooks.
-- [ ] Add PII/secrets scrubbing rules for environment evidence, logs, network endpoints, internal hostnames, paths, and artifact metadata before bundle emission.
-- [ ] Add CI hardening checks for untrusted PR execution: least-privilege token permissions, `pull_request_target` hazards, cache poisoning, unpinned actions, artifact retention, and self-hosted runner warnings.
+- [x] Detect source changes after a stage runs and mark dirty-after-run risk.
+- [x] Threat-model the verifier as an attack target, including malicious PR code exploiting mutation engines, fuzzers, parsers, test runners, or plugin hooks.
+- [x] Add PII/secrets scrubbing rules for environment evidence, logs, network endpoints, internal hostnames, paths, and artifact metadata before bundle emission.
+- [x] Add CI hardening checks for untrusted PR execution: least-privilege token permissions, `pull_request_target` hazards, cache poisoning, unpinned actions, artifact retention, and self-hosted runner warnings.
 
 ## P1: Claim Scope
 

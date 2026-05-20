@@ -42,3 +42,35 @@ around untrusted PR code.
 
 Bundles become safer to share, and unsafe CI/verifier conditions are visible
 instead of invisible assumptions.
+
+## Completion Summary
+
+Completed on 2026-05-21.
+
+Landed:
+
+- Added best-effort container/OCI identity detection from common environment
+  metadata.
+- Added sandbox evidence for source checkout state after sandbox setup and a
+  `source_changed_after_setup` risk signal.
+- Added core redaction helpers for secret-like assignments and private user
+  paths.
+- Added core GitHub workflow hardening checks for `pull_request_target`,
+  `write-all`, self-hosted runners, cache use, unpinned actions, and mutable
+  action refs.
+- Added `docs/threat-model.md`.
+- Updated GitHub Action and receipt-model docs.
+- Marked the related P1 sandbox/security tasks complete in `TASKS.md`.
+
+Deferred:
+
+- Full container or VM enforcement remains future work.
+- Redaction helpers are not yet applied as a bundle export profile.
+- CI hardening checks are core primitives; a dedicated CLI/reporting surface can
+  be added in a later policy phase.
+
+Risks discovered:
+
+- Source-change detection currently covers sandbox setup boundaries. Later
+  orchestration should record before/after fingerprints around every verifier
+  stage.

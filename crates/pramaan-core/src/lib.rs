@@ -1486,6 +1486,154 @@ pub struct RedactionManifest {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CiHardeningFinding {
+    pub id: String,
+    pub severity: String,
+    pub message: String,
+}
+
+pub fn redact_sensitive_text(input: &str) -> String {
+    let mut output = input.replace('\\', "/");
+    for key in [
+        "password",
+        "token",
+        "secret",
+        "api_key",
+        "apikey",
+        "authorization",
+    ] {
+        output = redact_assignment_values(&output, key, '=');
+        output = redact_assignment_values(&output, key, ':');
+    }
+    redact_user_paths(&output)
+}
+
+pub fn analyze_github_workflow_security(workflow_text: &str) -> Vec<CiHardeningFinding> {
+    let lower = workflow_text.to_ascii_lowercase();
+    let mut findings = Vec::new();
+
+    if lower.contains("pull_request_target:") {
+        findings.push(CiHardeningFinding {
+            id: "CI-001".to_string(),
+            severity: "high".to_string(),
+            message:
+                "`pull_request_target` can expose write tokens or secrets to untrusted PR code."
+                    .to_string(),
+        });
+    }
+    if lower.contains("permissions: write-all") {
+        findings.push(CiHardeningFinding {
+            id: "CI-002".to_string(),
+            severity: "high".to_string(),
+            message: "`permissions: write-all` violates least privilege for verifier runs."
+                .to_string(),
+        });
+    }
+    if lower.contains("self-hosted") {
+        findings.push(CiHardeningFinding {
+            id: "CI-003".to_string(),
+            severity: "medium".to_string(),
+            message:
+                "self-hosted runners need explicit isolation before executing untrusted PR code."
+                    .to_string(),
+        });
+    }
+    if lower.contains("actions/cache") {
+        findings.push(CiHardeningFinding {
+            id: "CI-004".to_string(),
+            severity: "medium".to_string(),
+            message: "workflow cache use should be checked for untrusted PR cache poisoning."
+                .to_string(),
+        });
+    }
+    for line in workflow_text.lines() {
+        let trimmed = line.trim();
+        let action_ref = trimmed
+            .strip_prefix("uses:")
+            .or_else(|| trimmed.strip_prefix("- uses:"));
+        if let Some(action_ref) = action_ref {
+            let action_ref = action_ref.trim();
+            if !action_ref.contains('@') {
+                findings.push(CiHardeningFinding {
+                    id: "CI-005".to_string(),
+                    severity: "medium".to_string(),
+                    message: format!("action `{action_ref}` is not pinned to a ref"),
+                });
+            } else if action_ref.ends_with("@main") || action_ref.ends_with("@master") {
+                findings.push(CiHardeningFinding {
+                    id: "CI-006".to_string(),
+                    severity: "medium".to_string(),
+                    message: format!("action `{action_ref}` is pinned to a mutable branch"),
+                });
+            }
+        }
+    }
+
+    findings
+}
+
+fn redact_assignment_values(input: &str, key: &str, separator: char) -> String {
+    let mut output = input.to_string();
+    let pattern = format!("{key}{separator}");
+    let mut search_start = 0;
+
+    loop {
+        let lower = output.to_ascii_lowercase();
+        let Some(relative_index) = lower[search_start..].find(&pattern) else {
+            break;
+        };
+        let start = search_start + relative_index;
+        let mut value_start = start + pattern.len();
+        while output[value_start..]
+            .chars()
+            .next()
+            .is_some_and(char::is_whitespace)
+        {
+            value_start += output[value_start..].chars().next().unwrap().len_utf8();
+        }
+        let value_end = output[value_start..]
+            .char_indices()
+            .find_map(|(index, character)| {
+                if character.is_whitespace() || matches!(character, '&' | ';' | ',') {
+                    Some(value_start + index)
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(output.len());
+        if value_end > value_start {
+            output.replace_range(value_start..value_end, "<redacted>");
+            search_start = value_start + "<redacted>".len();
+        } else {
+            search_start = value_start;
+        }
+    }
+
+    output
+}
+
+fn redact_user_paths(input: &str) -> String {
+    let mut output = input.to_string();
+    for prefix in ["C:/Users/", "/Users/", "/home/"] {
+        let mut search_start = 0;
+        while let Some(relative_index) = output[search_start..].find(prefix) {
+            let user_start = search_start + relative_index + prefix.len();
+            let user_end = output[user_start..]
+                .find('/')
+                .map(|index| user_start + index)
+                .unwrap_or(output.len());
+            if user_end > user_start {
+                output.replace_range(user_start..user_end, "<redacted>");
+                search_start = user_start + "<redacted>".len();
+            } else {
+                search_start = user_start;
+            }
+        }
+    }
+    output
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PolicyDecision {
     pub decision: String,
     pub policy_id: String,
@@ -2205,6 +2353,50 @@ mod tests {
             .decision
             .hard_failures
             .contains(&"stage_budget_exhausted:mutation_python_mutmut".to_string()));
+    }
+
+    #[test]
+    fn redaction_masks_secret_values_and_private_paths() {
+        let redacted = redact_sensitive_text(
+            "password=hunter2 token: ghp_123 C:\\Users\\Tushar\\repo /home/alex/project",
+        );
+
+        assert!(!redacted.contains("hunter2"));
+        assert!(!redacted.contains("ghp_123"));
+        assert!(!redacted.contains("Tushar"));
+        assert!(!redacted.contains("/home/alex"));
+        assert!(redacted.contains("password=<redacted>"));
+        assert!(redacted.contains("token: <redacted>"));
+        assert!(redacted.contains("C:/Users/<redacted>/repo"));
+        assert!(redacted.contains("/home/<redacted>/project"));
+    }
+
+    #[test]
+    fn ci_hardening_flags_untrusted_pr_workflow_hazards() {
+        let findings = analyze_github_workflow_security(
+            r#"
+on:
+  pull_request_target:
+permissions: write-all
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/cache@main
+      - uses: ./local-action
+"#,
+        );
+        let ids = findings
+            .iter()
+            .map(|finding| finding.id.as_str())
+            .collect::<BTreeSet<_>>();
+
+        assert!(ids.contains("CI-001"));
+        assert!(ids.contains("CI-002"));
+        assert!(ids.contains("CI-003"));
+        assert!(ids.contains("CI-004"));
+        assert!(ids.contains("CI-005"));
+        assert!(ids.contains("CI-006"));
     }
 
     #[test]

@@ -93,6 +93,21 @@ For forked pull requests, keep the workflow on `pull_request` rather than
 Pramaan runs repository code and should not receive write tokens or secrets from
 untrusted forks.
 
+## CI Hardening Checks
+
+Phase 21 adds text-level GitHub workflow hardening checks in core so future
+receipts can flag unsafe verifier environments. The current detector looks for:
+
+- `pull_request_target` on untrusted code paths;
+- `permissions: write-all`;
+- `self-hosted` runners;
+- `actions/cache` cache-poisoning review needs;
+- actions without an `@ref`;
+- actions pinned to mutable `@main` or `@master` refs.
+
+These checks are intentionally conservative. They are not a full GitHub Actions
+policy engine yet, but they make common verifier hazards visible.
+
 ## Optional Artifact Attestation
 
 To request GitHub artifact attestation, enable the input and grant the additional

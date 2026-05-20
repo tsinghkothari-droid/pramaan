@@ -105,6 +105,18 @@ To intentionally update a golden receipt, regenerate the relevant smoke fixture,
 review the diff in the normalized expected JSON, and update the test and docs in
 the same commit. Never update a golden fixture just to make a failing test green.
 
+## Redaction Discipline
+
+Receipts should not expose secrets or private infrastructure details when a
+bundle is shared outside the producing CI environment. Phase 21 adds redaction
+helpers for common secret assignments such as `password=`, `token:`,
+`api_key=`, and `authorization:`, plus private user paths such as
+`C:\Users\<name>`, `/Users/<name>`, and `/home/<name>`.
+
+Redaction is not a substitute for least-privilege CI. Untrusted pull request
+jobs should not receive secrets in the first place. Redaction makes accidental
+bundle sharing safer; it does not make hostile code execution safe.
+
 ## Claim Discipline
 
 Receipts should use precise language:

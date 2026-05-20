@@ -46,6 +46,8 @@ pub struct SandboxEvidence {
     pub base: WorktreeEvidence,
     pub head: WorktreeEvidence,
     pub source_dirty_state: DirtyState,
+    pub source_after_setup_dirty_state: DirtyState,
+    pub source_changed_after_setup: bool,
     pub repository: RepositoryEvidence,
     pub environment: EnvironmentEvidence,
     pub network_policy: NetworkPolicyEvidence,
@@ -54,6 +56,8 @@ pub struct SandboxEvidence {
     pub image_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub image_digest: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image_identity_source: Option<String>,
     pub limitations: Vec<String>,
     pub mitigated_risks: Vec<String>,
     pub residual_risks: Vec<String>,
@@ -115,6 +119,13 @@ pub struct EnvironmentEvidence {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NetworkPolicyEvidence {
     pub policy: String,
+    pub source: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContainerIdentityEvidence {
+    pub image_name: Option<String>,
+    pub image_digest: Option<String>,
     pub source: String,
 }
 
@@ -192,15 +203,43 @@ impl SandboxRunner {
         let repository = repository_evidence(&self.repo_path, &base_guard.path, &head_guard.path)?;
         let environment = environment_evidence()?;
         let network_policy = network_policy_evidence(self.network_policy.as_deref());
-        let hermetic = self.image_digest.is_some() && !source_dirty_state.is_dirty;
+        let detected_identity = detect_container_identity_from_env();
+        let image_name = self.image_name.clone().or_else(|| {
+            detected_identity
+                .as_ref()
+                .and_then(|identity| identity.image_name.clone())
+        });
+        let image_digest = self.image_digest.clone().or_else(|| {
+            detected_identity
+                .as_ref()
+                .and_then(|identity| identity.image_digest.clone())
+        });
+        let image_identity_source = if self.image_name.is_some() || self.image_digest.is_some() {
+            Some("explicit_runner_config".to_string())
+        } else {
+            detected_identity.map(|identity| identity.source)
+        };
+        let source_after_setup_dirty_state = dirty_state(&self.repo_path)?;
+        let source_changed_after_setup =
+            relevant_dirty_entries(
+                &source_after_setup_dirty_state,
+                &self.repo_path,
+                &self.out_dir,
+            ) != relevant_dirty_entries(&source_dirty_state, &self.repo_path, &self.out_dir);
+        let hermetic = image_digest.is_some() && !source_dirty_state.is_dirty;
         let limitations = limitations(
             hermetic,
-            self.image_digest.is_some(),
+            image_digest.is_some(),
             &source_dirty_state,
             &repository,
+            source_changed_after_setup,
         );
-        let (mitigated_risks, residual_risks, not_applicable_risks) =
-            sandbox_risks(hermetic, self.image_digest.is_some(), &repository);
+        let (mitigated_risks, residual_risks, not_applicable_risks) = sandbox_risks(
+            hermetic,
+            image_digest.is_some(),
+            &repository,
+            source_changed_after_setup,
+        );
 
         let evidence = SandboxEvidence {
             schema_version: SANDBOX_EVIDENCE_SCHEMA_VERSION.to_string(),
@@ -218,12 +257,15 @@ impl SandboxRunner {
                 dirty_state: dirty_state(&head_guard.path)?,
             },
             source_dirty_state,
+            source_after_setup_dirty_state,
+            source_changed_after_setup,
             repository,
             environment,
             network_policy,
             hermetic,
-            image_name: self.image_name.clone(),
-            image_digest: self.image_digest.clone(),
+            image_name,
+            image_digest,
+            image_identity_source,
             limitations,
             mitigated_risks,
             residual_risks,
@@ -359,6 +401,31 @@ fn dirty_state(repo_path: &Path) -> Result<DirtyState, SandboxError> {
         is_dirty: !entries.is_empty(),
         entries,
     })
+}
+
+fn relevant_dirty_entries(
+    state: &DirtyState,
+    repo_path: &Path,
+    ignored_path: &Path,
+) -> Vec<String> {
+    let ignored_prefix = ignored_path
+        .strip_prefix(repo_path)
+        .ok()
+        .map(portable_path)
+        .map(|path| path.trim_end_matches('/').to_string());
+
+    state
+        .entries
+        .iter()
+        .filter(|entry| {
+            let Some(prefix) = ignored_prefix.as_deref() else {
+                return true;
+            };
+            let normalized = entry.replace('\\', "/");
+            !normalized.contains(prefix)
+        })
+        .cloned()
+        .collect()
 }
 
 fn repository_evidence(
@@ -499,6 +566,62 @@ fn network_policy_evidence(policy: Option<&str>) -> NetworkPolicyEvidence {
     }
 }
 
+fn detect_container_identity_from_env() -> Option<ContainerIdentityEvidence> {
+    detect_container_identity_from_pairs(std::env::vars())
+}
+
+pub fn detect_container_identity_from_pairs<I, K, V>(pairs: I) -> Option<ContainerIdentityEvidence>
+where
+    I: IntoIterator<Item = (K, V)>,
+    K: AsRef<str>,
+    V: AsRef<str>,
+{
+    let mut image_name = None;
+    let mut image_digest = None;
+    let mut sources = Vec::new();
+
+    for (key, value) in pairs {
+        let key = key.as_ref().to_ascii_uppercase();
+        let value = value.as_ref().trim();
+        if value.is_empty() {
+            continue;
+        }
+
+        match key.as_str() {
+            "CONTAINER_IMAGE"
+            | "OCI_IMAGE_NAME"
+            | "IMAGE_NAME"
+            | "DEVCONTAINER_IMAGE"
+            | "GITHUB_ACTIONS_RUNNER_CONTAINER_IMAGE" => {
+                if image_name.is_none() {
+                    image_name = Some(value.to_string());
+                    sources.push(format!("env:{key}"));
+                }
+            }
+            "CONTAINER_IMAGE_DIGEST"
+            | "OCI_IMAGE_DIGEST"
+            | "IMAGE_DIGEST"
+            | "GITHUB_ACTIONS_RUNNER_CONTAINER_DIGEST" => {
+                if image_digest.is_none() {
+                    image_digest = Some(value.to_string());
+                    sources.push(format!("env:{key}"));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if image_name.is_some() || image_digest.is_some() {
+        Some(ContainerIdentityEvidence {
+            image_name,
+            image_digest,
+            source: sources.join(","),
+        })
+    } else {
+        None
+    }
+}
+
 fn optional_command(program: &str, args: &[String]) -> Option<String> {
     run_command(Path::new("."), program, args).ok()
 }
@@ -531,6 +654,7 @@ fn limitations(
     has_image_digest: bool,
     source_dirty_state: &DirtyState,
     repository: &RepositoryEvidence,
+    source_changed_after_setup: bool,
 ) -> Vec<String> {
     let mut limitations = Vec::new();
 
@@ -544,6 +668,13 @@ fn limitations(
     if source_dirty_state.is_dirty {
         limitations.push(
             "Source checkout had uncommitted or untracked files when sandbox evidence was captured."
+                .to_string(),
+        );
+    }
+
+    if source_changed_after_setup {
+        limitations.push(
+            "Source checkout changed while sandbox setup was running; verify stage isolation before trusting downstream evidence."
                 .to_string(),
         );
     }
@@ -568,6 +699,7 @@ fn sandbox_risks(
     hermetic: bool,
     has_image_digest: bool,
     repository: &RepositoryEvidence,
+    source_changed_after_setup: bool,
 ) -> (Vec<String>, Vec<String>, Vec<String>) {
     let mut mitigated = vec![
         "R-021".to_string(),
@@ -606,6 +738,10 @@ fn sandbox_risks(
         mitigated.extend(["R-031".to_string(), "R-032".to_string()]);
     } else {
         residual.extend(["R-031".to_string(), "R-032".to_string()]);
+    }
+
+    if source_changed_after_setup {
+        residual.push("R-034".to_string());
     }
 
     (mitigated, residual, not_applicable)
@@ -665,6 +801,11 @@ mod tests {
             run.evidence.image_name.as_deref(),
             Some("ghcr.io/pramaan/test:latest")
         );
+        assert_eq!(
+            run.evidence.image_identity_source.as_deref(),
+            Some("explicit_runner_config")
+        );
+        assert!(!run.evidence.source_changed_after_setup);
         assert_eq!(run.evidence.network_policy.policy, "disabled");
         assert!(run.evidence.environment.shell.is_some());
         assert!(run.evidence.residual_risks.is_empty());
@@ -774,6 +915,23 @@ mod tests {
             .any(|limitation| limitation.contains("No container or VM image digest")));
         assert!(run.evidence.residual_risks.contains(&"R-031".to_string()));
         assert!(run.evidence.residual_risks.contains(&"R-032".to_string()));
+    }
+
+    #[test]
+    fn container_identity_can_be_detected_from_environment_pairs() {
+        let identity = detect_container_identity_from_pairs([
+            ("OCI_IMAGE_NAME", "ghcr.io/pramaan/runner:latest"),
+            ("OCI_IMAGE_DIGEST", "sha256:abc123"),
+        ])
+        .expect("container identity");
+
+        assert_eq!(
+            identity.image_name.as_deref(),
+            Some("ghcr.io/pramaan/runner:latest")
+        );
+        assert_eq!(identity.image_digest.as_deref(), Some("sha256:abc123"));
+        assert!(identity.source.contains("env:OCI_IMAGE_NAME"));
+        assert!(identity.source.contains("env:OCI_IMAGE_DIGEST"));
     }
 
     #[test]
