@@ -44,3 +44,33 @@ static/security risks should raise gate severity.
 
 Claim scope and static risk receipts become useful enough for policy gates
 without pretending to know developer intent perfectly.
+
+## Completion Summary
+
+Completed on 2026-05-21.
+
+Landed:
+
+- Added issue text ingestion through `PRAMAAN_ISSUE_TEXT` and
+  `PRAMAAN_ISSUE_PATH`.
+- Added maintainer scope notes through `PRAMAAN_SCOPE_NOTE`,
+  `PRAMAAN_SCOPE_NOTE_PATH`, and `.pramaan-scope.md`.
+- Added low-confidence claim-scope risk refs for missing/vague PR context.
+- Added bounded semantic mismatch risk when changed public APIs are not
+  mentioned by claim text.
+- Aligned `schemas/claim_scope.schema.json` with the runtime Rust shape and
+  optional `risk_refs`.
+- Added static security-sensitive category detection and relaxed static-config
+  detection with tests.
+- Updated receipt model and risk taxonomy docs.
+
+Deferred:
+
+- This is deterministic text evidence, not LLM intent matching.
+- Static security classification currently scans the head repository snapshot;
+  diff-sensitive severity can be tightened when full stage orchestration exists.
+
+Risks discovered:
+
+- Claim-scope evidence is only as good as PR metadata and maintainer notes.
+  Missing context must stay visible instead of being treated as a pass.

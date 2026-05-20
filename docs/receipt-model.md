@@ -117,6 +117,22 @@ Redaction is not a substitute for least-privilege CI. Untrusted pull request
 jobs should not receive secrets in the first place. Redaction makes accidental
 bundle sharing safer; it does not make hostile code execution safe.
 
+## Claim Scope Inputs
+
+Phase 22 extends claim-scope evidence beyond CLI refs. The CLI can now consume:
+
+- GitHub event title/body through `GITHUB_EVENT_PATH`;
+- explicit `PRAMAAN_PR_TITLE` and `PRAMAAN_PR_BODY`;
+- issue context through `PRAMAAN_ISSUE_TEXT` or `PRAMAAN_ISSUE_PATH`;
+- maintainer scope notes through `PRAMAAN_SCOPE_NOTE`,
+  `PRAMAAN_SCOPE_NOTE_PATH`, or `.pramaan-scope.md`.
+
+When none of those sources exist, the claim scope is marked low confidence and
+receives claim-scope risk references such as `R-001` and `R-002`. If public API
+changes are detected but the claim text does not mention matching symbols,
+Pramaan emits `R-007` as a bounded semantic mismatch signal. That signal should
+inform review; it is not a sole merge gate.
+
 ## Claim Discipline
 
 Receipts should use precise language:

@@ -2040,6 +2040,8 @@ pub struct ClaimScope {
     pub extraction_method: String,
     pub confidence: ClaimConfidence,
     pub limitations: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub risk_refs: Vec<String>,
 }
 
 impl ClaimScope {
@@ -2072,6 +2074,7 @@ impl ClaimScope {
             limitations: vec![
                 "Claim scope is generated from CLI arguments only for Phase 1.".to_string(),
             ],
+            risk_refs: Vec::new(),
         }
     }
 }

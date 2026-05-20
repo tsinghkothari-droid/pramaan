@@ -158,7 +158,7 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
                 {
                     "name": "claim_scope",
                     "path": "claim_scope.synthetic.json",
-                    "digest": "sha256:6ef9fe137d0df622b7778206270d46801a3965b5094ea606cece6f85c5543862"
+                    "digest": "sha256:35ded69ccefbcd37465aac8843f5823de7165bfec5eabeae140697229dc167dc"
                 }
             ],
             "artifacts": [
@@ -230,6 +230,15 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
             }
         })
     );
+    let claim_scope: serde_json::Value =
+        serde_json::from_slice(&fs::read(claim_scope_path).expect("read claim scope"))
+            .expect("claim scope json");
+    assert_eq!(claim_scope["confidence"], "low");
+    assert!(claim_scope["risk_refs"]
+        .as_array()
+        .expect("claim risk refs")
+        .iter()
+        .any(|risk| risk == "R-001"));
 
     let manifest: serde_json::Value =
         serde_json::from_slice(&fs::read(manifest_path).expect("read manifest"))

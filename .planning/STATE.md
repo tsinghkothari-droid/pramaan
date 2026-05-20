@@ -6,12 +6,12 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** P0/P1 completion track. Phase 21 is complete; the next
-execution phase is Phase 22: P1 Claim Scope and Static Security Signals.
+**Current focus:** P0/P1 completion track. Phase 22 is complete; the next
+execution phase is Phase 23: P1 AST Oracle Extractors.
 
 ## Current Phase
 
-Phase 22: P1 Claim Scope and Static Security Signals
+Phase 23: P1 AST Oracle Extractors
 
 ## Status
 
@@ -62,3 +62,4 @@ pilot gate before P2 expansion.
 | 2026-05-21 | Completed Phase 19 receipt golden tests and canonical evidence. | Generated claim-scope receipts now have a normalized golden contract test, bundle manifest digests use canonical JSON bytes, and receipt docs explain fixture update discipline. |
 | 2026-05-21 | Completed Phase 20 SLA and policy gates. | Pramaan now has a default policy profile, core policy evaluation tests, `pramaan policy explain`, GitHub Action policy summary output, and documented SLA/gate behavior. |
 | 2026-05-21 | Completed Phase 21 sandbox, threat model, and redaction. | Sandbox evidence now includes best-effort container identity and source-change-after-setup evidence, core has redaction and CI hardening checks, and the verifier threat model is documented. |
+| 2026-05-21 | Completed Phase 22 claim scope and static security signals. | Claim scope now supports issue text and maintainer scope notes, maps low-confidence and semantic mismatch warnings to risk IDs, and static checks surface relaxed config plus security-sensitive categories. |

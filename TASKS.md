@@ -137,12 +137,12 @@ enough for external users.
 ## P1: Claim Scope
 
 - [x] Parse PR title and body from GitHub Actions context.
-- [ ] Ingest linked issue text when available.
+- [x] Ingest linked issue text when available.
 - [x] Detect changed public APIs for Python, TypeScript, and Rust.
-- [ ] Add low-confidence claim-scope warnings for vague or missing PR descriptions.
-- [ ] Allow maintainers to provide a scope note file for expected and out-of-scope behavior.
-- [ ] Map claim-scope warnings to stable risk IDs.
-- [ ] Add semantic claim-implementation mismatch detection as a bounded signal: compare stated intent, touched APIs, tests, and changed behavior without making it a sole merge gate.
+- [x] Add low-confidence claim-scope warnings for vague or missing PR descriptions.
+- [x] Allow maintainers to provide a scope note file for expected and out-of-scope behavior.
+- [x] Map claim-scope warnings to stable risk IDs.
+- [x] Add semantic claim-implementation mismatch detection as a bounded signal: compare stated intent, touched APIs, tests, and changed behavior without making it a sole merge gate.
 
 ## P1: Static and Hallucination Checks
 
@@ -150,9 +150,9 @@ enough for external users.
 - [x] TypeScript: integrate package-manager detection, `tsc --noEmit`, and ESLint when configured.
 - [x] Rust: integrate `cargo check`, `cargo test --no-run`, and `cargo clippy` when configured.
 - [x] Classify failures as `invented_api`, `invalid_parameter`, `undefined_symbol`, `nonexistent_import`, `resource_mismatch`, `logic_mismatch`, or `unknown`.
-- [ ] Detect relaxed static-check configuration in the PR.
+- [x] Detect relaxed static-check configuration in the PR.
 - [x] Emit skipped receipts when tools are unavailable instead of hiding missing checks.
-- [ ] Add security-sensitive diff classification for auth, authorization, cryptography, SQL/query construction, subprocess, filesystem, deserialization, secrets, network, and permissions.
+- [x] Add security-sensitive diff classification for auth, authorization, cryptography, SQL/query construction, subprocess, filesystem, deserialization, secrets, network, and permissions.
 
 ## P1: Oracle Integrity
 

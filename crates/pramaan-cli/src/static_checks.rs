@@ -259,6 +259,20 @@ fn run_or_skip_check(repo: &Path, plan: &StaticCheckPlan) -> Result<Receipt> {
     metadata.insert("language".to_string(), plan.language.to_string());
     metadata.insert("command".to_string(), plan.command.join(" "));
     metadata.insert("configured".to_string(), plan.configured.to_string());
+    let security_categories = scan_security_sensitive_categories(repo)?;
+    let relaxed_config = scan_relaxed_static_config(repo)?;
+    if !security_categories.is_empty() {
+        metadata.insert(
+            "security_sensitive_categories".to_string(),
+            security_categories.join(","),
+        );
+    }
+    if !relaxed_config.is_empty() {
+        metadata.insert(
+            "relaxed_static_config".to_string(),
+            relaxed_config.join(","),
+        );
+    }
 
     if let Some(config_path) = &plan.config_path {
         metadata.insert("config_path".to_string(), portable_path(config_path));
@@ -344,6 +358,12 @@ fn run_or_skip_check(repo: &Path, plan: &StaticCheckPlan) -> Result<Receipt> {
     let mut residual_risks = Vec::new();
     if status == StageStatus::Failed {
         residual_risks.push("R-038".to_string());
+    }
+    if !security_categories.is_empty() {
+        residual_risks.push("R-039".to_string());
+    }
+    if !relaxed_config.is_empty() {
+        residual_risks.push("R-040".to_string());
     }
 
     Ok(receipt(
@@ -446,6 +466,110 @@ fn tool_available(tool: &str) -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
+}
+
+fn scan_security_sensitive_categories(repo: &Path) -> Result<Vec<String>> {
+    let mut categories = BTreeSet::new();
+    for path in walk_files(repo)? {
+        let relative = path.strip_prefix(repo).unwrap_or(&path);
+        let relative = portable_path(relative);
+        let Ok(text) = fs::read_to_string(&path) else {
+            continue;
+        };
+        for category in classify_security_sensitive_text(&relative, &text) {
+            categories.insert(category.to_string());
+        }
+    }
+    Ok(categories.into_iter().collect())
+}
+
+fn scan_relaxed_static_config(repo: &Path) -> Result<Vec<String>> {
+    let mut findings = BTreeSet::new();
+    for path in walk_files(repo)? {
+        let relative = path.strip_prefix(repo).unwrap_or(&path);
+        let relative = portable_path(relative);
+        let Ok(text) = fs::read_to_string(&path) else {
+            continue;
+        };
+        for finding in classify_relaxed_static_config_text(&relative, &text) {
+            findings.insert(finding.to_string());
+        }
+    }
+    Ok(findings.into_iter().collect())
+}
+
+fn classify_security_sensitive_text(path: &str, text: &str) -> Vec<&'static str> {
+    let combined = format!("{path}\n{text}").to_ascii_lowercase();
+    let mut categories = BTreeSet::new();
+    for (category, needles) in [
+        ("auth", ["auth", "jwt", "session", "permission"].as_slice()),
+        (
+            "crypto",
+            ["crypto", "cipher", "hashlib", "sha256", "private_key"].as_slice(),
+        ),
+        (
+            "sql",
+            ["select ", "insert ", "update ", "delete ", "query("].as_slice(),
+        ),
+        (
+            "subprocess",
+            ["subprocess", "command::new", "exec(", "spawn("].as_slice(),
+        ),
+        (
+            "filesystem",
+            ["fs.", "filesystem", "read_file", "write_file"].as_slice(),
+        ),
+        (
+            "deserialization",
+            ["pickle", "deserialize", "serde_json::from"].as_slice(),
+        ),
+        (
+            "secrets",
+            ["secret", "token", "password", "api_key"].as_slice(),
+        ),
+        (
+            "network",
+            ["fetch(", "http://", "https://", "requests."].as_slice(),
+        ),
+    ] {
+        if needles.iter().any(|needle| combined.contains(needle)) {
+            categories.insert(category);
+        }
+    }
+    categories.into_iter().collect()
+}
+
+fn classify_relaxed_static_config_text(path: &str, text: &str) -> Vec<&'static str> {
+    let combined = format!("{path}\n{text}").to_ascii_lowercase();
+    let mut findings = BTreeSet::new();
+    for (finding, needles) in [
+        (
+            "typescript_strict_false",
+            ["\"strict\": false", "'strict': false"].as_slice(),
+        ),
+        (
+            "typescript_skip_lib_check",
+            ["\"skiplibcheck\": true", "'skiplibcheck': true"].as_slice(),
+        ),
+        ("mypy_ignore_errors", ["ignore_errors = true"].as_slice()),
+        (
+            "pyright_type_checking_off",
+            ["\"typecheckingmode\": \"off\""].as_slice(),
+        ),
+        (
+            "eslint_disable",
+            ["eslint-disable", "\"no-warning-comments\": \"off\""].as_slice(),
+        ),
+        (
+            "clippy_allows",
+            ["allow(clippy::all)", "allow(warnings)"].as_slice(),
+        ),
+    ] {
+        if needles.iter().any(|needle| combined.contains(needle)) {
+            findings.insert(finding);
+        }
+    }
+    findings.into_iter().collect()
 }
 
 fn has_extension(repo: &Path, extension: &str) -> Result<bool> {
@@ -599,4 +723,33 @@ fn render_static_summary(repo: &Path, out: &Path, receipts: &[(Receipt, PathBuf)
 
 fn portable_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn security_sensitive_text_classifier_finds_review_categories() {
+        let categories = classify_security_sensitive_text(
+            "src/auth.py",
+            "token = request.headers['Authorization']\nsubprocess.run(cmd)\nSELECT * FROM users",
+        );
+
+        assert!(categories.contains(&"auth"));
+        assert!(categories.contains(&"secrets"));
+        assert!(categories.contains(&"subprocess"));
+        assert!(categories.contains(&"sql"));
+    }
+
+    #[test]
+    fn relaxed_static_config_classifier_finds_weakened_settings() {
+        let findings = classify_relaxed_static_config_text(
+            "tsconfig.json",
+            r#"{ "compilerOptions": { "strict": false, "skipLibCheck": true } }"#,
+        );
+
+        assert!(findings.contains(&"typescript_strict_false"));
+        assert!(findings.contains(&"typescript_skip_lib_check"));
+    }
 }

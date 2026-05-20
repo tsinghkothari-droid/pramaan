@@ -66,6 +66,21 @@ yet a complete AST proof. Receipts should therefore keep heuristic limitations
 visible and may list the same family as both mitigated and residual when a
 specific finding remains open for reviewer judgment.
 
+## Claim Scope and Static Security Notes
+
+Phase 22 uses `R-001..R-010` for claim-scope confidence and mismatch signals:
+
+- missing or vague PR context is residual claim-scope risk;
+- deterministic public API detection failure is residual claim-scope risk;
+- claim text that does not mention changed public symbols is a bounded semantic
+  mismatch signal, not an automatic correctness judgment.
+
+Phase 22 also uses `R-039` and `R-040` as static-check residual risks when code
+touches security-sensitive categories or when static configuration appears
+relaxed. Current detection is text-based and conservative: auth, crypto, SQL,
+subprocess, filesystem, deserialization, secrets, and network indicators should
+raise reviewer attention even when the static command itself passes.
+
 ## Top-100 Mapping
 
 The top-100 register is the planning source of truth for risk ID meaning. The

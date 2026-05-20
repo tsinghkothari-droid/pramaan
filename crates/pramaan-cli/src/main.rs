@@ -476,6 +476,7 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
     let mut source_refs = scope.source_refs.clone();
     let mut expected_behavior = Vec::new();
     let mut limitations = Vec::new();
+    let mut risk_refs = Vec::new();
 
     if let Ok(event_path) = std::env::var("GITHUB_EVENT_PATH") {
         if !event_path.trim().is_empty() {
@@ -529,9 +530,30 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
             }
         }
     }
+    if let Some(issue_text) = read_optional_text_env("PRAMAAN_ISSUE_TEXT", "PRAMAAN_ISSUE_PATH")? {
+        expected_behavior.push(format!(
+            "Linked issue: {}",
+            first_non_empty_line(&issue_text)
+        ));
+        source_refs.push(pramaan_core::SourceRef {
+            kind: "issue_text".to_string(),
+            reference: "PRAMAAN_ISSUE_TEXT_OR_PATH".to_string(),
+        });
+    }
+    if let Some(scope_note) = read_optional_scope_note()? {
+        expected_behavior.push(format!(
+            "Maintainer scope note: {}",
+            first_non_empty_line(&scope_note)
+        ));
+        source_refs.push(pramaan_core::SourceRef {
+            kind: "maintainer_scope_note".to_string(),
+            reference: ".pramaan-scope.md".to_string(),
+        });
+    }
 
     let public_apis = changed_public_apis(base_ref, head_ref).unwrap_or_else(|error| {
         limitations.push(format!("Changed public API detection failed: {error}"));
+        risk_refs.push("R-004".to_string());
         Vec::new()
     });
 
@@ -539,16 +561,88 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
         scope.expected_behavior = expected_behavior;
         scope.extraction_method = "github_event_or_environment".to_string();
         scope.confidence = pramaan_core::ClaimConfidence::High;
+    } else {
+        limitations.push(
+            "No PR title, PR body, issue text, or maintainer scope note was available; claim scope is low confidence."
+                .to_string(),
+        );
+        risk_refs.extend(["R-001".to_string(), "R-002".to_string()]);
+        scope.confidence = pramaan_core::ClaimConfidence::Low;
     }
     if public_apis.is_empty() {
         scope.touched_public_apis = Vec::new();
         limitations.push("No changed public APIs were detected by deterministic scan.".to_string());
     } else {
+        if !scope_mentions_changed_api(&scope.expected_behavior, &public_apis) {
+            limitations.push(
+                "Changed public APIs were detected, but claim text does not mention matching symbols; semantic scope mismatch needs review."
+                    .to_string(),
+            );
+            risk_refs.push("R-007".to_string());
+        }
         scope.touched_public_apis = public_apis;
     }
     scope.source_refs = source_refs;
     scope.limitations = limitations;
+    risk_refs.sort();
+    risk_refs.dedup();
+    scope.risk_refs = risk_refs;
     Ok(scope)
+}
+
+fn read_optional_text_env(value_var: &str, path_var: &str) -> Result<Option<String>> {
+    if let Ok(value) = std::env::var(value_var) {
+        if !value.trim().is_empty() {
+            return Ok(Some(value));
+        }
+    }
+    if let Ok(path) = std::env::var(path_var) {
+        if !path.trim().is_empty() {
+            return Ok(Some(
+                fs::read_to_string(&path).with_context(|| format!("reading {path_var} {path}"))?,
+            ));
+        }
+    }
+    Ok(None)
+}
+
+fn read_optional_scope_note() -> Result<Option<String>> {
+    if let Some(value) = read_optional_text_env("PRAMAAN_SCOPE_NOTE", "PRAMAAN_SCOPE_NOTE_PATH")? {
+        return Ok(Some(value));
+    }
+    let path = PathBuf::from(".pramaan-scope.md");
+    if path.exists() {
+        return Ok(Some(
+            fs::read_to_string(&path).context("reading .pramaan-scope.md")?,
+        ));
+    }
+    Ok(None)
+}
+
+fn first_non_empty_line(text: &str) -> String {
+    text.lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .unwrap_or("empty note")
+        .chars()
+        .take(240)
+        .collect()
+}
+
+fn scope_mentions_changed_api(expected_behavior: &[String], public_apis: &[String]) -> bool {
+    let haystack = expected_behavior.join("\n").to_ascii_lowercase();
+    public_apis.iter().any(|api| {
+        api.split("::")
+            .last()
+            .map(|symbol| {
+                symbol
+                    .split(['(', '{', ':', ' '])
+                    .find(|part| part.chars().any(char::is_alphanumeric))
+                    .unwrap_or(symbol)
+                    .to_ascii_lowercase()
+            })
+            .is_some_and(|symbol| haystack.contains(&symbol))
+    })
 }
 
 fn linked_issue_refs(text: &str) -> Vec<String> {
