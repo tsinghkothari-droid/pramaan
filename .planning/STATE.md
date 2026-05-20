@@ -6,12 +6,12 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** P0/P1 completion track. Phase 18 is complete; the next
-execution phase is Phase 19: P0 Receipt Golden Tests and Canonical Evidence.
+**Current focus:** P0/P1 completion track. Phase 19 is complete; the next
+execution phase is Phase 20: P0 SLA and Policy Gates.
 
 ## Current Phase
 
-Phase 19: P0 Receipt Golden Tests and Canonical Evidence
+Phase 20: P0 SLA and Policy Gates
 
 ## Status
 
@@ -59,3 +59,4 @@ pilot gate before P2 expansion.
 | 2026-05-19 | Completed Phase 12 oracle integrity engine. | Oracle receipts now detect Python, TypeScript, and Rust oracle weakening patterns, renamed/deleted tests, boundary/error removals, and fixture/snapshot hash drift with reviewer-facing details. |
 | 2026-05-21 | Added P0/P1 GSD completion track for Phases 18-25. | Remaining P0/P1 tasks are now mapped to execution phases, with a Phase 25 pilot gate before P2/P3 expansion. |
 | 2026-05-21 | Completed Phase 18 product honesty and direction. | `STATUS.md`, README status language, non-goals, ICP, killer workflow, research sufficiency, and pivot criteria now keep the public surface ambitious but honest. |
+| 2026-05-21 | Completed Phase 19 receipt golden tests and canonical evidence. | Generated claim-scope receipts now have a normalized golden contract test, bundle manifest digests use canonical JSON bytes, and receipt docs explain fixture update discipline. |

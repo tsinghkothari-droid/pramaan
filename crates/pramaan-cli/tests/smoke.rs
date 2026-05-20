@@ -2,6 +2,8 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
+use serde_json::json;
+
 #[test]
 fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -103,6 +105,108 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
         "informational"
     );
     assert_eq!(claim_receipt["stage_budget"]["partial_evidence"], true);
+    let mut normalized_claim_receipt = claim_receipt.clone();
+    normalized_claim_receipt["started_at"] = json!("<normalized>");
+    normalized_claim_receipt["ended_at"] = json!("<normalized>");
+    assert_eq!(
+        normalized_claim_receipt,
+        json!({
+            "schema_version": "pramaan.receipt.v1",
+            "stage": "claim_scope",
+            "status": "passed",
+            "tool": {
+                "name": "pramaan-cli",
+                "version": env!("CARGO_PKG_VERSION")
+            },
+            "started_at": "<normalized>",
+            "ended_at": "<normalized>",
+            "exit_code": 0,
+            "inputs": [
+                {
+                    "name": "base",
+                    "value": "HEAD"
+                },
+                {
+                    "name": "head",
+                    "value": "HEAD"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "claim_scope",
+                    "path": "claim_scope.synthetic.json",
+                    "digest": "sha256:6ef9fe137d0df622b7778206270d46801a3965b5094ea606cece6f85c5543862"
+                }
+            ],
+            "artifacts": [
+                {
+                    "name": "claim_scope_json",
+                    "path": "claim_scope.synthetic.json",
+                    "media_type": "application/json"
+                }
+            ],
+            "summary": {
+                "title": "Synthetic claim scope emitted",
+                "details": "Claim scope was generated from CLI refs only; no PR metadata was inspected."
+            },
+            "limitations": [
+                "Synthetic Phase 1 receipt only; no repository checks were executed.",
+                "Risk IDs are sample references used to verify the receipt contract."
+            ],
+            "mitigated_risks": [
+                "R-003"
+            ],
+            "residual_risks": [
+                "R-090"
+            ],
+            "not_applicable_risks": [
+                "R-081"
+            ],
+            "agent_author": {
+                "product": "Codex",
+                "model_family": "gpt-5",
+                "execution_mode": "synthetic_verify",
+                "source": "local_cli",
+                "confidence": "unknown"
+            },
+            "plugin_identity": {
+                "name": "pramaan-core",
+                "version": "0.1.0",
+                "provenance": "workspace",
+                "sandbox_boundary": "in_process"
+            },
+            "plugin_permissions": {
+                "may_emit_receipts": true,
+                "may_emit_artifacts": true,
+                "may_read_previous_receipts": false,
+                "may_modify_previous_receipts": false,
+                "may_modify_manifest": false
+            },
+            "evidence_sensitivity": "internal",
+            "redaction_manifest": {
+                "profile": "internal-full",
+                "redacted_fields": [],
+                "hashed_fields": [],
+                "policy": "pramaan-redaction-v0"
+            },
+            "policy_decision": {
+                "decision": "informational",
+                "policy_id": "pramaan-default-v0",
+                "hard_failures": [],
+                "warnings": [
+                    "synthetic_evidence_only"
+                ],
+                "waived": []
+            },
+            "stage_budget": {
+                "target_ms": 30000,
+                "max_ms": 60000,
+                "consumed_ms": 0,
+                "exhausted": false,
+                "partial_evidence": true
+            }
+        })
+    );
 
     let manifest: serde_json::Value =
         serde_json::from_slice(&fs::read(manifest_path).expect("read manifest"))

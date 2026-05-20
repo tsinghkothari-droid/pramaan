@@ -87,6 +87,24 @@ Phase 9 pins the receipt contract in two ways:
 This is a compatibility floor, not the final schema-validation story. Full JSON
 Schema validation for every generated artifact remains a hardening target.
 
+## Golden and Canonical Evidence
+
+Phase 19 adds two stronger guardrails:
+
+- generated smoke receipts are compared against approved golden JSON after
+  volatile timestamps are normalized;
+- bundle manifest digests are computed from canonical JSON bytes with sorted
+  object keys instead of relying on pretty-printer output.
+
+Receipt artifact digests still hash the exact bytes written to disk. That is
+intentional for v0.1 because reviewers should be able to detect any byte-level
+change to an emitted receipt. A later schema migration may split display JSON
+from canonical signable payloads, but that must be explicit and fixture-backed.
+
+To intentionally update a golden receipt, regenerate the relevant smoke fixture,
+review the diff in the normalized expected JSON, and update the test and docs in
+the same commit. Never update a golden fixture just to make a failing test green.
+
 ## Claim Discipline
 
 Receipts should use precise language:

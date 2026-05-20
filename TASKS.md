@@ -103,7 +103,7 @@ enough for external users.
 - [x] Add agent-author attribution before schema freeze: agent product, model family/version when available, execution mode, prompt/context hash, and commit provenance.
 - [x] Add reviewer override capture before schema freeze: override decision, reason, reviewer identity source, timestamp, risk IDs accepted, and linked merge outcome.
 - [x] Add schema compatibility tests for all checked-in fixture receipts.
-- [ ] Add golden tests that diff generated receipts against approved fixtures.
+- [x] Add golden tests that diff generated receipts against approved fixtures.
 - [x] Add artifact graph support so every receipt can point to hashed logs, corpora, and tool outputs.
 - [x] Add bundle-level verification summary with mitigated, residual, skipped, and not-applicable risk families.
 - [x] Add tamper tests for missing artifacts, modified receipts, modified manifests, and changed signing metadata.

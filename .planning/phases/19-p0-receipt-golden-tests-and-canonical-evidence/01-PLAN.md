@@ -40,3 +40,29 @@ and hash drift are caught early.
 ## Exit Criteria
 
 Receipt drift is intentional, reviewable, and test-visible.
+
+## Completion Summary
+
+Completed on 2026-05-21.
+
+Landed:
+
+- Added canonical JSON byte serialization in `pramaan-core`.
+- Switched bundle manifest digest calculation to canonical JSON bytes.
+- Added core round-trip tests for canonical receipt serialization.
+- Added a normalized golden contract assertion for the generated claim-scope
+  receipt in the CLI smoke test.
+- Documented golden/canonical evidence discipline in `docs/receipt-model.md`.
+- Marked the P0 golden-test task complete in `TASKS.md`.
+
+Deferred:
+
+- Full JSON Schema validation for every generated artifact remains future
+  hardening.
+- Receipt artifact digests still hash the exact emitted bytes, by design.
+
+Risks discovered:
+
+- Existing receipt artifacts are display JSON and signable evidence at the same
+  time. Future signing work should explicitly split human-readable rendering
+  from canonical signing payloads if that becomes necessary.

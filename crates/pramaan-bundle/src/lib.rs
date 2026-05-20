@@ -1,7 +1,7 @@
 use chrono::Utc;
 use pramaan_core::{
-    timestamp, AgentAttribution, AgentProvenanceEntry, EvidenceSensitivity, PluginIdentity,
-    PolicyDecision, Receipt, RedactionManifest, ReviewerOverride, StageBudget,
+    canonical_json_bytes, timestamp, AgentAttribution, AgentProvenanceEntry, EvidenceSensitivity,
+    PluginIdentity, PolicyDecision, Receipt, RedactionManifest, ReviewerOverride, StageBudget,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest as ShaDigest, Sha256};
@@ -675,7 +675,7 @@ fn verify_manifest_ref(bundle_root: &Path, manifest_ref: &ManifestRef) -> Result
 fn manifest_digest(manifest: &BundleManifest) -> Result<Digest> {
     let mut normalized = manifest.clone();
     normalized.integrity.manifest_digest = placeholder_manifest_digest();
-    let bytes = serde_json::to_vec(&normalized).map_err(|source| BundleError::Json {
+    let bytes = canonical_json_bytes(&normalized).map_err(|source| BundleError::Json {
         path: PathBuf::from(MANIFEST_FILE_NAME),
         source,
     })?;

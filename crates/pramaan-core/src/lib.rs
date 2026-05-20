@@ -1750,6 +1750,47 @@ pub fn timestamp(value: DateTime<Utc>) -> String {
     value.to_rfc3339_opts(SecondsFormat::Secs, true)
 }
 
+pub fn canonical_json_bytes<T: Serialize>(value: &T) -> serde_json::Result<Vec<u8>> {
+    let value = serde_json::to_value(value)?;
+    let mut output = String::new();
+    write_canonical_json(&value, &mut output)?;
+    Ok(output.into_bytes())
+}
+
+fn write_canonical_json(value: &serde_json::Value, output: &mut String) -> serde_json::Result<()> {
+    match value {
+        serde_json::Value::Null => output.push_str("null"),
+        serde_json::Value::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
+        serde_json::Value::Number(value) => output.push_str(&value.to_string()),
+        serde_json::Value::String(value) => output.push_str(&serde_json::to_string(value)?),
+        serde_json::Value::Array(items) => {
+            output.push('[');
+            for (index, item) in items.iter().enumerate() {
+                if index > 0 {
+                    output.push(',');
+                }
+                write_canonical_json(item, output)?;
+            }
+            output.push(']');
+        }
+        serde_json::Value::Object(entries) => {
+            output.push('{');
+            let mut keys = entries.keys().collect::<Vec<_>>();
+            keys.sort();
+            for (index, key) in keys.iter().enumerate() {
+                if index > 0 {
+                    output.push(',');
+                }
+                output.push_str(&serde_json::to_string(key)?);
+                output.push(':');
+                write_canonical_json(&entries[*key], output)?;
+            }
+            output.push('}');
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1835,6 +1876,56 @@ mod tests {
             value["touched_public_apis"][0],
             "pramaan verify --base --head --out"
         );
+    }
+
+    #[test]
+    fn canonical_json_orders_object_keys() {
+        let left = serde_json::json!({
+            "z": [3, 2, 1],
+            "a": {
+                "b": true,
+                "a": "stable"
+            }
+        });
+        let right = serde_json::json!({
+            "a": {
+                "a": "stable",
+                "b": true
+            },
+            "z": [3, 2, 1]
+        });
+
+        let left_bytes = canonical_json_bytes(&left).expect("left canonical bytes");
+        let right_bytes = canonical_json_bytes(&right).expect("right canonical bytes");
+
+        assert_eq!(left_bytes, right_bytes);
+        assert_eq!(
+            String::from_utf8(left_bytes).expect("utf-8"),
+            r#"{"a":{"a":"stable","b":true},"z":[3,2,1]}"#
+        );
+    }
+
+    #[test]
+    fn canonical_receipt_round_trips_without_hash_drift() {
+        let receipt = Receipt::synthetic(
+            "canonical_test",
+            StageStatus::Passed,
+            "main",
+            "feature",
+            vec![],
+            vec![],
+            ReceiptSummary {
+                title: "Canonical receipt".to_string(),
+                details: "Round-trip stability check.".to_string(),
+            },
+            RiskRefs::sample(),
+        );
+
+        let first = canonical_json_bytes(&receipt).expect("first canonical bytes");
+        let decoded: Receipt = serde_json::from_slice(&first).expect("receipt decodes");
+        let second = canonical_json_bytes(&decoded).expect("second canonical bytes");
+
+        assert_eq!(first, second);
     }
 
     #[test]
