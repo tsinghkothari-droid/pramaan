@@ -211,16 +211,20 @@ Unfinished task-family mapping:
 | Open task family | Owning phases |
 | --- | --- |
 | Public Alpha blockers | 26, 27, 28, 29 |
+| Agent harness for coding agents | 26.5 |
 | Full AST/parser oracle integrations | 27 |
 | Real Hypothesis/fast-check campaigns | 28 |
+| AI evidence-seeking probe generation | 28.25 |
 | Auditable confidence vote and scoring schema | 28.5, 34 |
 | Attestation and signing | 29 |
 | Redaction profiles | 30 |
 | Plugin trust and verifier security | 31 |
 | CI/security review integrations | 32 |
+| Policy packs and enterprise profiles | 32.5 |
 | Adversarial corpus and secure-code scenarios | 33, 40 |
 | Reviewer feedback, calibration, and drift | 34 |
 | Documentation and adoption | 35 |
+| Reviewer UX and local reports | 35.5 |
 | Python/TypeScript/Rust language depth | 36 |
 | Non-GitHub enterprise support | 37 |
 | Multi-agent provenance | 38 |
@@ -256,6 +260,82 @@ Public Alpha blockers:
   summary tests.
 - [ ] Add an auditable confidence-vote schema and receipt, or keep all
   confidence-score claims explicitly absent from public Alpha copy.
+
+### Right-Direction Phase Task Breakdowns
+
+These tasks expand the right-direction phases that make Pramaan useful to real
+AI coding agents and real reviewers. They are planned, not complete.
+
+#### Phase 26.5: Agent Harness Interface
+
+- [ ] Add `schemas/agent_decision.schema.json` with `decision`, `reason`,
+  `bundle_path`, `blocking_stages`, `warnings`, `required_actions`,
+  `agent_message`, and `human_override_allowed`.
+- [ ] Add `pramaan agent done-gate --base <ref> --head <ref> --out <dir>`.
+- [ ] Add `pramaan agent explain --bundle <path>`.
+- [ ] Add deterministic `pass`, `warn`, and `block` mapping from existing
+  policy, bundle, and oracle evidence.
+- [ ] Add an `AGENTS.md` template that tells Codex-style agents not to claim
+  done while Pramaan blocks.
+- [ ] Add Claude Code command/hook templates under docs or `.claude/commands/`
+  if they can be kept provider-optional.
+- [ ] Add a blocked-agent fixture where a weakened-test PR returns
+  `decision=block`.
+- [ ] Add a warning fixture where skipped optional tools return
+  `decision=warn`.
+- [ ] Add docs explaining the agent harness is an evidence gate, not an agent
+  self-certification loop.
+
+#### Phase 28.25: AI Evidence-Seeking Probe Generator
+
+- [ ] Add `schemas/probe.schema.json`.
+- [ ] Add `pramaan probe plan --bundle <path>` to produce risk-targeted probe
+  plans.
+- [ ] Support probe kinds: regression assertion, property invariant,
+  differential input, security sink/source check, mutation-targeted test, and
+  fixture/snapshot challenge.
+- [ ] Store prompt hash and model/provider metadata without making provider
+  output trusted evidence.
+- [ ] Run generated probes in isolated temp test locations.
+- [ ] Reject probes that do not compile, do not run, or do not exercise changed
+  behavior.
+- [ ] Preserve rejected probes and rejection reasons as evidence.
+- [ ] Mutation-test or differential-test accepted probes where practical.
+- [ ] Emit `ai_probe_generation` receipts with accepted/rejected counts, risk
+  IDs, and artifact hashes.
+- [ ] Document that AI proposes probes, but only sandbox-executed probes count.
+
+#### Phase 32.5: Policy Pack Library and Enterprise Profiles
+
+- [ ] Add `schemas/policy_profile.schema.json`.
+- [ ] Create `policy/startup-fast.json`, `policy/open-source-maintainer.json`,
+  `policy/security-sensitive.json`, `policy/fintech-strict.json`, and
+  `policy/private-preview.json`.
+- [ ] Add `pramaan policy list`.
+- [ ] Add `pramaan policy explain --profile <id>`.
+- [ ] Add GitHub Action `policy-profile` input.
+- [ ] Add policy fixture bundles for pass, warn, fail, waiver, and
+  security-sensitive escalation.
+- [ ] Add parity tests between default Rust policy behavior and exported policy
+  fixtures.
+- [ ] Document when each policy pack should be used.
+- [ ] Keep policy packs as deterministic gates; no LLM judge can override hard
+  gates.
+
+#### Phase 35.5: Reviewer UX and Local HTML Report
+
+- [ ] Add `pramaan report html --bundle <path> --out <report.html>`.
+- [ ] Add `pramaan report markdown --bundle <path>`.
+- [ ] Group report content into blockers, warnings, ran/skipped stages, oracle
+  changes, replay commands, and human override fields.
+- [ ] Show oracle-integrity failures before lower-signal evidence.
+- [ ] Add copyable replay commands for mutation, fuzz, and property failures.
+- [ ] Add static fixture reports for pass, warn, and fail bundles.
+- [ ] Update the GitHub Action markdown summary to mirror the report hierarchy.
+- [ ] Add a smoke test that the weakened-test report includes blocker, oracle
+  finding, and replay or inspection paths.
+- [ ] Add docs that the local report is the first UX surface; hosted dashboard
+  is later.
 
 ### P0: Assertion Truth Audit Gate
 
