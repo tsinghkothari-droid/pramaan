@@ -7,6 +7,18 @@ use std::path::{Path, PathBuf};
 
 pub mod risks;
 
+use risks::{
+    BUNDLE_LOCAL_ONLY_ATTESTATION, BUNDLE_UNSIGNED, CLAIM_SCOPE_CHANGED_ARTIFACT_NOT_MENTIONED,
+    CLAIM_SCOPE_NO_PR_METADATA, CLAIM_SCOPE_SYNTHETIC_SAMPLE, FORMAL_NOT_APPLICABLE,
+    FUZZ_DETERMINISTIC_SIMULATED, FUZZ_DIVERGENCE_NEEDS_REVIEW, FUZZ_EXPECTED_DIVERGENCE,
+    FUZZ_NO_TOOL_BACKED_ADAPTER, ORACLE_ARTIFACT_REVIEW_REQUIRED, ORACLE_BOUNDARY_REMOVED,
+    ORACLE_CASE_REDUCTION, ORACLE_DELETED_TEST, ORACLE_DOWNGRADED_ASSERTION,
+    ORACLE_FULL_AST_NOT_AVAILABLE, ORACLE_INTEGRITY_FAILED, ORACLE_LOOSENED_EXPECTATION,
+    ORACLE_REMOVED_ERROR_PATH, ORACLE_SENSITIVE_ARTIFACT_CHANGED, ORACLE_SKIPPED_TEST,
+    ORACLE_SNAPSHOT_REVIEW_REQUIRED, ORACLE_WEAKENED_ASSERTION, RELEASE_ARTIFACT_MISSING,
+    REVIEWER_OVERRIDE_REQUIRED,
+};
+
 pub const RECEIPT_SCHEMA_VERSION: &str = "pramaan.receipt.v1";
 pub const CLAIM_SCOPE_SCHEMA_VERSION: &str = "pramaan.claim_scope.v1";
 pub const CONFIDENCE_SCHEMA_VERSION: &str = "pramaan.confidence.v1";
@@ -68,8 +80,8 @@ impl StaticHallucinationCategory {
 }
 
 pub fn classify_static_hallucinations(output: &str) -> Vec<StaticHallucinationCategory> {
+    let mut categories = classify_structured_static_diagnostics(output);
     let lower = output.to_lowercase();
-    let mut categories = Vec::new();
 
     if lower.contains("modulenotfounderror")
         || lower.contains("importerror")
@@ -147,6 +159,157 @@ pub fn classify_static_hallucinations(output: &str) -> Vec<StaticHallucinationCa
     categories.sort_by_key(|category| category.as_str());
     categories.dedup();
     categories
+}
+
+fn classify_structured_static_diagnostics(output: &str) -> Vec<StaticHallucinationCategory> {
+    let mut categories = Vec::new();
+
+    for code in extract_static_diagnostic_codes(output) {
+        match code_to_static_hallucination(&code) {
+            Some(category) => push_category(&mut categories, category),
+            None => push_category(&mut categories, StaticHallucinationCategory::Unknown),
+        }
+    }
+
+    categories
+}
+
+fn extract_static_diagnostic_codes(output: &str) -> Vec<String> {
+    let mut codes = BTreeSet::new();
+    for line in output
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+    {
+        if let Ok(value) = serde_json::from_str::<serde_json::Value>(line) {
+            collect_diagnostic_codes_from_json(&value, &mut codes);
+        }
+        if line.starts_with('{') || line.starts_with('[') {
+            if let Ok(value) = serde_json::from_str::<serde_json::Value>(line) {
+                collect_diagnostic_codes_from_json(&value, &mut codes);
+            }
+        }
+        for code in extract_textual_diagnostic_codes(line) {
+            codes.insert(code);
+        }
+    }
+    if codes.is_empty() {
+        if let Ok(value) = serde_json::from_str::<serde_json::Value>(output) {
+            collect_diagnostic_codes_from_json(&value, &mut codes);
+        }
+    }
+    codes.into_iter().collect()
+}
+
+fn collect_diagnostic_codes_from_json(value: &serde_json::Value, codes: &mut BTreeSet<String>) {
+    match value {
+        serde_json::Value::Array(items) => {
+            for item in items {
+                collect_diagnostic_codes_from_json(item, codes);
+            }
+        }
+        serde_json::Value::Object(map) => {
+            for key in ["code", "error_code", "rule", "ruleId"] {
+                if let Some(code) = map.get(key).and_then(serde_json::Value::as_str) {
+                    codes.insert(code.to_string());
+                }
+            }
+            if let Some(message) = map.get("message") {
+                collect_diagnostic_codes_from_json(message, codes);
+            }
+            if let Some(inner) = map.get("children") {
+                collect_diagnostic_codes_from_json(inner, codes);
+            }
+        }
+        serde_json::Value::String(text) => {
+            for code in extract_textual_diagnostic_codes(text) {
+                codes.insert(code);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn extract_textual_diagnostic_codes(line: &str) -> Vec<String> {
+    let mut codes = Vec::new();
+    for token in line
+        .split(|character: char| {
+            character.is_whitespace()
+                || matches!(
+                    character,
+                    ':' | ',' | ';' | '(' | ')' | '{' | '}' | '"' | '\'' | '`'
+                )
+        })
+        .map(|token| token.trim_matches(&['[', ']', '.'][..]))
+        .filter(|token| !token.is_empty())
+    {
+        if is_static_diagnostic_code(token) {
+            codes.push(token.to_string());
+        }
+    }
+    codes
+}
+
+fn is_static_diagnostic_code(token: &str) -> bool {
+    let is_typescript_code = token.starts_with("TS")
+        && token.len() > 2
+        && token[2..]
+            .chars()
+            .all(|character| character.is_ascii_digit());
+    let is_rust_code = token.starts_with('E')
+        && token.len() == 5
+        && token[1..]
+            .chars()
+            .all(|character| character.is_ascii_digit());
+    let is_python_lint_code = token.len() >= 2
+        && token.len() <= 6
+        && token
+            .chars()
+            .next()
+            .is_some_and(|character| character.is_ascii_uppercase())
+        && token[1..]
+            .chars()
+            .all(|character| character.is_ascii_digit());
+    let is_mypy_code = matches!(
+        token,
+        "attr-defined"
+            | "name-defined"
+            | "import-not-found"
+            | "no-any-return"
+            | "call-arg"
+            | "arg-type"
+            | "union-attr"
+    );
+
+    is_typescript_code || is_rust_code || is_python_lint_code || is_mypy_code
+}
+
+fn code_to_static_hallucination(code: &str) -> Option<StaticHallucinationCategory> {
+    match code {
+        "F401" | "F403" | "F405" | "import-not-found" => {
+            Some(StaticHallucinationCategory::NonexistentImport)
+        }
+        "F821" | "E0425" | "name-defined" | "TS2304" => {
+            Some(StaticHallucinationCategory::UndefinedSymbol)
+        }
+        "attr-defined" | "union-attr" | "TS2339" | "E0599" | "E0609" => {
+            Some(StaticHallucinationCategory::InventedApi)
+        }
+        "call-arg" | "arg-type" | "TS2554" | "E0061" => {
+            Some(StaticHallucinationCategory::InvalidParameter)
+        }
+        "TS2307" | "E0432" | "E0433" => Some(StaticHallucinationCategory::BrokenImport),
+        _ => None,
+    }
+}
+
+fn push_category(
+    categories: &mut Vec<StaticHallucinationCategory>,
+    category: StaticHallucinationCategory,
+) {
+    if !categories.contains(&category) {
+        categories.push(category);
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -325,9 +488,9 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                         base_test.stable_id, renamed_test.stable_id
                     ),
                     risk_ids: vec![
-                        "R-011".to_string(),
-                        "R-012".to_string(),
-                        "R-087".to_string(),
+                        ORACLE_DELETED_TEST.to_string(),
+                        ORACLE_SKIPPED_TEST.to_string(),
+                        ORACLE_FULL_AST_NOT_AVAILABLE.to_string(),
                     ],
                 });
                 continue;
@@ -338,9 +501,9 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                 test_name: Some(base_test.name.clone()),
                 details: "Test existed in base but was absent in head.".to_string(),
                 risk_ids: vec![
-                    "R-011".to_string(),
-                    "R-012".to_string(),
-                    "R-087".to_string(),
+                    ORACLE_DELETED_TEST.to_string(),
+                    ORACLE_SKIPPED_TEST.to_string(),
+                    ORACLE_FULL_AST_NOT_AVAILABLE.to_string(),
                 ],
             });
             let removed_error_tokens = matching_tokens(base_test, &["raises", "throws"]);
@@ -354,10 +517,10 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                         removed_error_tokens.join(",")
                     ),
                     risk_ids: vec![
-                        "R-013".to_string(),
-                        "R-018".to_string(),
-                        "R-020".to_string(),
-                        "R-087".to_string(),
+                        ORACLE_REMOVED_ERROR_PATH.to_string(),
+                        ORACLE_CASE_REDUCTION.to_string(),
+                        ORACLE_INTEGRITY_FAILED.to_string(),
+                        ORACLE_FULL_AST_NOT_AVAILABLE.to_string(),
                     ],
                 });
             }
@@ -381,10 +544,10 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                         removed_boundary_tokens.join(",")
                     ),
                     risk_ids: vec![
-                        "R-018".to_string(),
-                        "R-019".to_string(),
-                        "R-020".to_string(),
-                        "R-087".to_string(),
+                        ORACLE_CASE_REDUCTION.to_string(),
+                        ORACLE_BOUNDARY_REMOVED.to_string(),
+                        ORACLE_INTEGRITY_FAILED.to_string(),
+                        ORACLE_FULL_AST_NOT_AVAILABLE.to_string(),
                     ],
                 });
             }
@@ -400,9 +563,9 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                     "Skip, xfail, todo, or equivalent marker was added.".to_string()
                 }),
                 risk_ids: vec![
-                    "R-012".to_string(),
-                    "R-013".to_string(),
-                    "R-087".to_string(),
+                    ORACLE_SKIPPED_TEST.to_string(),
+                    ORACLE_REMOVED_ERROR_PATH.to_string(),
+                    ORACLE_FULL_AST_NOT_AVAILABLE.to_string(),
                 ],
             });
         }
@@ -417,9 +580,9 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                     base_test.parametrized_case_count, head_test.parametrized_case_count
                 ),
                 risk_ids: vec![
-                    "R-018".to_string(),
-                    "R-019".to_string(),
-                    "R-087".to_string(),
+                    ORACLE_CASE_REDUCTION.to_string(),
+                    ORACLE_BOUNDARY_REMOVED.to_string(),
+                    ORACLE_FULL_AST_NOT_AVAILABLE.to_string(),
                 ],
             });
         }
@@ -435,10 +598,10 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                     removed_error_tokens.join(",")
                 ),
                 risk_ids: vec![
-                    "R-013".to_string(),
-                    "R-018".to_string(),
-                    "R-020".to_string(),
-                    "R-087".to_string(),
+                    ORACLE_REMOVED_ERROR_PATH.to_string(),
+                    ORACLE_CASE_REDUCTION.to_string(),
+                    ORACLE_INTEGRITY_FAILED.to_string(),
+                    ORACLE_FULL_AST_NOT_AVAILABLE.to_string(),
                 ],
             });
         }
@@ -464,10 +627,10 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                     removed_boundary_tokens.join(",")
                 ),
                 risk_ids: vec![
-                    "R-018".to_string(),
-                    "R-019".to_string(),
-                    "R-020".to_string(),
-                    "R-087".to_string(),
+                    ORACLE_CASE_REDUCTION.to_string(),
+                    ORACLE_BOUNDARY_REMOVED.to_string(),
+                    ORACLE_INTEGRITY_FAILED.to_string(),
+                    ORACLE_FULL_AST_NOT_AVAILABLE.to_string(),
                 ],
             });
         }
@@ -485,11 +648,11 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                     head_test.signal_tokens.join(",")
                 ),
                 risk_ids: vec![
-                    "R-014".to_string(),
-                    "R-015".to_string(),
-                    "R-016".to_string(),
-                    "R-020".to_string(),
-                    "R-087".to_string(),
+                    ORACLE_WEAKENED_ASSERTION.to_string(),
+                    ORACLE_DOWNGRADED_ASSERTION.to_string(),
+                    ORACLE_LOOSENED_EXPECTATION.to_string(),
+                    ORACLE_INTEGRITY_FAILED.to_string(),
+                    ORACLE_FULL_AST_NOT_AVAILABLE.to_string(),
                 ],
             });
         }
@@ -513,9 +676,9 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                         head_artifact.kind, base_artifact.fingerprint, head_artifact.fingerprint
                     ),
                     risk_ids: vec![
-                        "R-008".to_string(),
-                        "R-017".to_string(),
-                        "R-088".to_string(),
+                        CLAIM_SCOPE_CHANGED_ARTIFACT_NOT_MENTIONED.to_string(),
+                        ORACLE_SENSITIVE_ARTIFACT_CHANGED.to_string(),
+                        ORACLE_SNAPSHOT_REVIEW_REQUIRED.to_string(),
                     ],
                 });
             }
@@ -528,9 +691,9 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                     base_artifact.kind
                 ),
                 risk_ids: vec![
-                    "R-008".to_string(),
-                    "R-017".to_string(),
-                    "R-089".to_string(),
+                    CLAIM_SCOPE_CHANGED_ARTIFACT_NOT_MENTIONED.to_string(),
+                    ORACLE_SENSITIVE_ARTIFACT_CHANGED.to_string(),
+                    ORACLE_ARTIFACT_REVIEW_REQUIRED.to_string(),
                 ],
             }),
             _ => {}
@@ -1040,10 +1203,10 @@ pub fn fuzz_mitigated_risks() -> Vec<String> {
 
 pub fn fuzz_not_applicable_risks() -> Vec<String> {
     vec![
-        "R-073".to_string(),
-        "R-074".to_string(),
-        "R-077".to_string(),
-        "R-080".to_string(),
+        FUZZ_DETERMINISTIC_SIMULATED.to_string(),
+        FUZZ_EXPECTED_DIVERGENCE.to_string(),
+        FUZZ_NO_TOOL_BACKED_ADAPTER.to_string(),
+        FUZZ_DIVERGENCE_NEEDS_REVIEW.to_string(),
     ]
 }
 
@@ -3515,7 +3678,7 @@ pub fn build_confidence_artifact(receipts: &[Receipt]) -> ConfidenceArtifact {
             id: "HG-000".to_string(),
             stage: "confidence_vote".to_string(),
             reason: "No stage receipts were available.".to_string(),
-            risk_ids: vec!["R-090".to_string()],
+            risk_ids: vec![BUNDLE_LOCAL_ONLY_ATTESTATION.to_string()],
         });
     }
 
@@ -3852,7 +4015,7 @@ fn hard_gates_for_receipt(receipt: &Receipt) -> Vec<ConfidenceHardGate> {
                 stage: receipt.stage.clone(),
                 reason: format!("{key} metadata is invalid for a required trust path."),
                 risk_ids: if receipt.residual_risks.is_empty() {
-                    vec!["R-090".to_string()]
+                    vec![BUNDLE_LOCAL_ONLY_ATTESTATION.to_string()]
                 } else {
                     receipt.residual_risks.clone()
                 },
@@ -3870,7 +4033,7 @@ fn hard_gates_for_receipt(receipt: &Receipt) -> Vec<ConfidenceHardGate> {
             id: "HG-PLUGIN-001".to_string(),
             stage: receipt.stage.clone(),
             reason: "Receipt came from an explicitly untrusted plugin.".to_string(),
-            risk_ids: vec!["R-092".to_string()],
+            risk_ids: vec![BUNDLE_UNSIGNED.to_string()],
         });
     }
 
@@ -4146,17 +4309,23 @@ pub struct RiskRefs {
 impl RiskRefs {
     pub fn sample() -> Self {
         Self {
-            mitigated: vec!["R-001".to_string(), "R-014".to_string()],
-            residual: vec!["R-049".to_string(), "R-057".to_string()],
-            not_applicable: vec!["R-081".to_string()],
+            mitigated: vec![
+                CLAIM_SCOPE_NO_PR_METADATA.to_string(),
+                ORACLE_WEAKENED_ASSERTION.to_string(),
+            ],
+            residual: vec![
+                REVIEWER_OVERRIDE_REQUIRED.to_string(),
+                RELEASE_ARTIFACT_MISSING.to_string(),
+            ],
+            not_applicable: vec![FORMAL_NOT_APPLICABLE.to_string()],
         }
     }
 
     pub fn claim_scope_sample() -> Self {
         Self {
-            mitigated: vec!["R-003".to_string()],
-            residual: vec!["R-090".to_string()],
-            not_applicable: vec!["R-081".to_string()],
+            mitigated: vec![CLAIM_SCOPE_SYNTHETIC_SAMPLE.to_string()],
+            residual: vec![BUNDLE_LOCAL_ONLY_ATTESTATION.to_string()],
+            not_applicable: vec![FORMAL_NOT_APPLICABLE.to_string()],
         }
     }
 }
@@ -5146,7 +5315,7 @@ jobs:
         assert_eq!(value["seed"], 7);
         assert_eq!(value["adapter"], "deterministic_simulated");
         assert_eq!(value["divergences"][0]["classification"], "expected");
-        assert!(fuzz_mitigated_risks().contains(&"R-079".to_string()));
+        assert!(fuzz_mitigated_risks().contains(&risks::FUZZ_REPLAYABLE_CASES.to_string()));
     }
 
     #[test]
@@ -5163,6 +5332,20 @@ jobs:
                 StaticHallucinationCategory::UndefinedSymbol
             ]
         );
+    }
+
+    #[test]
+    fn static_hallucination_classifier_prefers_structured_codes() {
+        let categories = classify_static_hallucinations(
+            r#"[{"code":"F821","message":"undefined name 'ghost'"},{"code":"TS2339","message":"property does not exist"}]
+src/lib.rs:1:1: error[E0432]: unresolved import `missing`
+app.ts(1,1): error TS2554: Expected 2 arguments, but got 1."#,
+        );
+
+        assert!(categories.contains(&StaticHallucinationCategory::UndefinedSymbol));
+        assert!(categories.contains(&StaticHallucinationCategory::InventedApi));
+        assert!(categories.contains(&StaticHallucinationCategory::BrokenImport));
+        assert!(categories.contains(&StaticHallucinationCategory::InvalidParameter));
     }
 
     #[test]
@@ -5201,10 +5384,9 @@ jobs:
             .tests
             .iter()
             .any(|test| test.language == OracleLanguage::Rust));
-        assert!(diff
-            .findings
-            .iter()
-            .any(|finding| finding.risk_ids.contains(&"R-087".to_string())));
+        assert!(diff.findings.iter().any(|finding| finding
+            .risk_ids
+            .contains(&ORACLE_FULL_AST_NOT_AVAILABLE.to_string())));
         assert!(diff.base.tests.iter().all(|test| test
             .extractor
             .evidence_label
@@ -5246,8 +5428,8 @@ jobs:
                 .any(|finding| finding.details.contains("git-blob:")
                     || finding.details.contains("->"))
         );
-        assert!(oracle_mitigated_risks().contains(&"R-020".to_string()));
-        assert!(oracle_mitigated_risks().contains(&"R-089".to_string()));
+        assert!(oracle_mitigated_risks().contains(&ORACLE_INTEGRITY_FAILED.to_string()));
+        assert!(oracle_mitigated_risks().contains(&ORACLE_ARTIFACT_REVIEW_REQUIRED.to_string()));
     }
 
     #[test]

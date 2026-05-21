@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">Pramaan terminal evidence report</title>
+  <desc id="desc">A terminal-style Pramaan verification summary showing receipts, residual risks, and evidence-not-proof wording.</desc>
+  <rect width="1200" height="640" fill="#111827"/>
+  <rect x="48" y="44" width="1104" height="552" rx="14" fill="#0b1220" stroke="#334155" stroke-width="2"/>
+  <circle cx="82" cy="76" r="8" fill="#ef4444"/>
+  <circle cx="110" cy="76" r="8" fill="#f59e0b"/>
+  <circle cx="138" cy="76" r="8" fill="#22c55e"/>
+  <text x="176" y="82" fill="#cbd5e1" font-family="Consolas, Menlo, monospace" font-size="18">pramaan verify --base main --head agent/pr --out target/pramaan</text>
+  <line x1="48" y1="104" x2="1152" y2="104" stroke="#334155" stroke-width="2"/>
+  <text x="78" y="150" fill="#e5e7eb" font-family="Consolas, Menlo, monospace" font-size="24">Pramaan verification bundle emitted</text>
+  <text x="78" y="196" fill="#94a3b8" font-family="Consolas, Menlo, monospace" font-size="18">final_status:</text>
+  <text x="232" y="196" fill="#facc15" font-family="Consolas, Menlo, monospace" font-size="18">warning</text>
+  <text x="78" y="228" fill="#94a3b8" font-family="Consolas, Menlo, monospace" font-size="18">bundle:</text>
+  <text x="174" y="228" fill="#cbd5e1" font-family="Consolas, Menlo, monospace" font-size="18">target/pramaan</text>
+  <text x="78" y="276" fill="#e5e7eb" font-family="Consolas, Menlo, monospace" font-size="20">Stages</text>
+  <text x="78" y="314" fill="#94a3b8" font-family="Consolas, Menlo, monospace" font-size="17">claim_scope             passed       receipts/claim-scope.receipt.json</text>
+  <text x="78" y="346" fill="#94a3b8" font-family="Consolas, Menlo, monospace" font-size="17">sandbox_setup           passed       receipts/sandbox-setup.receipt.json</text>
+  <text x="78" y="378" fill="#f87171" font-family="Consolas, Menlo, monospace" font-size="17">oracle_integrity        failed       receipts/oracle-integrity.receipt.json</text>
+  <text x="78" y="410" fill="#94a3b8" font-family="Consolas, Menlo, monospace" font-size="17">differential_fuzz       passed       receipts/differential-fuzz.receipt.json</text>
+  <text x="78" y="464" fill="#e5e7eb" font-family="Consolas, Menlo, monospace" font-size="20">Risk families</text>
+  <text x="78" y="502" fill="#f87171" font-family="Consolas, Menlo, monospace" font-size="17">residual     oracle_integrity(R-014), static_hallucination(R-038)</text>
+  <text x="78" y="534" fill="#86efac" font-family="Consolas, Menlo, monospace" font-size="17">mitigated    sandbox_reproducibility(R-021), claim_scope(R-003)</text>
+  <text x="78" y="570" fill="#cbd5e1" font-family="Consolas, Menlo, monospace" font-size="17">Note: evidence and residual risk; not a correctness proof.</text>
+</svg>

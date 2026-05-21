@@ -24,7 +24,7 @@ wording, not on any claim of production readiness.
 
 ## Current Phase
 
-Phase 35.8: Runtime Reviewer Commands and Config
+Phase 36.5: Repo Health Pass After v0.1.1
 
 Phase 35.7's machine-verification/human-signoff governance gate is adopted and
 complete for docs/templates. Future phase closeouts should now prepare both
@@ -41,6 +41,11 @@ anti-gaming hardening, Phase 35.5 local reports, and Phase 35.8 runtime
 doctor/config loading are complete with risks. Public review may proceed only
 as READY_FOR_PUBLIC_REVIEW_WITH_RISKS if the final dated readiness report and
 verification commands pass.
+
+Phase 36.5 is now the stabilization bridge before Phase 37. It closes
+repo-health issues that were visible only through manual diagnostic review:
+help text, release hygiene, static diagnostic robustness, quieter output, and
+README evidence tone.
 
 ## Status
 
@@ -182,3 +187,4 @@ have deeper production-grade coverage.
 | 2026-05-21 | Added Phase 35.7 machine verification and human sign-off gate. | Future agent-written phases must produce machine evidence, but humans approve meaning, severity, usefulness, public claims, release readiness, and accepted residual risk. |
 | 2026-05-21 | Completed Phase 29.1 cosign readiness slice. | `pramaan bundle cosign-plan` now records manifest digest, cosign availability/version evidence, a suggested signing command, and residual OIDC/transparency-log risks without claiming production identity proof. |
 | 2026-05-21 | Completed Phase 35.8 runtime reviewer command/config slice. | `pramaan doctor` and `pramaan verify --config .pramaan.toml` now provide tested private-preview onboarding diagnostics, config-driven stage skips, fuzz seed, mutation enablement, and configured local reports; `verify-pr` and persistent forge updates remain future work. |
+| 2026-05-21 | Completed Phase 36.5 repo health pass. | CLI subcommands now have help text, redacted bundle export has a top-level alias, `verify` suppresses per-stage chatter, `doctor` separates warning levels, structured static diagnostic codes are parsed before text fallbacks, risk constants were expanded, and release/security/changelog scaffolding plus a real evidence-style README visual landed. |

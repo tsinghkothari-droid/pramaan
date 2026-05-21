@@ -4,6 +4,11 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Receipt-first verification CLI for AI-authored pull requests"
+readme = "../../README.md"
+homepage = "https://github.com/tsinghkothari-droid/pramaan"
+keywords = ["ci", "verification", "slsa", "sigstore", "ai-code"]
+categories = ["command-line-utilities", "development-tools::testing"]
 
 [[bin]]
 name = "pramaan"

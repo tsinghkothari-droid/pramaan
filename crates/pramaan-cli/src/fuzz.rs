@@ -27,6 +27,27 @@ pub fn run_fuzz(
     out: PathBuf,
     seed: u64,
 ) -> Result<()> {
+    run_fuzz_with_options(base_repo, head_repo, claim_scope, out, seed, false)
+}
+
+pub fn run_fuzz_quiet(
+    base_repo: PathBuf,
+    head_repo: PathBuf,
+    claim_scope: Option<PathBuf>,
+    out: PathBuf,
+    seed: u64,
+) -> Result<()> {
+    run_fuzz_with_options(base_repo, head_repo, claim_scope, out, seed, true)
+}
+
+fn run_fuzz_with_options(
+    base_repo: PathBuf,
+    head_repo: PathBuf,
+    claim_scope: Option<PathBuf>,
+    out: PathBuf,
+    seed: u64,
+    quiet: bool,
+) -> Result<()> {
     let base_repo = base_repo
         .canonicalize()
         .with_context(|| format!("resolving base repository {}", base_repo.display()))?;
@@ -127,7 +148,9 @@ pub fn run_fuzz(
     );
     write_json(&receipt_path, &receipt)?;
 
-    render_fuzz_summary(&base_repo, &head_repo, &out, &receipt_path, &evidence);
+    if !quiet {
+        render_fuzz_summary(&base_repo, &head_repo, &out, &receipt_path, &evidence);
+    }
     Ok(())
 }
 

@@ -10,6 +10,7 @@ use pramaan_core::{
     StageStatus, ToolIdentity, RECEIPT_SCHEMA_VERSION,
 };
 use std::collections::{BTreeMap, BTreeSet};
+use std::env;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -17,6 +18,14 @@ use std::process::Command;
 use std::time::Instant;
 
 pub fn run_static_checks(repo: PathBuf, out: PathBuf) -> Result<()> {
+    run_static_checks_with_options(repo, out, false)
+}
+
+pub fn run_static_checks_quiet(repo: PathBuf, out: PathBuf) -> Result<()> {
+    run_static_checks_with_options(repo, out, true)
+}
+
+fn run_static_checks_with_options(repo: PathBuf, out: PathBuf, quiet: bool) -> Result<()> {
     let repo = repo
         .canonicalize()
         .with_context(|| format!("resolving repository path {}", repo.display()))?;
@@ -38,7 +47,9 @@ pub fn run_static_checks(repo: PathBuf, out: PathBuf) -> Result<()> {
         receipts.push((receipt, receipt_path));
     }
 
-    render_static_summary(&repo, &out, &receipts);
+    if !quiet {
+        render_static_summary(&repo, &out, &receipts);
+    }
     Ok(())
 }
 
@@ -349,9 +360,18 @@ fn run_or_skip_check(repo: &Path, plan: &StaticCheckPlan) -> Result<Receipt> {
         ));
     }
 
-    let output = Command::new(&plan.command[0])
-        .args(&plan.command[1..])
-        .current_dir(repo)
+    let mut command = Command::new(&plan.command[0]);
+    command.args(&plan.command[1..]).current_dir(repo);
+    if plan.tool == "cargo" && env::var_os("CARGO_TARGET_DIR").is_none() {
+        let cache_dir = env::current_dir()
+            .unwrap_or_else(|_| repo.to_path_buf())
+            .join("target")
+            .join("pramaan-cargo-cache");
+        metadata.insert("cargo_target_dir".to_string(), portable_path(&cache_dir));
+        command.env("CARGO_TARGET_DIR", cache_dir);
+    }
+
+    let output = command
         .output()
         .with_context(|| format!("running {}", plan.command.join(" ")))?;
     let combined_output = format!(

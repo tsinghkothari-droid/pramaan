@@ -118,6 +118,7 @@ it can run in parallel.
 | 11.7 | Phase 35.7 | Machine verification and human sign-off gate | Agents must produce evidence, but humans must approve meaning, risk, usefulness, public claims, and release readiness. | Real MVP governance gate |
 | 11.8 | Phase 35.8 | Runtime reviewer commands and config | `pramaan doctor` and `.pramaan.toml` loading turn the interface contract into a tested private-preview runtime slice. | Real MVP adoption gate |
 | 12 | Phase 36 | Python/TypeScript/Rust plugin depth | Depth beats adding shallow Go/Java too early. | Language expansion |
+| 12.5 | Phase 36.5 | Repo health pass after v0.1.1 | Stabilize help text, release hygiene, static diagnostic robustness, and README evidence tone before Phase 37 scope expansion. | Public-review polish |
 | 13 | Phase 37 | Provider-neutral forge design and GitLab support plan | Avoid hard-coding GitHub before enterprise pilots. | GitLab/Gitea/Bitbucket work |
 | 14 | Phase 38 | Multi-agent provenance and handoff tracking | Agent chains need attribution before trend analysis becomes serious. | Serious v1 provenance |
 | 15 | Phase 39 | Bounded adapter certification mode | Keep adjacent adapter work useful but out of Alpha scope. | Adapter product expansion |
@@ -236,6 +237,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 35.6 | Adoption UX and license hygiene | PR URL entrypoint, original reviewer commands, `.pramaan.toml`, persistent summaries, and public docs that avoid named adjacent-project references. |
 | Phase 35.7 | Governance gate | Machine-verification and human-signoff templates plus docs defining what agents can prove and what humans must approve. |
 | Phase 36 | P2 language depth | Deep Python, TypeScript, and Rust plugin quality before Go/Java expansion. |
+| Phase 36.5 | P2 repo health | CLI help text, top-level redacted export alias, quieter verify output, structured static diagnostic codes, release/security/changelog scaffolding, and README evidence visual replacement. |
 | Phase 37 | P3 enterprise | Provider-neutral forge abstraction, GitLab attestation/OIDC design, and Gitea/Bitbucket notes. |
 | Phase 38 | P3 provenance | Multi-agent provenance chains, intermediate commit attribution, and handoff metadata. |
 | Phase 39 | P3 adjacent | Keep adapter certification bounded, with proof-bundle examples and adapter risk taxonomy. |
@@ -772,6 +774,10 @@ Phase 28.5 acceptance criteria:
 - [x] Write a security model.
 - [x] Write a threat model for malicious PR authors and compromised tools.
 - [x] Write an enterprise deployment guide.
+- [x] Add root `SECURITY.md` disclosure policy.
+- [x] Add root `CHANGELOG.md` release notes with residual-risk language.
+- [x] Add release workflow scaffolding for tagged platform binaries and
+  provenance attestation; live release publication remains future work.
 - [x] Add troubleshooting docs for slow mutation, missing tools, flaky tests, and forked PR permissions.
 - [x] Add screenshots or rendered examples of PR summaries and bundle inspection.
 - [x] Document non-GitHub roadmap and minimum abstraction layer for GitLab, Gitea, and Bitbucket support.

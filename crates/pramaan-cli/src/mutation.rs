@@ -22,6 +22,27 @@ pub fn run_mutation(
     timeout_ms: u64,
     kill_threshold: u8,
 ) -> Result<()> {
+    run_mutation_with_options(repo, out, changed_files, timeout_ms, kill_threshold, false)
+}
+
+pub fn run_mutation_quiet(
+    repo: PathBuf,
+    out: PathBuf,
+    changed_files: Vec<String>,
+    timeout_ms: u64,
+    kill_threshold: u8,
+) -> Result<()> {
+    run_mutation_with_options(repo, out, changed_files, timeout_ms, kill_threshold, true)
+}
+
+fn run_mutation_with_options(
+    repo: PathBuf,
+    out: PathBuf,
+    changed_files: Vec<String>,
+    timeout_ms: u64,
+    kill_threshold: u8,
+    quiet: bool,
+) -> Result<()> {
     let repo = repo
         .canonicalize()
         .with_context(|| format!("resolving repository path {}", repo.display()))?;
@@ -59,7 +80,9 @@ pub fn run_mutation(
         receipts.push((receipt, receipt_path));
     }
 
-    render_mutation_summary(&repo, &out, &receipts);
+    if !quiet {
+        render_mutation_summary(&repo, &out, &receipts);
+    }
     Ok(())
 }
 

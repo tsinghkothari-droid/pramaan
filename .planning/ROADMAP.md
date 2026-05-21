@@ -1092,6 +1092,29 @@ and Go/Java expansion remain future work.
 3. Changed-function detection and diff scoping are language-aware.
 4. Go and Java remain blocked until plugin protocol and first-language depth are credible.
 
+## Phase 36.5: Repo Health Pass After v0.1.1
+
+**Goal:** Stabilize the shipped private-preview surface before Phase 37 expands
+scope into provider-neutral forge support.
+
+**Priority:** Repo health and release hygiene
+
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. CLI help text, redacted
+export aliasing, quieter `verify` orchestration, `doctor` warning categories,
+structured static diagnostic code parsing, expanded risk constants, release
+workflow scaffolding, cargo metadata, `SECURITY.md`, `CHANGELOG.md`, quickstart
+install notes, and README evidence visual replacement landed. Crates.io
+publishing, live tag release binaries, and a new live PR Action proof remain
+external release operations.
+
+**Success Criteria:**
+
+1. First-time users can understand subcommands from `--help`.
+2. `verify` emits one final summary when it orchestrates stage runners.
+3. `doctor` separates blockers, warnings, and informational notices.
+4. Structured diagnostic codes are preferred for hallucination classification.
+5. Release/security/changelog scaffolding exists without claiming publication.
+
 ## Phase 37: Provider-Neutral Forge and GitLab Support
 
 **Goal:** Design non-GitHub support before GitHub assumptions harden into the bundle model.
