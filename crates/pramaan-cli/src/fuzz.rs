@@ -1,6 +1,10 @@
 use anyhow::{Context, Result};
 use chrono::Utc;
 use pramaan_bundle::sha256_hex;
+use pramaan_core::risks::{
+    FUZZ_DETERMINISTIC_SIMULATED, FUZZ_DIVERGENCE_NEEDS_REVIEW, FUZZ_NO_TOOL_BACKED_ADAPTER,
+    FUZZ_UNEXPECTED_DIVERGENCE,
+};
 use pramaan_core::{
     fuzz_mitigated_risks, fuzz_not_applicable_risks, timestamp, ArtifactRef,
     DivergenceClassification, FuzzAdapterAvailability, FuzzAdapterMode, FuzzDiscovery,
@@ -280,18 +284,18 @@ fn residual_risks(evidence: &FuzzRunEvidence) -> Vec<String> {
         .iter()
         .any(|item| item.classification == DivergenceClassification::Unexpected)
     {
-        risks.insert("R-075".to_string());
+        risks.insert(FUZZ_UNEXPECTED_DIVERGENCE.to_string());
     }
     if evidence
         .divergences
         .iter()
         .any(|item| item.classification == DivergenceClassification::NeedsReview)
     {
-        risks.insert("R-080".to_string());
+        risks.insert(FUZZ_DIVERGENCE_NEEDS_REVIEW.to_string());
     }
     if evidence.adapter == FuzzAdapterMode::DeterministicSimulated {
-        risks.insert("R-073".to_string());
-        risks.insert("R-077".to_string());
+        risks.insert(FUZZ_DETERMINISTIC_SIMULATED.to_string());
+        risks.insert(FUZZ_NO_TOOL_BACKED_ADAPTER.to_string());
     }
     risks.into_iter().collect()
 }

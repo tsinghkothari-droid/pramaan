@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.pramaan.dev/v1/risk_taxonomy.schema.json",
+  "$id": "https://raw.githubusercontent.com/tsinghkothari-droid/pramaan/main/schemas/risk_taxonomy.schema.json",
   "title": "Pramaan Risk Taxonomy",
   "description": "A versioned register of stable Pramaan risk IDs used by receipts, bundles, and demo/eval scenarios.",
   "type": "object",

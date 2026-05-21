@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.pramaan.dev/v1/agent_decision.schema.json",
+  "$id": "https://raw.githubusercontent.com/tsinghkothari-droid/pramaan/main/schemas/agent_decision.schema.json",
   "title": "Pramaan Agent Completion Gate Decision",
   "description": "A deterministic pass/warn/block response for coding agents. This is a completion gate over Pramaan evidence, not agent self-certification or correctness proof.",
   "type": "object",

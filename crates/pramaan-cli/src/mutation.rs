@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use chrono::Utc;
 use pramaan_bundle::sha256_hex;
+use pramaan_core::risks::{MUTATION_BELOW_KILL_THRESHOLD, MUTATION_SURVIVED, MUTATION_TIMEOUT};
 use pramaan_core::{
     mutation_mitigated_risks, normalize_cargo_mutants_output, normalize_mutmut_output,
     normalize_stryker_output, timestamp, ArtifactRef, InputRef, MutationLanguage, MutationSummary,
@@ -242,9 +243,20 @@ fn run_or_skip_mutation(
         ));
     }
 
-    if !tool_available(&plan.tool)
-        || (plan.language == MutationLanguage::Rust && !cargo_mutants_available())
-    {
+    let tool_version = if plan.language == MutationLanguage::Rust {
+        cargo_mutants_version()
+    } else {
+        read_tool_version(&plan.tool)
+    };
+    metadata.insert("tool_executed".to_string(), plan.tool.clone());
+    metadata.insert(
+        "tool_executed_version".to_string(),
+        tool_version
+            .clone()
+            .unwrap_or_else(|| "unavailable".to_string()),
+    );
+
+    if tool_version.is_none() {
         metadata.insert("missing_tool".to_string(), plan.tool.clone());
         metadata.insert("evidence_mode".to_string(), "missing_tool".to_string());
         if plan.language == MutationLanguage::Rust {
@@ -327,13 +339,13 @@ fn run_or_skip_mutation(
 
     let mut residual_risks = Vec::new();
     if summary.survived > 0 {
-        residual_risks.push("R-068".to_string());
+        residual_risks.push(MUTATION_SURVIVED.to_string());
     }
     if summary.timed_out > 0 {
-        residual_risks.push("R-072".to_string());
+        residual_risks.push(MUTATION_TIMEOUT.to_string());
     }
     if !threshold_met {
-        residual_risks.push("R-069".to_string());
+        residual_risks.push(MUTATION_BELOW_KILL_THRESHOLD.to_string());
     }
     residual_risks.sort();
     residual_risks.dedup();
@@ -637,21 +649,36 @@ fn walk_files(root: &Path) -> Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-fn tool_available(tool: &str) -> bool {
-    Command::new(tool)
-        .arg("--version")
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+fn read_tool_version(tool: &str) -> Option<String> {
+    let output = Command::new(tool).arg("--version").output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    first_non_empty_line(&output.stdout, &output.stderr)
 }
 
-fn cargo_mutants_available() -> bool {
-    Command::new("cargo")
-        .arg("mutants")
-        .arg("--version")
+fn cargo_mutants_version() -> Option<String> {
+    let output = Command::new("cargo")
+        .args(["mutants", "--version"])
         .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    first_non_empty_line(&output.stdout, &output.stderr)
+}
+
+fn first_non_empty_line(stdout: &[u8], stderr: &[u8]) -> Option<String> {
+    let combined = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(stdout),
+        String::from_utf8_lossy(stderr)
+    );
+    combined
+        .lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .map(|line| line.to_string())
 }
 
 fn package_manager(repo: &Path) -> String {

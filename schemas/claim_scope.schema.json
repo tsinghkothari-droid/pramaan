@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.pramaan.dev/v1/claim_scope.schema.json",
+  "$id": "https://raw.githubusercontent.com/tsinghkothari-droid/pramaan/main/schemas/claim_scope.schema.json",
   "title": "Pramaan Claim Scope",
   "description": "Runtime claim-scope shape emitted by the Pramaan Rust CLI.",
   "type": "object",

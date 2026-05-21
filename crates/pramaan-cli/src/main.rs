@@ -5,6 +5,10 @@ use pramaan_bundle::{
     build_manifest, read_manifest, sha256_hex, verify_bundle, write_manifest, BundleBuildOptions,
     BundleManifest, MANIFEST_FILE_NAME,
 };
+use pramaan_core::risks::{
+    CLAIM_SCOPE_API_NOT_MENTIONED, CLAIM_SCOPE_LOW_CONFIDENCE, CLAIM_SCOPE_NO_PR_METADATA,
+    CLAIM_SCOPE_PUBLIC_API_DETECTION_FAILED,
+};
 use pramaan_core::{
     build_agent_decision, build_confidence_artifact, default_policy_profile,
     evaluate_default_policy, render_confidence_markdown, risk_family, timestamp, AgentAttribution,
@@ -826,16 +830,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
 }
 
 fn add_synthetic_trust_hooks(receipt: &mut Receipt) {
-    receipt.agent_author = Some(AgentAttribution {
-        product: "Codex".to_string(),
-        model_family: Some("gpt-5".to_string()),
-        model_version: None,
-        execution_mode: "synthetic_verify".to_string(),
-        prompt_context_hash: None,
-        commit_provenance: None,
-        source: "local_cli".to_string(),
-        confidence: AttributionConfidence::Unknown,
-    });
+    receipt.agent_author = agent_attribution_from_env();
     receipt.plugin_identity = Some(PluginIdentity {
         name: "pramaan-core".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
@@ -872,6 +867,35 @@ fn add_synthetic_trust_hooks(receipt: &mut Receipt) {
         timeout_reason: None,
         partial_evidence: true,
     });
+}
+
+fn agent_attribution_from_env() -> Option<AgentAttribution> {
+    let product = read_non_empty_env("PRAMAAN_AGENT_PRODUCT")?;
+    let model_family = read_non_empty_env("PRAMAAN_AGENT_MODEL_FAMILY");
+    let model_version = read_non_empty_env("PRAMAAN_AGENT_MODEL_VERSION");
+    let execution_mode =
+        read_non_empty_env("PRAMAAN_AGENT_EXECUTION_MODE").unwrap_or_else(|| "unspecified".into());
+    let prompt_context_hash = read_non_empty_env("PRAMAAN_AGENT_PROMPT_CONTEXT_HASH");
+    let commit_provenance = read_non_empty_env("PRAMAAN_AGENT_COMMIT_PROVENANCE");
+    let source = read_non_empty_env("PRAMAAN_AGENT_SOURCE").unwrap_or_else(|| "environment".into());
+
+    Some(AgentAttribution {
+        product,
+        model_family,
+        model_version,
+        execution_mode,
+        prompt_context_hash,
+        commit_provenance,
+        source,
+        confidence: AttributionConfidence::Unknown,
+    })
+}
+
+fn read_non_empty_env(name: &str) -> Option<String> {
+    std::env::var(name)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
 }
 
 fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope> {
@@ -956,7 +980,7 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
 
     let public_apis = changed_public_apis(base_ref, head_ref).unwrap_or_else(|error| {
         limitations.push(format!("Changed public API detection failed: {error}"));
-        risk_refs.push("R-004".to_string());
+        risk_refs.push(CLAIM_SCOPE_PUBLIC_API_DETECTION_FAILED.to_string());
         Vec::new()
     });
 
@@ -969,7 +993,10 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
             "No PR title, PR body, issue text, or maintainer scope note was available; claim scope is low confidence."
                 .to_string(),
         );
-        risk_refs.extend(["R-001".to_string(), "R-002".to_string()]);
+        risk_refs.extend([
+            CLAIM_SCOPE_NO_PR_METADATA.to_string(),
+            CLAIM_SCOPE_LOW_CONFIDENCE.to_string(),
+        ]);
         scope.confidence = pramaan_core::ClaimConfidence::Low;
     }
     if public_apis.is_empty() {
@@ -981,7 +1008,7 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
                 "Changed public APIs were detected, but claim text does not mention matching symbols; semantic scope mismatch needs review."
                     .to_string(),
             );
-            risk_refs.push("R-007".to_string());
+            risk_refs.push(CLAIM_SCOPE_API_NOT_MENTIONED.to_string());
         }
         scope.touched_public_apis = public_apis;
     }

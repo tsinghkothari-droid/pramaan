@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.pramaan.dev/v1/bundle.schema.json",
+  "$id": "https://raw.githubusercontent.com/tsinghkothari-droid/pramaan/main/schemas/bundle.schema.json",
   "title": "Pramaan Proof Bundle Manifest",
   "description": "A manifest that references Pramaan receipts and artifacts by digest and summarizes evidence without reducing risk to a single score.",
   "type": "object",

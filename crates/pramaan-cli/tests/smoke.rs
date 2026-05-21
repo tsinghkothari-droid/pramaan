@@ -154,7 +154,11 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     assert_eq!(claim_receipt["stage"], "claim_scope");
     assert_eq!(claim_receipt["status"], "passed");
     assert!(claim_receipt["residual_risks"].is_array());
-    assert_eq!(claim_receipt["agent_author"]["product"], "Codex");
+    assert!(
+        claim_receipt.get("agent_author").is_none(),
+        "agent_author must be absent unless PRAMAAN_AGENT_PRODUCT is set; got {:?}",
+        claim_receipt.get("agent_author")
+    );
     assert_eq!(claim_receipt["plugin_identity"]["name"], "pramaan-core");
     assert_eq!(claim_receipt["evidence_sensitivity"], "internal");
     assert_eq!(
@@ -219,13 +223,6 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
             "not_applicable_risks": [
                 "R-081"
             ],
-            "agent_author": {
-                "product": "Codex",
-                "model_family": "gpt-5",
-                "execution_mode": "synthetic_verify",
-                "source": "local_cli",
-                "confidence": "unknown"
-            },
             "plugin_identity": {
                 "name": "pramaan-core",
                 "version": "0.1.0",
@@ -277,7 +274,16 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     let manifest: serde_json::Value =
         serde_json::from_slice(&fs::read(&manifest_path).expect("read manifest"))
             .expect("manifest json");
-    assert_eq!(manifest["agent_attribution"][0]["product"], "Codex");
+    let agent_attribution = manifest
+        .get("agent_attribution")
+        .and_then(serde_json::Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or(&[]);
+    assert!(
+        agent_attribution.is_empty(),
+        "manifest must not self-attribute to any agent unless PRAMAAN_AGENT_PRODUCT is set; got {:?}",
+        agent_attribution
+    );
     assert_eq!(manifest["plugin_identities"][0]["name"], "pramaan-core");
     assert_eq!(manifest["redaction_manifest"]["profile"], "internal-full");
     assert_eq!(manifest["policy_decision"]["decision"], "informational");
@@ -601,6 +607,18 @@ fn static_checks_emit_fixture_receipts_and_classify_broken_imports() {
     assert_eq!(
         rust_receipt["metadata"]["hallucination_categories"],
         "broken_import,nonexistent_import"
+    );
+    assert_eq!(rust_receipt["metadata"]["tool_executed"], "cargo");
+    let cargo_version = rust_receipt["metadata"]["tool_executed_version"]
+        .as_str()
+        .expect("tool_executed_version metadata");
+    assert!(
+        !cargo_version.is_empty(),
+        "tool_executed_version must be populated (got empty)"
+    );
+    assert_ne!(
+        cargo_version, "unavailable",
+        "cargo must be available in the test environment; receipt should record its actual version"
     );
 }
 
@@ -1112,4 +1130,64 @@ fn mutation_emits_diff_scoped_receipts_with_budget_metadata() {
             );
         }
     }
+}
+
+#[test]
+fn agent_attribution_flows_through_when_env_vars_are_set() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-agent-attribution-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean attribution output");
+    }
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .env("PRAMAAN_AGENT_PRODUCT", "ExampleAgent")
+        .env("PRAMAAN_AGENT_MODEL_FAMILY", "example-model")
+        .env("PRAMAAN_AGENT_MODEL_VERSION", "1.2.3")
+        .env("PRAMAAN_AGENT_EXECUTION_MODE", "ci_pull_request")
+        .env("PRAMAAN_AGENT_SOURCE", "github_actions")
+        .args([
+            "verify",
+            "--base",
+            "HEAD",
+            "--head",
+            "HEAD",
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan verify with agent env");
+
+    assert!(
+        output.status.success(),
+        "verify with agent env failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let claim_receipt_path = out.join("receipts").join("claim-scope.receipt.json");
+    let claim_receipt: serde_json::Value =
+        serde_json::from_slice(&fs::read(&claim_receipt_path).expect("read claim receipt"))
+            .expect("claim receipt json");
+    let agent = claim_receipt
+        .get("agent_author")
+        .expect("agent_author must be present when PRAMAAN_AGENT_PRODUCT is set");
+    assert_eq!(agent["product"], "ExampleAgent");
+    assert_eq!(agent["model_family"], "example-model");
+    assert_eq!(agent["model_version"], "1.2.3");
+    assert_eq!(agent["execution_mode"], "ci_pull_request");
+    assert_eq!(agent["source"], "github_actions");
+    assert_ne!(
+        agent["product"], "Codex",
+        "must not silently revert to hardcoded vendor"
+    );
 }

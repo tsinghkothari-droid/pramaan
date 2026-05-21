@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.pramaan.dev/v1/adapter_certification.schema.json",
+  "$id": "https://raw.githubusercontent.com/tsinghkothari-droid/pramaan/main/schemas/adapter_certification.schema.json",
   "title": "Pramaan Adapter Certification Receipt",
   "description": "A versioned Pramaan receipt for MCP servers, agent tools, and adapters. It records typed surface evidence, observed checks, and stable adapter risk IDs without claiming universal safety.",
   "type": "object",
