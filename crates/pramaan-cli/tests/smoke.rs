@@ -793,6 +793,140 @@ fn bundle_verify_fails_when_artifact_is_tampered() {
 }
 
 #[test]
+fn bundle_export_redacted_scrubs_sensitive_bundle_copy() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let root = workspace
+        .join("target")
+        .join("pramaan-redaction-export-tests")
+        .join(format!("{}", std::process::id()));
+    let source = root.join("source");
+    let export = root.join("public-demo");
+
+    if root.exists() {
+        fs::remove_dir_all(&root).expect("clean redaction output");
+    }
+    fs::create_dir_all(source.join("receipts")).expect("create receipt dir");
+    fs::create_dir_all(source.join("logs")).expect("create log dir");
+    fs::write(
+        source.join("logs").join("leaky.log"),
+        "token=ghp_123 contact=ops@example.internal host=https://ci.internal/build ip=10.2.3.4 C:\\Users\\Tushar\\repo",
+    )
+    .expect("write leaky log");
+
+    let receipt = Receipt::synthetic(
+        "leaky_stage",
+        StageStatus::Passed,
+        "base",
+        "head",
+        vec![],
+        vec![pramaan_core::ArtifactRef {
+            name: "leaky_log".to_string(),
+            path: "logs/leaky.log".to_string(),
+            media_type: Some("text/plain".to_string()),
+            digest: None,
+        }],
+        ReceiptSummary {
+            title: "Leaky stage".to_string(),
+            details: "artifact_url=https://artifact.internal/raw cache_key=windows-private-cache"
+                .to_string(),
+        },
+        RiskRefs {
+            mitigated: vec!["R-072".to_string()],
+            residual: vec![],
+            not_applicable: vec![],
+        },
+    );
+    fs::write(
+        source.join("receipts").join("leaky.receipt.json"),
+        serde_json::to_vec_pretty(&receipt).expect("serialize leaky receipt"),
+    )
+    .expect("write leaky receipt");
+    let manifest = build_manifest(
+        &source,
+        BundleBuildOptions::synthetic("base".to_string(), "head".to_string()),
+    )
+    .expect("build leaky manifest");
+    write_manifest(&source, &manifest).expect("write leaky manifest");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "bundle",
+            "export-redacted",
+            source.to_str().expect("utf-8 source path"),
+            "--profile",
+            "public-demo",
+            "--out",
+            export.to_str().expect("utf-8 export path"),
+        ])
+        .output()
+        .expect("run pramaan bundle export-redacted");
+    assert!(
+        output.status.success(),
+        "redaction export failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stdout).contains("Pramaan redacted bundle export complete")
+    );
+
+    let verify_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "bundle",
+            "verify",
+            export.to_str().expect("utf-8 export path"),
+        ])
+        .output()
+        .expect("run pramaan bundle verify on redacted export");
+    assert!(
+        verify_output.status.success(),
+        "redacted export should verify\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&verify_output.stdout),
+        String::from_utf8_lossy(&verify_output.stderr)
+    );
+
+    let redacted_log =
+        fs::read_to_string(export.join("logs").join("leaky.log")).expect("read redacted log");
+    for leaked in [
+        "ghp_123",
+        "ops@example.internal",
+        "ci.internal",
+        "10.2.3.4",
+        "Tushar",
+    ] {
+        assert!(
+            !redacted_log.contains(leaked),
+            "redacted log leaked {leaked}: {redacted_log}"
+        );
+    }
+    assert!(redacted_log.contains("<redacted>"));
+    assert!(redacted_log.contains("<redacted-email>"));
+    assert!(redacted_log.contains("<redacted-host>"));
+    assert!(redacted_log.contains("<redacted-ip>"));
+
+    let redacted_receipt = fs::read_to_string(export.join("receipts").join("leaky.receipt.json"))
+        .expect("read redacted receipt");
+    assert!(!redacted_receipt.contains("artifact.internal"));
+    assert!(!redacted_receipt.contains("windows-private-cache"));
+
+    let manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(export.join("bundle.manifest.json")).expect("manifest"))
+            .expect("manifest JSON");
+    assert_eq!(manifest["redaction_manifest"]["profile"], "public-demo");
+    assert!(manifest["receipts"]
+        .as_array()
+        .expect("receipts")
+        .iter()
+        .any(|receipt| receipt["path"] == "receipts/bundle-redaction.receipt.json"));
+}
+
+#[test]
 fn static_checks_emit_fixture_receipts_and_classify_broken_imports() {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()

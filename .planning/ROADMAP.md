@@ -613,11 +613,21 @@ GitHub attestation evidence remain later hardening, not current guarantees.
 
 **Priority:** P2 trust
 
+**Status:** Completed 2026-05-21 for profile validation, pattern-based text/JSON
+redaction, `pramaan bundle export-redacted`, manifest rebuilds, and public-demo
+scrub tests. `summary-only` is accepted as a profile but full artifact
+minimization remains later hardening.
+
 **Success Criteria:**
 
-1. `internal-full`, `reviewer-redacted`, `public-demo`, and `summary-only` profiles are implemented or explicitly scoped.
-2. Secret, private path, internal hostname, endpoint, and CI metadata fixtures are scrubbed.
-3. Redacted bundles remain inspectable and verifiable under allowed transformations.
+1. `internal-full`, `reviewer-redacted`, `public-demo`, and `summary-only`
+   profiles are implemented or explicitly scoped.
+2. Secret, private path, internal hostname, endpoint, and CI metadata fixtures
+   are scrubbed.
+3. Redacted bundles remain inspectable and verifiable under allowed
+   transformations.
+4. Stale offline attestations are removed during export because redaction
+   changes manifest hashes.
 
 ## Phase 31: Plugin Protocol Trust and Isolation
 

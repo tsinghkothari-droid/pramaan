@@ -108,10 +108,15 @@ the same commit. Never update a golden fixture just to make a failing test green
 ## Redaction Discipline
 
 Receipts should not expose secrets or private infrastructure details when a
-bundle is shared outside the producing CI environment. Phase 21 adds redaction
-helpers for common secret assignments such as `password=`, `token:`,
-`api_key=`, and `authorization:`, plus private user paths such as
-`C:\Users\<name>`, `/Users/<name>`, and `/home/<name>`.
+bundle is shared outside the producing CI environment. The redaction helper
+covers common secret assignments such as `password=`, `token:`, `api_key=`,
+`authorization:`, cache keys, and artifact URLs; common token prefixes; private
+user paths such as `C:\Users\<name>`, `/Users/<name>`, and `/home/<name>`;
+email-like values; private IPs; and internal hostnames.
+
+Phase 30 adds explicit profiles: `internal-full`, `reviewer-redacted`,
+`public-demo`, and `summary-only`. Exported redacted bundles get a
+`bundle_redaction` receipt and a rebuilt manifest.
 
 Redaction is not a substitute for least-privilege CI. Untrusted pull request
 jobs should not receive secrets in the first place. Redaction makes accidental

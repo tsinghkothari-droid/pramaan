@@ -1,7 +1,9 @@
 use chrono::Utc;
 use pramaan_core::{
-    canonical_json_bytes, timestamp, AgentAttribution, AgentProvenanceEntry, EvidenceSensitivity,
-    PluginIdentity, PolicyDecision, Receipt, RedactionManifest, ReviewerOverride, StageBudget,
+    canonical_json_bytes, redact_sensitive_text, timestamp, AgentAttribution, AgentProvenanceEntry,
+    ArtifactRef, EvidenceSensitivity, OutputRef, PluginIdentity, PolicyDecision, Receipt,
+    ReceiptSummary, RedactionManifest, ReviewerOverride, RiskRefs, StageBudget, StageStatus,
+    REDACTION_POLICY_VERSION,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest as ShaDigest, Sha256};
@@ -348,8 +350,149 @@ pub struct OfflineAttestationReport {
     pub verification_result: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RedactionExportReport {
+    pub bundle_root: PathBuf,
+    pub manifest_path: PathBuf,
+    pub profile: String,
+    pub redacted_files: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RedactionExportManifest {
+    schema_version: String,
+    profile: String,
+    source_manifest_digest: Digest,
+    redacted_files: Vec<String>,
+    policy: String,
+}
+
 pub fn sha256_hex(bytes: impl AsRef<[u8]>) -> String {
     Digest::sha256(bytes).prefixed()
+}
+
+pub fn export_redacted_bundle(
+    source_bundle: &Path,
+    out_dir: &Path,
+    profile: &str,
+) -> Result<RedactionExportReport> {
+    validate_redaction_profile(profile)?;
+    if out_dir.exists() {
+        return Err(BundleError::Schema(format!(
+            "redaction output {} already exists",
+            out_dir.display()
+        )));
+    }
+
+    verify_bundle(source_bundle)?;
+    let source_manifest_path = if source_bundle.is_dir() {
+        source_bundle.join(MANIFEST_FILE_NAME)
+    } else {
+        source_bundle.to_path_buf()
+    };
+    let source_root = source_manifest_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."));
+    let source_manifest = read_manifest(&source_manifest_path)?;
+    copy_dir_all(source_root, out_dir)?;
+
+    let copied_manifest_path = out_dir.join(MANIFEST_FILE_NAME);
+    if copied_manifest_path.exists() {
+        fs::remove_file(&copied_manifest_path).map_err(|source| BundleError::Io {
+            path: copied_manifest_path.clone(),
+            source,
+        })?;
+    }
+    let copied_attestations_dir = out_dir.join(ATTESTATIONS_DIR_NAME);
+    if copied_attestations_dir.exists() {
+        fs::remove_dir_all(&copied_attestations_dir).map_err(|source| BundleError::Io {
+            path: copied_attestations_dir.clone(),
+            source,
+        })?;
+    }
+
+    let mut redacted_files = Vec::new();
+    redact_bundle_files(out_dir, profile, &mut redacted_files)?;
+    redacted_files.sort();
+    redacted_files.dedup();
+
+    let export_manifest_dir = out_dir.join("redaction");
+    fs::create_dir_all(&export_manifest_dir).map_err(|source| BundleError::Io {
+        path: export_manifest_dir.clone(),
+        source,
+    })?;
+    let export_manifest_path = export_manifest_dir.join("export-manifest.json");
+    let export_manifest = RedactionExportManifest {
+        schema_version: "pramaan.redaction_export.v1".to_string(),
+        profile: profile.to_string(),
+        source_manifest_digest: source_manifest.integrity.manifest_digest.clone(),
+        redacted_files: redacted_files.clone(),
+        policy: REDACTION_POLICY_VERSION.to_string(),
+    };
+    write_json_file(&export_manifest_path, &export_manifest)?;
+
+    let receipt_dir = out_dir.join("receipts");
+    fs::create_dir_all(&receipt_dir).map_err(|source| BundleError::Io {
+        path: receipt_dir.clone(),
+        source,
+    })?;
+    let relative_export_manifest = portable_relative_path(out_dir, &export_manifest_path);
+    let mut receipt = Receipt::synthetic(
+        "bundle_redaction",
+        StageStatus::Passed,
+        source_manifest.repository.base_ref.clone(),
+        source_manifest.repository.head_ref.clone(),
+        vec![OutputRef {
+            name: "redaction_export_manifest".to_string(),
+            path: relative_export_manifest.clone(),
+            digest: Some(manifest_file_digest(&export_manifest_path)?),
+        }],
+        vec![ArtifactRef {
+            name: "redaction_export_manifest".to_string(),
+            path: relative_export_manifest,
+            media_type: Some("application/json".to_string()),
+            digest: None,
+        }],
+        ReceiptSummary {
+            title: "Bundle redaction export complete".to_string(),
+            details: format!(
+                "Profile {profile} redacted {} file(s); old attestations were removed because redaction changes manifest hashes.",
+                redacted_files.len()
+            ),
+        },
+        RiskRefs {
+            mitigated: vec!["R-072".to_string()],
+            residual: vec![],
+            not_applicable: vec![],
+        },
+    );
+    receipt.evidence_sensitivity = Some(EvidenceSensitivity::Redacted);
+    receipt.redaction_manifest = Some(RedactionManifest {
+        profile: profile.to_string(),
+        redacted_fields: redacted_files.clone(),
+        hashed_fields: vec!["source_manifest_digest".to_string()],
+        policy: REDACTION_POLICY_VERSION.to_string(),
+    });
+    write_json_file(&receipt_dir.join("bundle-redaction.receipt.json"), &receipt)?;
+
+    let manifest = build_manifest(
+        out_dir,
+        BundleBuildOptions {
+            bundle_id: format!("bundle_redacted_{}", Utc::now().timestamp()),
+            run_id: format!("run_redacted_{}", Utc::now().timestamp()),
+            repository: source_manifest.repository,
+        },
+    )?;
+    let manifest_path = write_manifest(out_dir, &manifest)?;
+    verify_bundle(out_dir)?;
+
+    Ok(RedactionExportReport {
+        bundle_root: out_dir.to_path_buf(),
+        manifest_path,
+        profile: profile.to_string(),
+        redacted_files,
+    })
 }
 
 pub fn emit_offline_attestations(bundle_root: &Path) -> Result<OfflineAttestationReport> {
@@ -478,6 +621,154 @@ pub fn verify_offline_attestations(bundle_root: &Path) -> Result<OfflineAttestat
         manifest_digest: expected.manifest_digest,
         verification_result: expected.verification_result,
     })
+}
+
+fn validate_redaction_profile(profile: &str) -> Result<()> {
+    if matches!(
+        profile,
+        "internal-full" | "reviewer-redacted" | "public-demo" | "summary-only"
+    ) {
+        Ok(())
+    } else {
+        Err(BundleError::Schema(format!(
+            "unsupported redaction profile {profile}; expected internal-full, reviewer-redacted, public-demo, or summary-only"
+        )))
+    }
+}
+
+fn copy_dir_all(source: &Path, destination: &Path) -> Result<()> {
+    if destination.starts_with(source) {
+        return Err(BundleError::Schema(format!(
+            "redaction output {} must not be inside source bundle {}",
+            destination.display(),
+            source.display()
+        )));
+    }
+    fs::create_dir_all(destination).map_err(|source_error| BundleError::Io {
+        path: destination.to_path_buf(),
+        source: source_error,
+    })?;
+    for entry in fs::read_dir(source).map_err(|source_error| BundleError::Io {
+        path: source.to_path_buf(),
+        source: source_error,
+    })? {
+        let entry = entry.map_err(|source_error| BundleError::Io {
+            path: source.to_path_buf(),
+            source: source_error,
+        })?;
+        let source_path = entry.path();
+        let destination_path = destination.join(entry.file_name());
+        if source_path.is_dir() {
+            copy_dir_all(&source_path, &destination_path)?;
+        } else {
+            fs::copy(&source_path, &destination_path).map_err(|source_error| BundleError::Io {
+                path: destination_path,
+                source: source_error,
+            })?;
+        }
+    }
+    Ok(())
+}
+
+fn redact_bundle_files(root: &Path, profile: &str, redacted_files: &mut Vec<String>) -> Result<()> {
+    if profile == "internal-full" {
+        return Ok(());
+    }
+
+    let mut pending = vec![root.to_path_buf()];
+    while let Some(path) = pending.pop() {
+        for entry in fs::read_dir(&path).map_err(|source| BundleError::Io {
+            path: path.clone(),
+            source,
+        })? {
+            let entry = entry.map_err(|source| BundleError::Io {
+                path: path.clone(),
+                source,
+            })?;
+            let entry_path = entry.path();
+            if entry_path.is_dir() {
+                pending.push(entry_path);
+            } else if should_redact_file(&entry_path) {
+                let redacted =
+                    if entry_path.extension().and_then(|ext| ext.to_str()) == Some("json") {
+                        redact_json_file(&entry_path)?
+                    } else {
+                        redact_text_file(&entry_path)?
+                    };
+                if redacted {
+                    redacted_files.push(portable_relative_path(root, &entry_path));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn should_redact_file(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|extension| extension.to_str()),
+        Some("json" | "md" | "txt" | "log" | "yml" | "yaml")
+    )
+}
+
+fn redact_json_file(path: &Path) -> Result<bool> {
+    let bytes = fs::read(path).map_err(|source| BundleError::Io {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    let Ok(mut value) = serde_json::from_slice::<serde_json::Value>(&bytes) else {
+        return redact_text_file(path);
+    };
+    let original = value.clone();
+    redact_json_value(&mut value);
+    if value == original {
+        return Ok(false);
+    }
+    write_json_file(path, &value)?;
+    Ok(true)
+}
+
+fn redact_json_value(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::String(text) => {
+            *text = redact_sensitive_text(text);
+        }
+        serde_json::Value::Array(items) => {
+            for item in items {
+                redact_json_value(item);
+            }
+        }
+        serde_json::Value::Object(map) => {
+            for value in map.values_mut() {
+                redact_json_value(value);
+            }
+        }
+        serde_json::Value::Null | serde_json::Value::Bool(_) | serde_json::Value::Number(_) => {}
+    }
+}
+
+fn redact_text_file(path: &Path) -> Result<bool> {
+    let text = fs::read_to_string(path).map_err(|source| BundleError::Io {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    let redacted = redact_sensitive_text(&text);
+    if redacted == text {
+        return Ok(false);
+    }
+    fs::write(path, redacted).map_err(|source| BundleError::Io {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    Ok(true)
+}
+
+fn manifest_file_digest(path: &Path) -> Result<String> {
+    let bytes = fs::read(path).map_err(|source| BundleError::Io {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    Ok(Digest::sha256(bytes).prefixed())
 }
 
 pub fn build_manifest(bundle_root: &Path, options: BundleBuildOptions) -> Result<BundleManifest> {

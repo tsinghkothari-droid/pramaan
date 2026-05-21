@@ -2,8 +2,8 @@ use anyhow::{Context, Result};
 use chrono::Utc;
 use clap::{Parser, Subcommand};
 use pramaan_bundle::{
-    build_manifest, emit_offline_attestations, read_manifest, sha256_hex, verify_bundle,
-    verify_offline_attestations, write_manifest, BundleBuildOptions, BundleManifest,
+    build_manifest, emit_offline_attestations, export_redacted_bundle, read_manifest, sha256_hex,
+    verify_bundle, verify_offline_attestations, write_manifest, BundleBuildOptions, BundleManifest,
     MANIFEST_FILE_NAME,
 };
 use pramaan_core::{
@@ -71,6 +71,7 @@ enum BundleCommands {
     Verify(BundleVerifyArgs),
     Attest(BundleAttestArgs),
     VerifyOffline(BundleVerifyOfflineArgs),
+    ExportRedacted(BundleExportRedactedArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -86,6 +87,15 @@ struct BundleAttestArgs {
 #[derive(Debug, Parser)]
 struct BundleVerifyOfflineArgs {
     path: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct BundleExportRedactedArgs {
+    path: PathBuf,
+    #[arg(long)]
+    profile: String,
+    #[arg(long)]
+    out: PathBuf,
 }
 
 #[derive(Debug, Parser)]
@@ -1031,6 +1041,16 @@ fn run_bundle(args: BundleArgs) -> Result<()> {
             println!("in_toto: {}", report.statement_path.display());
             println!("manifest_digest: {}", report.manifest_digest.prefixed());
             println!("verification_result: {}", report.verification_result);
+            Ok(())
+        }
+        BundleCommands::ExportRedacted(args) => {
+            let report = export_redacted_bundle(&args.path, &args.out, &args.profile)
+                .context("exporting redacted bundle")?;
+            println!("Pramaan redacted bundle export complete");
+            println!("bundle: {}", report.bundle_root.display());
+            println!("manifest: {}", report.manifest_path.display());
+            println!("profile: {}", report.profile);
+            println!("redacted_files: {}", report.redacted_files.len());
             Ok(())
         }
     }

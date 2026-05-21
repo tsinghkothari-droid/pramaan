@@ -1995,6 +1995,8 @@ pub struct RedactionManifest {
     pub policy: String,
 }
 
+pub const REDACTION_POLICY_VERSION: &str = "pramaan-redaction-v0.2";
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CiHardeningFinding {
     pub id: String,
@@ -2011,11 +2013,21 @@ pub fn redact_sensitive_text(input: &str) -> String {
         "api_key",
         "apikey",
         "authorization",
+        "github_token",
+        "ci_job_token",
+        "cache_key",
+        "cache-key",
+        "artifact_url",
+        "artifact-url",
     ] {
         output = redact_assignment_values(&output, key, '=');
         output = redact_assignment_values(&output, key, ':');
     }
-    redact_user_paths(&output)
+    let output = redact_user_paths(&output);
+    let output = redact_sensitive_segments(&output, "<redacted-email>", looks_like_email);
+    let output = redact_sensitive_segments(&output, "<redacted-host>", looks_like_internal_host);
+    let output = redact_sensitive_segments(&output, "<redacted-ip>", looks_like_private_ipv4);
+    redact_sensitive_segments(&output, "<redacted-token>", looks_like_token_prefix)
 }
 
 pub fn analyze_github_workflow_security(workflow_text: &str) -> Vec<CiHardeningFinding> {
@@ -2141,6 +2153,126 @@ fn redact_user_paths(input: &str) -> String {
         }
     }
     output
+}
+
+fn redact_sensitive_segments(
+    input: &str,
+    replacement: &str,
+    predicate: fn(&str) -> bool,
+) -> String {
+    let mut output = String::new();
+    let mut segment = String::new();
+
+    for character in input.chars() {
+        if character.is_whitespace() {
+            output.push_str(&redact_segment(&segment, replacement, predicate));
+            segment.clear();
+            output.push(character);
+        } else {
+            segment.push(character);
+        }
+    }
+    output.push_str(&redact_segment(&segment, replacement, predicate));
+    output
+}
+
+fn redact_segment(segment: &str, replacement: &str, predicate: fn(&str) -> bool) -> String {
+    if segment.is_empty() {
+        return String::new();
+    }
+    let chars = segment.chars().collect::<Vec<_>>();
+    let start = chars
+        .iter()
+        .position(|character| !is_redaction_boundary(*character))
+        .unwrap_or(0);
+    let end = chars
+        .iter()
+        .rposition(|character| !is_redaction_boundary(*character))
+        .map(|index| index + 1)
+        .unwrap_or(chars.len());
+    let core = chars[start..end].iter().collect::<String>();
+    let redacted_core = if let Some(index) = core.find('=') {
+        let (key, value_with_separator) = core.split_at(index);
+        let value = &value_with_separator[1..];
+        if predicate(value) {
+            format!("{key}={replacement}")
+        } else {
+            return segment.to_string();
+        }
+    } else if let Some(index) = core.find(':') {
+        let (key, value_with_separator) = core.split_at(index);
+        let value = &value_with_separator[1..];
+        if predicate(value) {
+            format!("{key}:{replacement}")
+        } else {
+            return segment.to_string();
+        }
+    } else if predicate(&core) {
+        replacement.to_string()
+    } else {
+        return segment.to_string();
+    };
+
+    let prefix = chars[..start].iter().collect::<String>();
+    let suffix = chars[end..].iter().collect::<String>();
+    format!("{prefix}{redacted_core}{suffix}")
+}
+
+fn is_redaction_boundary(character: char) -> bool {
+    matches!(
+        character,
+        '"' | '\'' | '`' | ',' | ';' | '(' | ')' | '[' | ']' | '{' | '}' | '<' | '>'
+    )
+}
+
+fn looks_like_email(segment: &str) -> bool {
+    let Some((local, domain)) = segment.split_once('@') else {
+        return false;
+    };
+    !local.is_empty() && domain.contains('.') && !domain.ends_with('@')
+}
+
+fn looks_like_internal_host(segment: &str) -> bool {
+    let lower = segment.to_ascii_lowercase();
+    lower.contains(".internal")
+        || lower.contains(".corp")
+        || lower.contains(".local")
+        || lower.contains("localhost")
+}
+
+fn looks_like_private_ipv4(segment: &str) -> bool {
+    let normalized = segment
+        .trim_start_matches("http://")
+        .trim_start_matches("https://")
+        .split('/')
+        .next()
+        .unwrap_or(segment)
+        .split(':')
+        .next()
+        .unwrap_or(segment);
+    let parts = normalized
+        .split('.')
+        .map(str::parse::<u8>)
+        .collect::<Result<Vec<_>, _>>();
+    let Ok(parts) = parts else {
+        return false;
+    };
+    if parts.len() != 4 {
+        return false;
+    }
+    parts[0] == 10
+        || parts[0] == 127
+        || (parts[0] == 192 && parts[1] == 168)
+        || (parts[0] == 172 && (16..=31).contains(&parts[1]))
+}
+
+fn looks_like_token_prefix(segment: &str) -> bool {
+    let lower = segment.to_ascii_lowercase();
+    lower.starts_with("ghp_")
+        || lower.starts_with("ghs_")
+        || lower.starts_with("xoxb-")
+        || lower.starts_with("sk-")
+        || (segment.starts_with("AKIA") && segment.len() >= 12)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4023,17 +4155,34 @@ mod tests {
     #[test]
     fn redaction_masks_secret_values_and_private_paths() {
         let redacted = redact_sensitive_text(
-            "password=hunter2 token: ghp_123 C:\\Users\\Tushar\\repo /home/alex/project",
+            "password=hunter2 token: ghp_123 C:\\Users\\Tushar\\repo /home/alex/project \
+             contact=ops@example.internal host=https://ci.internal/build ip=10.1.2.3 \
+             artifact_url=https://artifacts.internal/abc cache_key=windows-private-cache \
+             github_token=ghs_123456 standalone sk-live-secret",
         );
 
         assert!(!redacted.contains("hunter2"));
         assert!(!redacted.contains("ghp_123"));
         assert!(!redacted.contains("Tushar"));
         assert!(!redacted.contains("/home/alex"));
+        assert!(!redacted.contains("ops@example.internal"));
+        assert!(!redacted.contains("ci.internal"));
+        assert!(!redacted.contains("10.1.2.3"));
+        assert!(!redacted.contains("artifacts.internal"));
+        assert!(!redacted.contains("windows-private-cache"));
+        assert!(!redacted.contains("ghs_123456"));
+        assert!(!redacted.contains("sk-live-secret"));
         assert!(redacted.contains("password=<redacted>"));
         assert!(redacted.contains("token: <redacted>"));
         assert!(redacted.contains("C:/Users/<redacted>/repo"));
         assert!(redacted.contains("/home/<redacted>/project"));
+        assert!(redacted.contains("contact=<redacted-email>"));
+        assert!(redacted.contains("host=<redacted-host>"));
+        assert!(redacted.contains("ip=<redacted-ip>"));
+        assert!(redacted.contains("artifact_url=<redacted>"));
+        assert!(redacted.contains("cache_key=<redacted>"));
+        assert!(redacted.contains("github_token=<redacted>"));
+        assert!(redacted.contains("standalone <redacted-token>"));
     }
 
     #[test]

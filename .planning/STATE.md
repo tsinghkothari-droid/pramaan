@@ -14,7 +14,7 @@ Phase 28 real Hypothesis/fast-check harnesses.
 
 ## Current Phase
 
-Phase 30: Redaction Profiles and Public Bundle Export
+Phase 31: Plugin Protocol Trust and Isolation
 
 Public Alpha gate still open: Phase 26.1 Live GitHub Action Proof.
 
@@ -104,3 +104,4 @@ gate.
 | 2026-05-21 | Executed Phase 28.25 provider-neutral AI probe planning. | `pramaan probe plan` now writes `pramaan.probe.v1` plans and `ai_probe_generation` receipts while keeping every candidate pending until sandbox execution; generated-probe execution is split to Phase 28.26. |
 | 2026-05-21 | Completed Phase 28.5 uncalibrated confidence bridge. | Confidence artifacts now have schema/fixture contract tests plus critical-path and invalid-attestation hard gates; Phase 34 still owns real calibration. |
 | 2026-05-21 | Executed Phase 29 local/offline attestation. | `pramaan bundle attest` now emits local VSA and in-toto files, `pramaan bundle verify-offline` checks them against manifest/confidence digests, and production Sigstore/GitHub identity remains explicit future hardening. |
+| 2026-05-21 | Executed Phase 30 redacted bundle export. | `pramaan bundle export-redacted` now supports named profiles, scrubs text/JSON bundle copies, removes stale attestations, rebuilds manifests, and verifies public-demo exports without hand-editing JSON. |
