@@ -68,6 +68,7 @@ pub const AGENTIC_WORKFLOW_INJECTION: &str = "R-093";
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::BTreeSet;
 
     #[test]
     fn known_risk_ids_are_sorted_and_unique() {
@@ -117,5 +118,104 @@ mod tests {
                 "named constant {id} not in KNOWN_RISK_IDS"
             );
         }
+    }
+
+    #[test]
+    fn phase_33_adversarial_corpus_has_required_coverage() {
+        let corpus: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../corpus/adversarial-scenarios-v0.1.json"
+        ))
+        .expect("phase 33 adversarial corpus parses");
+        assert_eq!(
+            corpus["schema_version"], "pramaan.adversarial_corpus/v1",
+            "corpus must use the v1 schema id"
+        );
+        let scenarios = corpus["scenarios"]
+            .as_array()
+            .expect("corpus scenarios must be an array");
+        assert!(
+            scenarios.len() >= 25,
+            "phase 33 requires at least 25 scenarios"
+        );
+
+        let mut ids = BTreeSet::new();
+        let mut secure_categories = BTreeSet::new();
+        let mut adversary_models = BTreeSet::new();
+        let mut categories = BTreeSet::new();
+        for scenario in scenarios {
+            let id = scenario["id"].as_str().expect("scenario id is required");
+            assert!(ids.insert(id), "duplicate scenario id {id}");
+            for field in [
+                "name",
+                "category",
+                "failure_mode",
+                "status",
+                "language",
+                "adversary_model",
+                "severity",
+                "base_change",
+                "head_change",
+                "ordinary_ci_expectation",
+                "pramaan_expected_finding",
+                "reviewer_explanation",
+                "replay_command",
+            ] {
+                assert!(
+                    scenario[field]
+                        .as_str()
+                        .is_some_and(|value| !value.is_empty()),
+                    "{id} missing non-empty {field}"
+                );
+            }
+            categories.insert(
+                scenario["category"]
+                    .as_str()
+                    .expect("scenario category is required"),
+            );
+            adversary_models.insert(
+                scenario["adversary_model"]
+                    .as_str()
+                    .expect("scenario adversary_model is required"),
+            );
+            if let Some(category) = scenario["secure_code_category"].as_str() {
+                secure_categories.insert(category);
+            }
+            let risks = scenario["risk_ids"]
+                .as_array()
+                .expect("scenario risk_ids must be an array");
+            assert!(!risks.is_empty(), "{id} must map to risk IDs");
+            for risk in risks {
+                let risk = risk.as_str().expect("risk id must be a string");
+                assert!(is_known_risk_id(risk), "{id} uses unknown risk ID {risk}");
+            }
+        }
+
+        for category in [
+            "validation_removal",
+            "authorization_weakening",
+            "unsafe_deserialization",
+            "injection_sanitization_removal",
+            "crypto_misuse",
+            "secret_exposure",
+        ] {
+            assert!(
+                secure_categories.contains(category),
+                "missing secure-code corpus category {category}"
+            );
+        }
+        for adversary in [
+            "careless_ai",
+            "overfitted_ai",
+            "malicious_pr",
+            "malicious_ci",
+            "compromised_plugin",
+        ] {
+            assert!(
+                adversary_models.contains(adversary),
+                "missing adversary model {adversary}"
+            );
+        }
+        assert!(categories.contains("verifier_abuse"));
+        assert!(categories.contains("ci_supply_chain"));
     }
 }

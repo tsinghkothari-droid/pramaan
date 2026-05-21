@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pramaan.dev/schemas/adversarial_corpus.schema.json",
+  "title": "Pramaan Adversarial Corpus",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "corpus_id",
+    "description",
+    "source_taxonomy",
+    "minimum_scenario_count",
+    "scenarios"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "pramaan.adversarial_corpus/v1"
+    },
+    "corpus_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_taxonomy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "minimum_scenario_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 25,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "category",
+          "failure_mode",
+          "status",
+          "language",
+          "adversary_model",
+          "severity",
+          "fixture_paths",
+          "base_change",
+          "head_change",
+          "ordinary_ci_expectation",
+          "pramaan_expected_finding",
+          "reviewer_explanation",
+          "replay_kind",
+          "replay_command",
+          "risk_ids"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^ADV-[0-9]{3}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "secure_code_category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "failure_mode": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": ["implemented_demo", "implemented_fixture", "scenario_spec"]
+          },
+          "language": {
+            "type": "string",
+            "minLength": 1
+          },
+          "adversary_model": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": ["low", "medium", "high", "critical"]
+          },
+          "fixture_paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "base_change": {
+            "type": "string",
+            "minLength": 1
+          },
+          "head_change": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ordinary_ci_expectation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pramaan_expected_finding": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reviewer_explanation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "replay_kind": {
+            "enum": ["executable_demo", "metadata_report"]
+          },
+          "replay_command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "risk_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^R-[0-9]{3}$"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

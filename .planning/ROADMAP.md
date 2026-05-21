@@ -692,6 +692,12 @@ future hardening.
 
 **Priority:** P2 evals
 
+**Status:** Completed 2026-05-21. `corpus/adversarial-scenarios-v0.1.json`,
+`schemas/adversarial_corpus.schema.json`, and
+`scripts/check-adversarial-corpus.mjs` now validate 25 scenarios. Most entries
+are scenario specs, not executable demos; Phase 40 still owns the 100-scenario
+corpus and broader runnable fixture set.
+
 **Success Criteria:**
 
 1. Corpus has at least 25 scenarios mapped to stable risk IDs.

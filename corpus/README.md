@@ -1,35 +1,45 @@
 # Pramaan Adversarial Corpus
 
-This directory contains public demo and evaluation scenarios for AI-code trust failures that ordinary CI can miss.
+This directory contains public demo and evaluation scenarios for AI-code trust
+failures that ordinary CI can miss.
 
-The starter manifest is:
+The Phase 33 manifest is:
+
+```text
+corpus/adversarial-scenarios-v0.1.json
+```
+
+The original starter manifest remains for compatibility:
 
 ```text
 corpus/starter-adversarial-scenarios.json
 ```
 
-Each scenario records:
+## Validate
 
-- a stable scenario ID;
-- the failure mode;
-- implementation status;
-- demo or fixture paths when they already exist;
-- the command Pramaan should run when the scenario is executable;
-- expected Pramaan signal;
-- risk IDs mapped back to the top-100 register.
+```powershell
+node scripts/check-adversarial-corpus.mjs
+```
 
-## Starter Scenarios
+The validator checks:
 
-| Scenario | Failure mode | Status | Primary risk IDs |
-| --- | --- | --- | --- |
-| `ADV-001` | Weakened assertion | Implemented demo | `R-011`, `R-014`, `R-087`, `R-100` |
-| `ADV-002` | Skipped test | Starter spec | `R-010`, `R-012`, `R-087`, `R-100` |
-| `ADV-003` | Invented import | Implemented demo | `R-038`, `R-039`, `R-040`, `R-100` |
-| `ADV-004` | Mutation survivor | Starter spec | `R-068`, `R-071`, `R-072`, `R-100` |
-| `ADV-005` | Unexpected differential divergence | Starter spec | `R-073`, `R-075`, `R-080`, `R-100` |
-| `ADV-006` | Sensitive fixture/snapshot drift | Implemented demo | `R-008`, `R-017`, `R-088`, `R-100` |
+- at least 25 scenarios;
+- unique `ADV-...` IDs;
+- non-empty base/head/ordinary-CI/Pramaan/reviewer fields;
+- known `R-...` risk ID shape;
+- replay commands for every scenario;
+- secure-code coverage for validation, authorization, deserialization,
+  injection, crypto, and secrets;
+- malicious verifier, malicious CI, overfitted AI, compromised plugin, and
+  careless-AI adversary models.
 
-`ADV-001`, `ADV-003`, and `ADV-006` are implemented public demos. The remaining starter specs are preserved so future phases can add executable fixtures without changing scenario IDs.
+## Scenario Status
+
+| Status | Meaning |
+| --- | --- |
+| `implemented_demo` | Runnable public example exists under `examples/`. |
+| `implemented_fixture` | Checked fixture exists but may not be a full repo demo. |
+| `scenario_spec` | Risk-mapped scenario is defined; executable fixture remains future work. |
 
 ## Public Demo Path
 
@@ -51,11 +61,5 @@ The inspection path for reviewers is:
 target/pramaan-demo/oracle/receipts/oracle-integrity.receipt.json
 target/pramaan-demo/oracle/oracle-diff.json
 examples/vulnerable-python-pr/risk-map.json
-corpus/starter-adversarial-scenarios.json
-```
-
-Checked-in example outputs live under:
-
-```text
-examples/proof-bundles/
+corpus/adversarial-scenarios-v0.1.json
 ```

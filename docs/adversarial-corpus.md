@@ -1,54 +1,61 @@
 # Adversarial Corpus
 
-Pramaan keeps public adversarial scenarios in `corpus/` so demos and future evaluations can reuse the same failure-mode IDs and risk mappings.
+Pramaan keeps public adversarial scenarios in `corpus/` so demos and future
+evaluations reuse the same failure-mode IDs, risk mappings, and reviewer
+expectations.
 
-The starter corpus manifest is:
+Phase 33 promotes the main corpus manifest to:
 
 ```text
-corpus/starter-adversarial-scenarios.json
+corpus/adversarial-scenarios-v0.1.json
 ```
 
-## Scenario Index
+The older `corpus/starter-adversarial-scenarios.json` remains as the initial
+public-demo seed, but new eval work should target the v0.1 manifest.
 
-| ID | Failure mode | Status | Risk mapping |
-| --- | --- | --- | --- |
-| `ADV-001` | Weakened assertion | Implemented demo | `R-011`, `R-014`, `R-087`, `R-100` |
-| `ADV-002` | Skipped test | Starter spec | `R-010`, `R-012`, `R-087`, `R-100` |
-| `ADV-003` | Invented import | Implemented demo | `R-038`, `R-039`, `R-040`, `R-100` |
-| `ADV-004` | Mutation survivor | Starter spec | `R-068`, `R-071`, `R-072`, `R-100` |
-| `ADV-005` | Unexpected differential divergence | Starter spec | `R-073`, `R-075`, `R-080`, `R-100` |
-| `ADV-006` | Sensitive fixture/snapshot drift | Implemented demo | `R-008`, `R-017`, `R-088`, `R-100` |
+## Validation
 
-## Implemented Demo
-
-`ADV-001` is implemented in `examples/vulnerable-python-pr/`.
-
-Run ordinary CI on the weakened PR:
+Run the corpus validator:
 
 ```powershell
-python -m unittest discover -s examples/vulnerable-python-pr/weakened-test -p "test_*.py"
+node scripts/check-adversarial-corpus.mjs
 ```
 
-Run Pramaan oracle integrity:
+Inspect one scenario:
+
+```powershell
+node scripts/check-adversarial-corpus.mjs --scenario ADV-010
+```
+
+The validator fails duplicate IDs, missing reviewer explanations, missing replay
+commands, malformed risk IDs, fewer than 25 scenarios, missing secure-code
+categories, or missing verifier/CI-abuse coverage.
+
+## Phase 33 Coverage
+
+| Requirement | Status |
+| --- | --- |
+| 25+ scenarios | Met: `ADV-001` through `ADV-025` |
+| Secure-code validation removal | `ADV-007` |
+| Authorization weakening | `ADV-008` |
+| Unsafe deserialization | `ADV-009` |
+| Injection sanitization removal | `ADV-010` |
+| Crypto misuse | `ADV-011` |
+| Secret exposure | `ADV-012` |
+| Malicious verifier or CI abuse | `ADV-013`, `ADV-014`, `ADV-022` |
+| Plugin poisoning | `ADV-015` |
+| Benchmark overfitting | `ADV-023` |
+| Reviewer override / calibration gap | `ADV-025` |
+
+## Implemented Demo Scenarios
+
+`ADV-001` is implemented in `examples/vulnerable-python-pr/`.
 
 ```powershell
 cargo run -p pramaan-cli -- oracle --base-repo examples/vulnerable-python-pr/base --head-repo examples/vulnerable-python-pr/weakened-test --out target/pramaan-demo/oracle
 ```
 
-Inspect:
-
-```text
-target/pramaan-demo/oracle/receipts/oracle-integrity.receipt.json
-target/pramaan-demo/oracle/oracle-diff.json
-examples/vulnerable-python-pr/risk-map.json
-corpus/starter-adversarial-scenarios.json
-```
-
-The local receipt should fail at `oracle_integrity`; the diff should name a `weakened_assertion` finding; the risk-map and corpus manifest should both point to stable `R-...` IDs.
-
 `ADV-003` is implemented in `examples/hallucinated-rust-pr/`.
-
-Run Pramaan static checks:
 
 ```powershell
 cargo run -p pramaan-cli -- static-checks --repo examples/hallucinated-rust-pr --out target/pramaan-demo/hallucinated-rust
@@ -56,21 +63,20 @@ cargo run -p pramaan-cli -- static-checks --repo examples/hallucinated-rust-pr -
 
 `ADV-006` is implemented in `examples/snapshot-fixture-drift-pr/`.
 
-Run ordinary CI on the drifted head:
-
-```powershell
-python -m unittest discover -s examples/snapshot-fixture-drift-pr/head -p "test_*.py"
-```
-
-Run Pramaan oracle integrity:
-
 ```powershell
 cargo run -p pramaan-cli -- oracle --base-repo examples/snapshot-fixture-drift-pr/base --head-repo examples/snapshot-fixture-drift-pr/head --out target/pramaan-demo/snapshot-fixture-drift
 ```
 
+`ADV-015` is an implemented malicious-plugin receipt fixture under
+`corpus/plugin-security/`.
+
 ## Corpus Rules
 
 - Keep scenario IDs stable after publication.
-- Add executable fixture paths when a starter spec becomes runnable.
-- Keep risk mappings conservative and grounded in `.planning/research/TOP_100_FLAWS_AND_MITIGATIONS_2026-05-18.md`.
-- Do not remove old scenarios when detection improves; mark them as implemented, superseded, or retained for regression coverage.
+- Add executable fixture paths when a scenario spec becomes runnable.
+- Keep ordinary-CI expectations separate from Pramaan expected findings.
+- Keep risk mappings conservative and grounded in the risk register.
+- Do not remove old scenarios when detection improves; mark them as
+  implemented, superseded, or retained for regression coverage.
+- Metadata-only replay commands are not proof of detection. They exist so a
+  reviewer can inspect the scenario until an executable fixture lands.

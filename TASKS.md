@@ -318,13 +318,13 @@ AI coding agents and real reviewers. They are planned, not complete.
 
 #### Phase 32.5: Policy Pack Library and Enterprise Profiles
 
-- [ ] Add `schemas/policy_profile.schema.json`.
+- [x] Add `schemas/policy_profile.schema.json`.
 - [x] Create `policy/startup-fast.json`, `policy/open-source-maintainer.json`,
   `policy/security-sensitive.json`, `policy/fintech-strict.json`, and
   `policy/private-preview.json`.
-- [ ] Add `pramaan policy list`.
-- [ ] Add `pramaan policy explain --profile <id>`.
-- [ ] Add GitHub Action `policy-profile` input.
+- [x] Add `pramaan policy list`.
+- [x] Add `pramaan policy explain --profile <id>`.
+- [x] Add GitHub Action `policy-profile` input.
 - [ ] Add policy fixture bundles for pass, warn, fail, waiver, and
   security-sensitive escalation.
 - [ ] Add parity tests between default Rust policy behavior and exported policy
@@ -586,7 +586,7 @@ Phase 28.5 acceptance criteria:
 
 ## P2: Adversarial Corpus and Evals
 
-- [ ] Expand the adversarial corpus to 25 scenarios.
+- [x] Expand the adversarial corpus to 25 scenarios.
 - [ ] Expand the adversarial corpus to 75 scenarios.
 - [ ] Expand the adversarial corpus to 100+ scenarios mapped to risk IDs.
 - [ ] Add real-world replay cases from open-source bug-fix PRs.
@@ -596,7 +596,7 @@ Phase 28.5 acceptance criteria:
 - [ ] Add repo-level baseline calibration: expected mutation survival range, expected skipped-stage profile, runtime baseline, and noise-floor warnings.
 - [ ] Add trend/drift metrics across PRs: agent failure rate, mutation survival drift, oracle-risk drift, skipped-stage drift, and runtime drift.
 - [ ] Add benchmark-integrity mutation harness to detect agents overfitting eval tasks or hidden-test assumptions.
-- [ ] Add secure-code corpus categories for removed validation, weakened authorization, unsafe deserialization, injection sanitization removal, crypto misuse, and secret exposure.
+- [x] Add secure-code corpus categories for removed validation, weakened authorization, unsafe deserialization, injection sanitization removal, crypto misuse, and secret exposure.
 
 ## P2: Documentation and Adoption
 
@@ -628,7 +628,8 @@ Phase 28.5 acceptance criteria:
 - [x] Prevent plugins from editing prior receipts or bundle manifests directly.
 - [ ] Run risky parsers, test runners, mutation engines, and fuzzers behind stronger sandbox boundaries.
 - [x] Add malicious-plugin fixtures to the adversarial corpus.
-- [ ] Add malicious-PR fixtures to the adversarial corpus.
+- [x] Add malicious-PR scenario specs to the adversarial corpus; executable
+  malicious-PR repos remain future fixtures.
 - [x] Add bundle redaction policy tests for secrets, internal endpoints,
   private paths, and CI metadata.
 
