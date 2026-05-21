@@ -9,6 +9,7 @@ pub const RECEIPT_SCHEMA_VERSION: &str = "pramaan.receipt.v1";
 pub const CLAIM_SCOPE_SCHEMA_VERSION: &str = "pramaan.claim_scope.v1";
 pub const CONFIDENCE_SCHEMA_VERSION: &str = "pramaan.confidence.v1";
 pub const AGENT_DECISION_SCHEMA_VERSION: &str = "pramaan.agent_decision.v1";
+pub const PROBE_SCHEMA_VERSION: &str = "pramaan.probe.v1";
 pub const CONFIDENCE_ALGORITHM_VERSION: &str = "pramaan-confidence-v0.1-uncalibrated";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -884,6 +885,127 @@ pub struct FuzzRunEvidence {
     pub base_discovery: FuzzDiscovery,
     pub head_discovery: FuzzDiscovery,
     pub divergences: Vec<FuzzDivergence>,
+    pub limitations: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProbeKind {
+    RegressionAssertion,
+    PropertyInvariant,
+    DifferentialInput,
+    SecuritySinkSourceCheck,
+    MutationTargetedTest,
+    FixtureSnapshotChallenge,
+}
+
+impl ProbeKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::RegressionAssertion => "regression_assertion",
+            Self::PropertyInvariant => "property_invariant",
+            Self::DifferentialInput => "differential_input",
+            Self::SecuritySinkSourceCheck => "security_sink_source_check",
+            Self::MutationTargetedTest => "mutation_targeted_test",
+            Self::FixtureSnapshotChallenge => "fixture_snapshot_challenge",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProbeLanguage {
+    Python,
+    #[serde(rename = "typescript")]
+    TypeScript,
+    Rust,
+    Unknown,
+}
+
+impl ProbeLanguage {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Python => "python",
+            Self::TypeScript => "typescript",
+            Self::Rust => "rust",
+            Self::Unknown => "unknown",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProbeSandboxStatus {
+    RequiresExecution,
+    ExecutedPassed,
+    ExecutedFailed,
+    RejectedStatic,
+}
+
+impl ProbeSandboxStatus {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::RequiresExecution => "requires_execution",
+            Self::ExecutedPassed => "executed_passed",
+            Self::ExecutedFailed => "executed_failed",
+            Self::RejectedStatic => "rejected_static",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProbeDecision {
+    PendingExecution,
+    Kept,
+    Rejected,
+}
+
+impl ProbeDecision {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::PendingExecution => "pending_execution",
+            Self::Kept => "kept",
+            Self::Rejected => "rejected",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ProbeProvider {
+    pub name: String,
+    pub mode: String,
+    pub model: Option<String>,
+    pub prompt_hash: String,
+    pub trusted_for_decision: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ProbeCandidate {
+    pub probe_id: String,
+    pub risk_ids: Vec<String>,
+    pub kind: ProbeKind,
+    pub language: ProbeLanguage,
+    pub target_files: Vec<String>,
+    pub prompt_hash: String,
+    pub candidate_code: String,
+    pub sandbox_status: ProbeSandboxStatus,
+    pub execution_result: String,
+    pub kept_or_rejected: ProbeDecision,
+    pub rejection_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ProbePlanArtifact {
+    pub schema_version: String,
+    pub generator_version: String,
+    pub source_bundle: String,
+    pub generated_at: String,
+    pub provider: ProbeProvider,
+    pub probes: Vec<ProbeCandidate>,
+    pub accepted_count: usize,
+    pub rejected_count: usize,
+    pub pending_count: usize,
     pub limitations: Vec<String>,
 }
 

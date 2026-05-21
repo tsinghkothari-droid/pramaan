@@ -6,15 +6,17 @@ use pramaan_bundle::{
     BundleManifest, MANIFEST_FILE_NAME,
 };
 use pramaan_core::{
-    build_agent_decision, build_confidence_artifact, default_policy_profile,
+    build_agent_decision, build_confidence_artifact, canonical_json_bytes, default_policy_profile,
     evaluate_default_policy, render_confidence_markdown, risk_family, timestamp, AgentAttribution,
     ArtifactRef, AttributionConfidence, ClaimScope, ConfidenceDecision, EvidenceSensitivity,
     FuzzDivergence, FuzzRunEvidence, OutputRef, PluginIdentity, PluginPermissions, PolicyDecision,
-    PolicyStageEvidence, Receipt, ReceiptSummary, RedactionManifest, RiskRefs, StageBudget,
-    StageStatus, ToolIdentity, RECEIPT_SCHEMA_VERSION,
+    PolicyStageEvidence, ProbeCandidate, ProbeDecision, ProbeKind, ProbeLanguage,
+    ProbePlanArtifact, ProbeProvider, ProbeSandboxStatus, Receipt, ReceiptSummary,
+    RedactionManifest, RiskRefs, StageBudget, StageStatus, ToolIdentity, PROBE_SCHEMA_VERSION,
+    RECEIPT_SCHEMA_VERSION,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -43,6 +45,7 @@ enum Commands {
     Policy(PolicyArgs),
     Confidence(ConfidenceArgs),
     Agent(AgentArgs),
+    Probe(ProbeArgs),
     Replay(ReplayArgs),
 }
 
@@ -137,6 +140,25 @@ struct AgentExplainArgs {
 }
 
 #[derive(Debug, Parser)]
+struct ProbeArgs {
+    #[command(subcommand)]
+    command: ProbeCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum ProbeCommands {
+    Plan(ProbePlanArgs),
+}
+
+#[derive(Debug, Parser)]
+struct ProbePlanArgs {
+    #[arg(long)]
+    bundle: PathBuf,
+    #[arg(long)]
+    out: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
 struct ReplayArgs {
     bundle: PathBuf,
     #[arg(long)]
@@ -214,6 +236,7 @@ fn main() -> Result<()> {
         Commands::Policy(args) => run_policy(args),
         Commands::Confidence(args) => run_confidence(args),
         Commands::Agent(args) => run_agent(args),
+        Commands::Probe(args) => run_probe(args),
         Commands::Replay(args) => run_replay(args),
     }
 }
@@ -281,6 +304,354 @@ fn replay_case_matches(divergence: &FuzzDivergence, requested: &str) -> bool {
 
 fn replay_case_id(divergence: &FuzzDivergence) -> String {
     format!("{}#{}", divergence.stable_id, divergence.input.index)
+}
+
+fn run_probe(args: ProbeArgs) -> Result<()> {
+    match args.command {
+        ProbeCommands::Plan(args) => run_probe_plan(args),
+    }
+}
+
+fn run_probe_plan(args: ProbePlanArgs) -> Result<()> {
+    let manifest_path = resolve_manifest_path(&args.bundle);
+    let bundle_root = manifest_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .to_path_buf();
+    let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
+    let receipts = read_bundle_receipts(&bundle_root, &manifest)?;
+    let prompt_hash = probe_prompt_hash(&manifest, &receipts)?;
+    let artifact = build_probe_plan_artifact(&bundle_root, &receipts, &prompt_hash);
+    let write_into_bundle = args.out.is_none();
+    let out_dir = args.out.unwrap_or_else(|| bundle_root.join("probes"));
+    fs::create_dir_all(&out_dir)
+        .with_context(|| format!("creating probe output directory {}", out_dir.display()))?;
+
+    let plan_path = out_dir.join("ai-probe-plan.json");
+    write_json(&plan_path, &artifact)?;
+    let plan_digest = digest_file(&plan_path)?;
+    let receipt_path = if write_into_bundle {
+        bundle_root
+            .join("receipts")
+            .join("ai-probe-generation.receipt.json")
+    } else {
+        out_dir
+            .join("receipts")
+            .join("ai-probe-generation.receipt.json")
+    };
+    let receipt =
+        probe_generation_receipt(&manifest, &artifact, &plan_path, &plan_digest, &bundle_root);
+    write_json(&receipt_path, &receipt)?;
+
+    if write_into_bundle {
+        let updated_manifest = build_manifest(
+            &bundle_root,
+            BundleBuildOptions {
+                bundle_id: manifest.bundle_id,
+                run_id: manifest.run_id,
+                repository: manifest.repository,
+            },
+        )
+        .context("rebuilding bundle manifest with probe plan artifacts")?;
+        write_manifest(&bundle_root, &updated_manifest)
+            .context("writing updated bundle manifest")?;
+    }
+
+    println!("Pramaan AI probe plan complete");
+    println!("manifest: {}", manifest_path.display());
+    println!("probe_plan: {}", plan_path.display());
+    println!("probes: {}", artifact.probes.len());
+    println!("accepted: {}", artifact.accepted_count);
+    println!("rejected: {}", artifact.rejected_count);
+    println!("pending_execution: {}", artifact.pending_count);
+    println!("provider_trusted_for_decision: false");
+    Ok(())
+}
+
+fn resolve_manifest_path(bundle: &Path) -> PathBuf {
+    if bundle.is_dir() {
+        bundle.join(MANIFEST_FILE_NAME)
+    } else {
+        bundle.to_path_buf()
+    }
+}
+
+fn probe_prompt_hash(manifest: &BundleManifest, receipts: &[Receipt]) -> Result<String> {
+    let receipt_rows = receipts
+        .iter()
+        .map(|receipt| {
+            serde_json::json!({
+                "stage": receipt.stage,
+                "status": receipt.status.as_str(),
+                "residual_risks": receipt.residual_risks,
+                "not_applicable_risks": receipt.not_applicable_risks,
+                "limitations": receipt.limitations,
+            })
+        })
+        .collect::<Vec<_>>();
+    let material = serde_json::json!({
+        "generator": "pramaan-ai-probe-plan-v0.1",
+        "manifest_digest": manifest.integrity.manifest_digest.prefixed(),
+        "final_status": manifest.final_status,
+        "risk_summary": manifest.risk_summary,
+        "receipts": receipt_rows,
+    });
+    let bytes = canonical_json_bytes(&material).context("canonicalizing probe prompt material")?;
+    Ok(sha256_hex(bytes))
+}
+
+fn build_probe_plan_artifact(
+    bundle_root: &Path,
+    receipts: &[Receipt],
+    prompt_hash: &str,
+) -> ProbePlanArtifact {
+    let probes = build_probe_candidates(receipts, prompt_hash);
+    let accepted_count = probes
+        .iter()
+        .filter(|probe| probe.kept_or_rejected == ProbeDecision::Kept)
+        .count();
+    let rejected_count = probes
+        .iter()
+        .filter(|probe| probe.kept_or_rejected == ProbeDecision::Rejected)
+        .count();
+    let pending_count = probes
+        .iter()
+        .filter(|probe| probe.kept_or_rejected == ProbeDecision::PendingExecution)
+        .count();
+
+    ProbePlanArtifact {
+        schema_version: PROBE_SCHEMA_VERSION.to_string(),
+        generator_version: "pramaan-ai-probe-plan-v0.1".to_string(),
+        source_bundle: portable_path(bundle_root),
+        generated_at: timestamp(Utc::now()),
+        provider: ProbeProvider {
+            name: "provider_neutral".to_string(),
+            mode: "deterministic_risk_targeting".to_string(),
+            model: None,
+            prompt_hash: prompt_hash.to_string(),
+            trusted_for_decision: false,
+        },
+        probes,
+        accepted_count,
+        rejected_count,
+        pending_count,
+        limitations: vec![
+            "AI/provider output is not trusted evidence; generated probes must execute before they mitigate risk.".to_string(),
+            "Phase 28.25 creates a provider-neutral probe plan. Safe sandbox execution is split to a follow-up phase.".to_string(),
+        ],
+    }
+}
+
+fn build_probe_candidates(receipts: &[Receipt], prompt_hash: &str) -> Vec<ProbeCandidate> {
+    let mut rows = Vec::new();
+    let mut seen = BTreeSet::new();
+    for receipt in receipts {
+        for risk_id in receipt
+            .residual_risks
+            .iter()
+            .chain(receipt.not_applicable_risks.iter())
+        {
+            if seen.insert((receipt.stage.clone(), risk_id.clone())) {
+                rows.push((receipt, risk_id.clone()));
+            }
+        }
+    }
+
+    rows.into_iter()
+        .enumerate()
+        .map(|(index, (receipt, risk_id))| {
+            let kind = probe_kind_for(&receipt.stage, &risk_id);
+            let language = probe_language_for(receipt);
+            let target_files = probe_target_files(receipt);
+            ProbeCandidate {
+                probe_id: format!("probe-{index:03}-{}", risk_id.to_ascii_lowercase()),
+                risk_ids: vec![risk_id.clone()],
+                kind,
+                language,
+                target_files: target_files.clone(),
+                prompt_hash: prompt_hash.to_string(),
+                candidate_code: probe_candidate_code(kind, language, &risk_id, &target_files),
+                sandbox_status: ProbeSandboxStatus::RequiresExecution,
+                execution_result: "not_executed: candidate must run in an isolated temp test location before it can mitigate risk.".to_string(),
+                kept_or_rejected: ProbeDecision::PendingExecution,
+                rejection_reason: None,
+            }
+        })
+        .collect()
+}
+
+fn probe_kind_for(stage: &str, risk_id: &str) -> ProbeKind {
+    match risk_family(risk_id) {
+        "oracle_integrity" => {
+            if stage.contains("oracle") {
+                ProbeKind::FixtureSnapshotChallenge
+            } else {
+                ProbeKind::RegressionAssertion
+            }
+        }
+        "mutation_quality" => ProbeKind::MutationTargetedTest,
+        "property_fuzz" => ProbeKind::DifferentialInput,
+        "runtime_behavior" => ProbeKind::PropertyInvariant,
+        "static_hallucination" | "public_api_compatibility" => ProbeKind::RegressionAssertion,
+        "ci_supply_chain" | "bundle_integrity" => ProbeKind::SecuritySinkSourceCheck,
+        _ => ProbeKind::RegressionAssertion,
+    }
+}
+
+fn probe_language_for(receipt: &Receipt) -> ProbeLanguage {
+    let mut paths = Vec::new();
+    paths.extend(receipt.outputs.iter().map(|output| output.path.as_str()));
+    paths.extend(
+        receipt
+            .artifacts
+            .iter()
+            .map(|artifact| artifact.path.as_str()),
+    );
+    for path in paths {
+        if path.ends_with(".py") {
+            return ProbeLanguage::Python;
+        }
+        if path.ends_with(".ts") || path.ends_with(".tsx") || path.ends_with(".js") {
+            return ProbeLanguage::TypeScript;
+        }
+        if path.ends_with(".rs") {
+            return ProbeLanguage::Rust;
+        }
+    }
+    ProbeLanguage::Unknown
+}
+
+fn probe_target_files(receipt: &Receipt) -> Vec<String> {
+    let mut paths = receipt
+        .outputs
+        .iter()
+        .map(|output| output.path.clone())
+        .chain(
+            receipt
+                .artifacts
+                .iter()
+                .map(|artifact| artifact.path.clone()),
+        )
+        .filter(|path| {
+            path.ends_with(".py")
+                || path.ends_with(".ts")
+                || path.ends_with(".tsx")
+                || path.ends_with(".js")
+                || path.ends_with(".rs")
+                || path.ends_with(".json")
+                || path.ends_with(".snap")
+        })
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    if paths.is_empty() {
+        paths.push("unknown_changed_files".to_string());
+    }
+    paths
+}
+
+fn probe_candidate_code(
+    kind: ProbeKind,
+    language: ProbeLanguage,
+    risk_id: &str,
+    target_files: &[String],
+) -> String {
+    format!(
+        "// Pramaan provider-neutral probe skeleton\n// kind: {}\n// language: {}\n// risk: {}\n// targets: {}\n// Generate an isolated test/property/input that exercises changed behavior.\n// This skeleton is not mitigation until sandbox execution records a passing result.",
+        kind.as_str(),
+        language.as_str(),
+        risk_id,
+        target_files.join(", ")
+    )
+}
+
+fn probe_generation_receipt(
+    manifest: &BundleManifest,
+    artifact: &ProbePlanArtifact,
+    plan_path: &Path,
+    plan_digest: &str,
+    bundle_root: &Path,
+) -> Receipt {
+    let now = timestamp(Utc::now());
+    let residual_risks = artifact
+        .probes
+        .iter()
+        .flat_map(|probe| probe.risk_ids.iter().cloned())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let mut metadata = BTreeMap::new();
+    metadata.insert(
+        "accepted_count".to_string(),
+        artifact.accepted_count.to_string(),
+    );
+    metadata.insert(
+        "rejected_count".to_string(),
+        artifact.rejected_count.to_string(),
+    );
+    metadata.insert(
+        "pending_count".to_string(),
+        artifact.pending_count.to_string(),
+    );
+    metadata.insert(
+        "provider_trusted_for_decision".to_string(),
+        artifact.provider.trusted_for_decision.to_string(),
+    );
+    metadata.insert(
+        "prompt_hash".to_string(),
+        artifact.provider.prompt_hash.clone(),
+    );
+
+    Receipt {
+        schema_version: RECEIPT_SCHEMA_VERSION.to_string(),
+        stage: "ai_probe_generation".to_string(),
+        status: if artifact.probes.is_empty() {
+            StageStatus::NotApplicable
+        } else {
+            StageStatus::Passed
+        },
+        tool: ToolIdentity::new("pramaan-ai-probe-plan", env!("CARGO_PKG_VERSION")),
+        started_at: now.clone(),
+        ended_at: now,
+        exit_code: Some(0),
+        inputs: vec![pramaan_core::InputRef {
+            name: "bundle_manifest".to_string(),
+            value: MANIFEST_FILE_NAME.to_string(),
+            digest: Some(manifest.integrity.manifest_digest.prefixed()),
+        }],
+        outputs: vec![OutputRef {
+            name: "ai_probe_plan".to_string(),
+            path: bundle_path(bundle_root, plan_path),
+            digest: Some(plan_digest.to_string()),
+        }],
+        artifacts: vec![ArtifactRef {
+            name: "ai_probe_plan_json".to_string(),
+            path: bundle_path(bundle_root, plan_path),
+            media_type: Some("application/json".to_string()),
+            digest: Some(plan_digest.to_string()),
+        }],
+        summary: ReceiptSummary {
+            title: "AI evidence-seeking probe plan emitted".to_string(),
+            details: format!(
+                "{} probes require sandbox execution; zero AI proposals are trusted as mitigation.",
+                artifact.pending_count
+            ),
+        },
+        limitations: artifact.limitations.clone(),
+        mitigated_risks: Vec::new(),
+        residual_risks,
+        not_applicable_risks: Vec::new(),
+        agent_author: None,
+        reviewer_override: None,
+        multi_agent_provenance: Vec::new(),
+        plugin_identity: None,
+        plugin_permissions: None,
+        evidence_sensitivity: Some(EvidenceSensitivity::Internal),
+        redaction_manifest: None,
+        policy_decision: None,
+        stage_budget: None,
+        metadata,
+    }
 }
 
 fn run_agent(args: AgentArgs) -> Result<()> {

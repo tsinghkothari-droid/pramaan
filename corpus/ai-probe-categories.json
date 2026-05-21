@@ -1,0 +1,36 @@
+{
+  "schema_version": "pramaan.ai_probe_categories.v1",
+  "purpose": "Starter taxonomy for AI evidence-seeking probes. These are search targets, not trusted evidence until executed.",
+  "categories": [
+    {
+      "kind": "regression_assertion",
+      "risk_families": ["static_hallucination", "public_api_compatibility"],
+      "acceptance_requirement": "Compiles/runs in isolation and fails on the risky behavior before the fix."
+    },
+    {
+      "kind": "property_invariant",
+      "risk_families": ["runtime_behavior"],
+      "acceptance_requirement": "Runs with bounded generated inputs and records seed, counterexample, and shrink data where available."
+    },
+    {
+      "kind": "differential_input",
+      "risk_families": ["property_fuzz"],
+      "acceptance_requirement": "Runs the same input against base and head and classifies divergence against claim scope."
+    },
+    {
+      "kind": "security_sink_source_check",
+      "risk_families": ["ci_supply_chain", "bundle_integrity"],
+      "acceptance_requirement": "Exercises the suspected source/sink in a sandbox without leaking secrets or network access."
+    },
+    {
+      "kind": "mutation_targeted_test",
+      "risk_families": ["mutation_quality"],
+      "acceptance_requirement": "Kills a survivor or is preserved as rejected weak evidence."
+    },
+    {
+      "kind": "fixture_snapshot_challenge",
+      "risk_families": ["oracle_integrity"],
+      "acceptance_requirement": "Detects snapshot, fixture, skip, ignore, or assertion weakening without modifying the original oracle."
+    }
+  ]
+}

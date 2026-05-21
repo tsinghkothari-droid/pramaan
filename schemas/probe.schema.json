@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/probe.schema.json",
+  "title": "Pramaan AI Evidence-Seeking Probe Plan",
+  "description": "Provider-neutral probe candidates for missing evidence. AI/provider output is not trusted mitigation until sandbox execution records a result.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generator_version",
+    "source_bundle",
+    "generated_at",
+    "provider",
+    "probes",
+    "accepted_count",
+    "rejected_count",
+    "pending_count",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "pramaan.probe.v1"
+    },
+    "generator_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_bundle": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provider": {
+      "$ref": "#/$defs/provider"
+    },
+    "probes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/probe"
+      }
+    },
+    "accepted_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "rejected_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pending_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "risk_id_array": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^R-[0-9]{3}$"
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "mode",
+        "model",
+        "prompt_hash",
+        "trusted_for_decision"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": ["string", "null"]
+        },
+        "prompt_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "trusted_for_decision": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "probe_id",
+        "risk_ids",
+        "kind",
+        "language",
+        "target_files",
+        "prompt_hash",
+        "candidate_code",
+        "sandbox_status",
+        "execution_result",
+        "kept_or_rejected",
+        "rejection_reason"
+      ],
+      "properties": {
+        "probe_id": {
+          "type": "string",
+          "pattern": "^probe-[0-9]{3}-r-[0-9]{3}$"
+        },
+        "risk_ids": {
+          "$ref": "#/$defs/risk_id_array"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "regression_assertion",
+            "property_invariant",
+            "differential_input",
+            "security_sink_source_check",
+            "mutation_targeted_test",
+            "fixture_snapshot_challenge"
+          ]
+        },
+        "language": {
+          "type": "string",
+          "enum": ["python", "typescript", "rust", "unknown"]
+        },
+        "target_files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "prompt_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "candidate_code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sandbox_status": {
+          "type": "string",
+          "enum": [
+            "requires_execution",
+            "executed_passed",
+            "executed_failed",
+            "rejected_static"
+          ]
+        },
+        "execution_result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kept_or_rejected": {
+          "type": "string",
+          "enum": ["pending_execution", "kept", "rejected"]
+        },
+        "rejection_reason": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

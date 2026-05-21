@@ -480,6 +480,179 @@ fn agent_explain_blocks_weakened_oracle_bundle() {
 }
 
 #[test]
+fn probe_plan_preserves_ai_candidates_as_pending_evidence() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-probe-plan-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean probe output");
+    }
+    fs::create_dir_all(out.join("receipts")).expect("create probe receipt dir");
+    fs::create_dir_all(out.join("tests")).expect("create probe test dir");
+    fs::create_dir_all(out.join("src")).expect("create probe source dir");
+    fs::write(
+        out.join("tests").join("test_checkout.py"),
+        "def test_checkout(): pass\n",
+    )
+    .expect("write probe python target");
+    fs::write(
+        out.join("src").join("pricing.ts"),
+        "export const price = 1;\n",
+    )
+    .expect("write probe typescript target");
+
+    let oracle_receipt = Receipt::synthetic(
+        "oracle_integrity",
+        StageStatus::Failed,
+        "base",
+        "head",
+        vec![],
+        vec![pramaan_core::ArtifactRef {
+            name: "changed_test".to_string(),
+            path: "tests/test_checkout.py".to_string(),
+            media_type: Some("text/x-python".to_string()),
+            digest: None,
+        }],
+        ReceiptSummary {
+            title: "Oracle integrity failed".to_string(),
+            details: "Assertion weakening remains.".to_string(),
+        },
+        RiskRefs {
+            mitigated: vec![],
+            residual: vec!["R-014".to_string()],
+            not_applicable: vec![],
+        },
+    );
+    let fuzz_receipt = Receipt::synthetic(
+        "differential_fuzz",
+        StageStatus::Skipped,
+        "base",
+        "head",
+        vec![],
+        vec![pramaan_core::ArtifactRef {
+            name: "changed_source".to_string(),
+            path: "src/pricing.ts".to_string(),
+            media_type: Some("text/typescript".to_string()),
+            digest: None,
+        }],
+        ReceiptSummary {
+            title: "Fuzz skipped".to_string(),
+            details: "fast-check was unavailable.".to_string(),
+        },
+        RiskRefs {
+            mitigated: vec![],
+            residual: vec!["R-075".to_string()],
+            not_applicable: vec![],
+        },
+    );
+
+    for receipt in [oracle_receipt, fuzz_receipt] {
+        let path = out
+            .join("receipts")
+            .join(format!("{}.receipt.json", receipt.stage.replace('_', "-")));
+        fs::write(
+            path,
+            serde_json::to_vec_pretty(&receipt).expect("serialize probe fixture receipt"),
+        )
+        .expect("write probe fixture receipt");
+    }
+    let manifest = build_manifest(
+        &out,
+        BundleBuildOptions::synthetic("base".to_string(), "head".to_string()),
+    )
+    .expect("build probe fixture manifest");
+    write_manifest(&out, &manifest).expect("write probe fixture manifest");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "probe",
+            "plan",
+            "--bundle",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan probe plan");
+
+    assert!(
+        output.status.success(),
+        "probe plan failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Pramaan AI probe plan complete"));
+    assert!(stdout.contains("provider_trusted_for_decision: false"));
+
+    let plan_path = out.join("probes").join("ai-probe-plan.json");
+    let receipt_path = out
+        .join("receipts")
+        .join("ai-probe-generation.receipt.json");
+    assert!(plan_path.exists(), "probe plan exists");
+    assert!(receipt_path.exists(), "probe receipt exists");
+
+    let plan: serde_json::Value =
+        serde_json::from_slice(&fs::read(plan_path).expect("read probe plan"))
+            .expect("probe plan json");
+    assert_eq!(plan["schema_version"], "pramaan.probe.v1");
+    assert_eq!(plan["provider"]["trusted_for_decision"], false);
+    assert_eq!(plan["accepted_count"], 0);
+    assert_eq!(plan["rejected_count"], 0);
+    assert_eq!(plan["pending_count"], 2);
+    assert!(plan["provider"]["prompt_hash"]
+        .as_str()
+        .expect("prompt hash")
+        .starts_with("sha256:"));
+    assert!(plan["probes"]
+        .as_array()
+        .expect("probe array")
+        .iter()
+        .any(|probe| probe["kind"] == "fixture_snapshot_challenge"
+            && probe["language"] == "python"
+            && probe["sandbox_status"] == "requires_execution"
+            && probe["kept_or_rejected"] == "pending_execution"));
+    assert!(plan["probes"]
+        .as_array()
+        .expect("probe array")
+        .iter()
+        .any(|probe| probe["kind"] == "differential_input" && probe["language"] == "typescript"));
+
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&fs::read(receipt_path).expect("read probe receipt"))
+            .expect("probe receipt json");
+    assert_eq!(receipt["stage"], "ai_probe_generation");
+    assert_eq!(receipt["status"], "passed");
+    assert_eq!(
+        receipt["metadata"]["provider_trusted_for_decision"],
+        "false"
+    );
+    assert!(receipt["residual_risks"]
+        .as_array()
+        .expect("residual risks")
+        .iter()
+        .any(|risk| risk == "R-075"));
+
+    let bundle_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args(["bundle", "verify", out.to_str().expect("utf-8 output path")])
+        .output()
+        .expect("run bundle verify after probe plan");
+    assert!(
+        bundle_output.status.success(),
+        "bundle verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&bundle_output.stdout),
+        String::from_utf8_lossy(&bundle_output.stderr)
+    );
+}
+
+#[test]
 fn bundle_verify_fails_when_artifact_is_tampered() {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()

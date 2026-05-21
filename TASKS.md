@@ -111,7 +111,7 @@ Execution guardrails:
 - Start with Phase 26 unless the user explicitly asks for a narrower phase.
 - Do not market public Alpha before Phase 26.1 has live GitHub Action evidence.
 - Do not ask coding agents to self-certify completion before Phase 26.5 lands.
-- Do not count AI-generated probes as evidence before Phase 28.25 executes them
+- Do not count AI-generated probes as evidence before Phase 28.26 executes them
   in a sandbox.
 - Do not sign or attest confidence scores before Phase 28.5 exists.
 - Do not offer enterprise policy-pack claims before Phase 32.5 exists.
@@ -296,22 +296,25 @@ AI coding agents and real reviewers. They are planned, not complete.
 
 #### Phase 28.25: AI Evidence-Seeking Probe Generator
 
-- [ ] Add `schemas/probe.schema.json`.
-- [ ] Add `pramaan probe plan --bundle <path>` to produce risk-targeted probe
+- [x] Add `schemas/probe.schema.json`.
+- [x] Add `pramaan probe plan --bundle <path>` to produce risk-targeted probe
   plans.
-- [ ] Support probe kinds: regression assertion, property invariant,
+- [x] Support probe kinds: regression assertion, property invariant,
   differential input, security sink/source check, mutation-targeted test, and
   fixture/snapshot challenge.
-- [ ] Store prompt hash and model/provider metadata without making provider
+- [x] Store prompt hash and model/provider metadata without making provider
   output trusted evidence.
 - [ ] Run generated probes in isolated temp test locations.
 - [ ] Reject probes that do not compile, do not run, or do not exercise changed
   behavior.
-- [ ] Preserve rejected probes and rejection reasons as evidence.
+- [x] Preserve pending generated probes and execution requirement as evidence;
+  rejected-probe preservation remains tied to real execution.
 - [ ] Mutation-test or differential-test accepted probes where practical.
-- [ ] Emit `ai_probe_generation` receipts with accepted/rejected counts, risk
+- [x] Emit `ai_probe_generation` receipts with accepted/rejected/pending counts, risk
   IDs, and artifact hashes.
-- [ ] Document that AI proposes probes, but only sandbox-executed probes count.
+- [x] Document that AI proposes probes, but only sandbox-executed probes count.
+- [ ] Split and execute `Phase 28.26`: sandbox execution for generated probes,
+  compile/run rejection reasons, and mutation/differential validation.
 
 #### Phase 32.5: Policy Pack Library and Enterprise Profiles
 

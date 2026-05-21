@@ -1,0 +1,34 @@
+{
+  "schema_version": "pramaan.probe.v1",
+  "generator_version": "pramaan-ai-probe-plan-v0.1",
+  "source_bundle": "target/pramaan",
+  "generated_at": "2026-05-21T00:00:00Z",
+  "provider": {
+    "name": "provider_neutral",
+    "mode": "deterministic_risk_targeting",
+    "model": null,
+    "prompt_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "trusted_for_decision": false
+  },
+  "probes": [
+    {
+      "probe_id": "probe-000-r-014",
+      "risk_ids": ["R-014"],
+      "kind": "fixture_snapshot_challenge",
+      "language": "python",
+      "target_files": ["tests/test_checkout.py"],
+      "prompt_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "candidate_code": "# Create an isolated regression assertion that fails if the weakened oracle remains weak.",
+      "sandbox_status": "requires_execution",
+      "execution_result": "not_executed: candidate must run before it can mitigate risk.",
+      "kept_or_rejected": "pending_execution",
+      "rejection_reason": null
+    }
+  ],
+  "accepted_count": 0,
+  "rejected_count": 0,
+  "pending_count": 1,
+  "limitations": [
+    "AI/provider output is not trusted evidence; generated probes must execute before they mitigate risk."
+  ]
+}

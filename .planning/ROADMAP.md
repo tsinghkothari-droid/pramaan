@@ -520,7 +520,11 @@ harnesses where eligible pure functions and project dependencies make that safe.
 3. TypeScript fast-check records bounded runs, seeds, timeouts, tool versions,
    shrink data, and counterexamples.
 4. Missing tools or unsafe candidates remain visible residual/skipped evidence.
+
 ## Phase 28.25: AI Evidence-Seeking Probe Generator
+
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Provider-neutral probe
+planning landed; sandbox execution of generated probes is split to Phase 28.26.
 
 **Goal:** Use AI to generate candidate tests, properties, differential inputs,
 and security probes while counting only sandbox-executed evidence.
@@ -535,6 +539,22 @@ and security probes while counting only sandbox-executed evidence.
    kept/rejected status, and rejection reason.
 3. Generated probes compile/run in isolation before contributing mitigation.
 4. Weak, non-compiling, or irrelevant probes are preserved as rejected evidence.
+
+## Phase 28.26: Sandbox Execution for Generated Probes
+
+**Goal:** Execute provider- or agent-generated probe candidates in isolated temp
+test locations and preserve accepted/rejected execution evidence.
+
+**Priority:** AI probe hardening split
+
+**Success Criteria:**
+
+1. Probe candidates compile/run in a temporary isolated test location.
+2. Non-compiling, non-running, or irrelevant probes are preserved with rejection
+   reasons.
+3. Accepted probes record sandbox output, changed-behavior binding evidence,
+   and mutation/differential validation where practical.
+4. AI/provider output still never mitigates risk without execution evidence.
 
 ## Phase 28.5: Auditable Confidence Vote and Calibration Schema
 
