@@ -46,12 +46,37 @@ re-execution remains split to the safe generated-harness phase.
 
 ## Trust Rules
 
-- Plugins should never edit prior receipts or bundle manifests.
-- Plugin identity and permissions belong in receipts before third-party plugins
-  are accepted.
-- Risky parsers, test runners, mutation engines, and fuzzers should run behind
-  stronger sandbox boundaries before enterprise use.
+- Plugins run as subprocess JSON adapters for v0.1. A plugin receives a JSON
+  request on stdin and emits JSON receipts/artifacts on stdout or into its
+  assigned output directory.
+- Plugin receipts must include `plugin_identity` and `plugin_permissions`.
+- Plugins may emit receipts and artifacts, but they must not modify prior
+  receipts or bundle manifests.
+- Plugin output paths must be relative bundle paths; parent traversal,
+  backslashes, and absolute paths are rejected.
+- Third-party plugins should use `subprocess`, `container`, or future `wasm`
+  isolation. `in_process` is reserved for workspace-owned internal code.
 - Adapter output should be hash-linked when it is used for a policy decision.
+
+The protocol shape is captured in `schemas/plugin_protocol.schema.json`.
+Bundle construction now rejects plugin receipts with high/critical trust
+findings such as missing identity, dangerous write permissions, untrusted
+unsigned provenance, no sandbox boundary, or path escape attempts.
+
+Allowed v0.1 permissions:
+
+```json
+{
+  "may_emit_receipts": true,
+  "may_emit_artifacts": true,
+  "may_read_previous_receipts": false,
+  "may_modify_previous_receipts": false,
+  "may_modify_manifest": false
+}
+```
+
+Any plugin that needs broader permissions is out of scope until there is a
+separate signed plugin registry and review process.
 
 ## Agent Harness Boundary
 

@@ -93,7 +93,7 @@ it can run in parallel.
 | 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
 | 5 | Phase 29 | Local/offline in-toto/SLSA VSA and offline verify landed; production Sigstore/cosign identity remains planned. | Trust evidence must leave CI as a verifiable artifact. | Real MVP trust gate |
 | 6 | Phase 30 | Redaction profiles and public-safe bundle export landed; summary-only artifact minimization remains later hardening. | External pilots and demos need shareable bundles. | Public bundle sharing |
-| 7 | Phase 31 | Plugin protocol, identity, permissions, and isolation | Plugin expansion is dangerous before verifier supply-chain trust exists. | Third-party plugin work |
+| 7 | Phase 31 | Plugin protocol schema, trust validator, dangerous-permission rejection, and malicious-plugin fixture landed. | Plugin expansion is dangerous before verifier supply-chain trust exists. | Third-party plugin work |
 | 8 | Phase 32 | SARIF export, OPA/policy parity, CI hardening, agentic workflow-injection checks | Findings should appear in existing security review surfaces. | Enterprise/security adoption |
 | 8.5 | Phase 32.5 | Policy pack library and enterprise profiles | Teams need risk-tuned policies without editing code. | Enterprise/security adoption |
 | 9 | Phase 33 | 25-scenario adversarial and secure-code corpus | Real MVP needs broader failure-mode proof before scale claims. | Phase 40 corpus 100 |
@@ -191,7 +191,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
 | Phase 29 | P2 trust | Local/offline SLSA VSA-style output, in-toto wrapping, composite-action attestation emission, and offline bundle verification; production Sigstore/cosign identity remains a hardening follow-up. |
 | Phase 30 | P2 trust | Redaction profiles, redacted bundle export, manifest rebuild, and public-demo scrub tests for secrets, private paths, internal hosts, and CI metadata. |
-| Phase 31 | P2 security | Plugin protocol, plugin identity/provenance, least-privilege receipt permissions, and isolated plugin execution threat model. |
+| Phase 31 | P2 security | Plugin protocol schema, plugin identity/provenance validation, least-privilege receipt permissions, and malicious plugin rejection. |
 | Phase 32 | P2 security | SARIF export, policy-as-code parity, CI hardening expansion, CodeQL/security-scanner integration, and agentic workflow-injection checks. |
 | Phase 32.5 | Enterprise adoption | Built-in policy packs for startup-fast, open-source-maintainer, security-sensitive, fintech-strict, and private-preview. |
 | Phase 33 | P2 evals | Adversarial corpus expansion to 25 scenarios, including secure-code and malicious-verifier cases. |
@@ -577,7 +577,8 @@ Phase 28.5 acceptance criteria:
 - [x] Add offline verification mode for downloaded bundles.
 - [x] Document public-repo and private-repo attestation differences.
 - [ ] Add signing identity and certificate metadata to bundle summaries.
-- [ ] Define plugin trust model: plugin identity, version, signature, sandbox boundary, receipt permissions, and tamper resistance.
+- [x] Define plugin trust model: plugin identity, version, signature, sandbox
+  boundary, receipt permissions, and tamper resistance.
 - [x] Add SLSA Verification Summary Attestation output mode for Pramaan's
   final verifier decision.
 - [x] Add redaction profiles: internal-full, reviewer-redacted, public-demo,
@@ -620,11 +621,14 @@ Phase 28.5 acceptance criteria:
 
 ## P2: Verifier and Plugin Security
 
-- [ ] Define a plugin protocol with least-privilege receipt-writing permissions.
-- [ ] Require plugin identity, version, provenance, and optional signature in every plugin-emitted receipt.
-- [ ] Prevent plugins from editing prior receipts or bundle manifests directly.
+- [x] Define a plugin protocol with least-privilege receipt-writing
+  permissions.
+- [x] Require plugin identity, version, provenance, and optional signature in
+  every plugin-emitted receipt.
+- [x] Prevent plugins from editing prior receipts or bundle manifests directly.
 - [ ] Run risky parsers, test runners, mutation engines, and fuzzers behind stronger sandbox boundaries.
-- [ ] Add malicious-plugin and malicious-PR fixtures to the adversarial corpus.
+- [x] Add malicious-plugin fixtures to the adversarial corpus.
+- [ ] Add malicious-PR fixtures to the adversarial corpus.
 - [x] Add bundle redaction policy tests for secrets, internal endpoints,
   private paths, and CI metadata.
 
@@ -680,7 +684,7 @@ public-Alpha-ready until those are complete.
 - [ ] Auditable confidence vote is decomposed, signed, and clearly labeled as
   risk evidence rather than correctness proof.
 - [ ] Repo-level calibration prevents obvious alert fatigue.
-- [ ] Plugin trust model prevents untrusted plugins from poisoning receipts.
+- [x] Plugin trust model prevents untrusted plugins from poisoning receipts.
 - [x] CI hardening checks catch unsafe workflow patterns for untrusted PR code.
 - [ ] Redaction profiles are tested before any bundle is safe to export.
 

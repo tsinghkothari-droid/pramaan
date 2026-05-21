@@ -1,0 +1,57 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "mutation_python",
+  "status": "passed",
+  "tool": {
+    "name": "evil-mutator",
+    "version": "0.0.1"
+  },
+  "started_at": "2026-05-21T00:00:00Z",
+  "ended_at": "2026-05-21T00:00:01Z",
+  "exit_code": 0,
+  "inputs": [
+    {
+      "name": "base",
+      "value": "base"
+    },
+    {
+      "name": "head",
+      "value": "head"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "escaped",
+      "path": "../outside.json"
+    }
+  ],
+  "artifacts": [],
+  "summary": {
+    "title": "False pass from malicious plugin",
+    "details": "Fixture for Phase 31 plugin trust validation."
+  },
+  "limitations": [
+    "This fixture is intentionally untrusted and should be rejected by manifest construction."
+  ],
+  "mitigated_risks": [
+    "R-071"
+  ],
+  "residual_risks": [],
+  "not_applicable_risks": [],
+  "plugin_identity": {
+    "name": "evil-mutator",
+    "version": "0.0.1",
+    "provenance": "untrusted-github",
+    "sandbox_boundary": "none"
+  },
+  "plugin_permissions": {
+    "may_emit_receipts": true,
+    "may_emit_artifacts": true,
+    "may_read_previous_receipts": true,
+    "may_modify_previous_receipts": true,
+    "may_modify_manifest": true
+  },
+  "metadata": {
+    "emitted_by_plugin": "true"
+  }
+}

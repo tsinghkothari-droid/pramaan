@@ -1981,6 +1981,13 @@ pub struct PluginIdentity {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PluginTrustFinding {
+    pub id: String,
+    pub severity: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EvidenceSensitivity {
     Public,
@@ -2030,6 +2037,105 @@ pub fn redact_sensitive_text(input: &str) -> String {
     let output = redact_sensitive_segments(&output, "<redacted-host>", looks_like_internal_host);
     let output = redact_sensitive_segments(&output, "<redacted-ip>", looks_like_private_ipv4);
     redact_sensitive_segments(&output, "<redacted-token>", looks_like_token_prefix)
+}
+
+pub fn validate_plugin_receipt_trust(receipt: &Receipt) -> Vec<PluginTrustFinding> {
+    let declared_plugin = receipt.plugin_identity.is_some()
+        || receipt
+            .metadata
+            .get("emitted_by_plugin")
+            .is_some_and(|value| value == "true");
+    if !declared_plugin {
+        return Vec::new();
+    }
+
+    let mut findings = Vec::new();
+    let Some(identity) = receipt.plugin_identity.as_ref() else {
+        findings.push(PluginTrustFinding {
+            id: "PLUG-001".to_string(),
+            severity: "high".to_string(),
+            message: "Plugin receipt is missing plugin identity metadata.".to_string(),
+        });
+        return findings;
+    };
+
+    if identity.name.trim().is_empty()
+        || identity.version.trim().is_empty()
+        || identity.provenance.trim().is_empty()
+        || identity.sandbox_boundary.trim().is_empty()
+    {
+        findings.push(PluginTrustFinding {
+            id: "PLUG-002".to_string(),
+            severity: "high".to_string(),
+            message: "Plugin identity fields must be non-empty.".to_string(),
+        });
+    }
+
+    let Some(permissions) = receipt.plugin_permissions.as_ref() else {
+        findings.push(PluginTrustFinding {
+            id: "PLUG-003".to_string(),
+            severity: "high".to_string(),
+            message: "Plugin receipt is missing explicit permissions.".to_string(),
+        });
+        return findings;
+    };
+
+    if permissions.may_modify_previous_receipts || permissions.may_modify_manifest {
+        findings.push(PluginTrustFinding {
+            id: "PLUG-004".to_string(),
+            severity: "critical".to_string(),
+            message: "Plugins must not be allowed to modify prior receipts or bundle manifests."
+                .to_string(),
+        });
+    }
+    if !permissions.may_emit_receipts {
+        findings.push(PluginTrustFinding {
+            id: "PLUG-005".to_string(),
+            severity: "high".to_string(),
+            message: "Plugin receipt was emitted without may_emit_receipts permission.".to_string(),
+        });
+    }
+    if identity.provenance.contains("untrusted") && identity.signature.is_none() {
+        findings.push(PluginTrustFinding {
+            id: "PLUG-006".to_string(),
+            severity: "high".to_string(),
+            message: "Explicitly untrusted plugin receipts require a signature or must be blocked."
+                .to_string(),
+        });
+    }
+    if identity.sandbox_boundary == "none" {
+        findings.push(PluginTrustFinding {
+            id: "PLUG-007".to_string(),
+            severity: "high".to_string(),
+            message: "Plugin sandbox boundary cannot be none.".to_string(),
+        });
+    } else if identity.sandbox_boundary == "in_process"
+        && !identity.provenance.starts_with("workspace")
+    {
+        findings.push(PluginTrustFinding {
+            id: "PLUG-008".to_string(),
+            severity: "medium".to_string(),
+            message: "Third-party plugins should not run in-process for risky evidence stages."
+                .to_string(),
+        });
+    }
+
+    for path in receipt
+        .artifacts
+        .iter()
+        .map(|artifact| artifact.path.as_str())
+        .chain(receipt.outputs.iter().map(|output| output.path.as_str()))
+    {
+        if path.starts_with('/') || path.contains("..") || path.contains('\\') {
+            findings.push(PluginTrustFinding {
+                id: "PLUG-009".to_string(),
+                severity: "high".to_string(),
+                message: format!("Plugin output path `{path}` must stay relative to the bundle."),
+            });
+        }
+    }
+
+    findings
 }
 
 pub fn analyze_github_workflow_security(workflow_text: &str) -> Vec<CiHardeningFinding> {
@@ -3706,6 +3812,84 @@ mod tests {
         assert_eq!(value["evidence_sensitivity"], "internal");
         assert_eq!(value["policy_decision"]["decision"], "warning");
         assert_eq!(value["stage_budget"]["partial_evidence"], false);
+    }
+
+    #[test]
+    fn plugin_trust_validator_blocks_dangerous_plugin_receipts() {
+        let mut receipt = Receipt::synthetic(
+            "mutation_python",
+            StageStatus::Passed,
+            "base",
+            "head",
+            vec![OutputRef {
+                name: "escaped".to_string(),
+                path: "../outside.json".to_string(),
+                digest: None,
+            }],
+            vec![],
+            ReceiptSummary {
+                title: "Plugin pass".to_string(),
+                details: "Malicious plugin attempted to pass.".to_string(),
+            },
+            RiskRefs::sample(),
+        );
+        receipt.plugin_identity = Some(PluginIdentity {
+            name: "evil-mutator".to_string(),
+            version: "0.0.1".to_string(),
+            provenance: "untrusted-github".to_string(),
+            signature: None,
+            sandbox_boundary: "none".to_string(),
+        });
+        receipt.plugin_permissions = Some(PluginPermissions {
+            may_emit_receipts: true,
+            may_emit_artifacts: true,
+            may_read_previous_receipts: true,
+            may_modify_previous_receipts: true,
+            may_modify_manifest: true,
+        });
+
+        let findings = validate_plugin_receipt_trust(&receipt);
+        let ids = findings
+            .iter()
+            .map(|finding| finding.id.as_str())
+            .collect::<Vec<_>>();
+        assert!(ids.contains(&"PLUG-004"));
+        assert!(ids.contains(&"PLUG-006"));
+        assert!(ids.contains(&"PLUG-007"));
+        assert!(ids.contains(&"PLUG-009"));
+    }
+
+    #[test]
+    fn plugin_trust_validator_accepts_workspace_subprocess_receipt() {
+        let mut receipt = Receipt::synthetic(
+            "oracle_python",
+            StageStatus::Passed,
+            "base",
+            "head",
+            vec![],
+            vec![],
+            ReceiptSummary {
+                title: "Plugin pass".to_string(),
+                details: "Workspace plugin emitted constrained evidence.".to_string(),
+            },
+            RiskRefs::sample(),
+        );
+        receipt.plugin_identity = Some(PluginIdentity {
+            name: "pramaan-python-oracle".to_string(),
+            version: "0.1.0".to_string(),
+            provenance: "workspace".to_string(),
+            signature: None,
+            sandbox_boundary: "subprocess".to_string(),
+        });
+        receipt.plugin_permissions = Some(PluginPermissions {
+            may_emit_receipts: true,
+            may_emit_artifacts: true,
+            may_read_previous_receipts: false,
+            may_modify_previous_receipts: false,
+            may_modify_manifest: false,
+        });
+
+        assert!(validate_plugin_receipt_trust(&receipt).is_empty());
     }
 
     #[test]

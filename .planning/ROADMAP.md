@@ -635,6 +635,11 @@ minimization remains later hardening.
 
 **Priority:** P2 security
 
+**Status:** Completed 2026-05-21 for the v0.1 subprocess JSON protocol shape,
+plugin trust validator, bundle-time rejection of high/critical plugin findings,
+and a malicious-plugin fixture. Stronger runtime isolation remains future
+hardening.
+
 **Success Criteria:**
 
 1. Plugin protocol defines identity, version, provenance, allowed receipt capabilities, and optional signatures.

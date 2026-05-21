@@ -1,9 +1,9 @@
 use chrono::Utc;
 use pramaan_core::{
-    canonical_json_bytes, redact_sensitive_text, timestamp, AgentAttribution, AgentProvenanceEntry,
-    ArtifactRef, EvidenceSensitivity, OutputRef, PluginIdentity, PolicyDecision, Receipt,
-    ReceiptSummary, RedactionManifest, ReviewerOverride, RiskRefs, StageBudget, StageStatus,
-    REDACTION_POLICY_VERSION,
+    canonical_json_bytes, redact_sensitive_text, timestamp, validate_plugin_receipt_trust,
+    AgentAttribution, AgentProvenanceEntry, ArtifactRef, EvidenceSensitivity, OutputRef,
+    PluginIdentity, PolicyDecision, Receipt, ReceiptSummary, RedactionManifest, ReviewerOverride,
+    RiskRefs, StageBudget, StageStatus, REDACTION_POLICY_VERSION,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest as ShaDigest, Sha256};
@@ -791,6 +791,18 @@ pub fn build_manifest(bundle_root: &Path, options: BundleBuildOptions) -> Result
 
     for receipt_path in receipt_paths {
         let receipt = read_receipt(&receipt_path)?;
+        let plugin_findings = validate_plugin_receipt_trust(&receipt);
+        if let Some(finding) = plugin_findings
+            .iter()
+            .find(|finding| matches!(finding.severity.as_str(), "critical" | "high"))
+        {
+            return Err(BundleError::Schema(format!(
+                "{} failed plugin trust validation: {} {}",
+                receipt_path.display(),
+                finding.id,
+                finding.message
+            )));
+        }
         let receipt_ref = manifest_ref_for_path(bundle_root, &receipt_path, "application/json")?;
         let relative_receipt_path = receipt_ref.path.clone();
 
@@ -1707,6 +1719,13 @@ mod tests {
             signature: None,
             sandbox_boundary: "in_process".to_string(),
         });
+        receipt.plugin_permissions = Some(pramaan_core::PluginPermissions {
+            may_emit_receipts: true,
+            may_emit_artifacts: true,
+            may_read_previous_receipts: false,
+            may_modify_previous_receipts: false,
+            may_modify_manifest: false,
+        });
         receipt.evidence_sensitivity = Some(EvidenceSensitivity::Internal);
         receipt.redaction_manifest = Some(RedactionManifest {
             profile: "reviewer-redacted".to_string(),
@@ -1761,6 +1780,55 @@ mod tests {
             manifest.stages[0].evidence_sensitivity,
             Some(EvidenceSensitivity::Internal)
         );
+
+        fs::remove_dir_all(&root).expect("cleanup temp bundle");
+    }
+
+    #[test]
+    fn build_manifest_rejects_dangerous_plugin_permissions() {
+        let root =
+            std::env::temp_dir().join(format!("pramaan-plugin-trust-test-{}", std::process::id()));
+        if root.exists() {
+            fs::remove_dir_all(&root).expect("clean temp bundle");
+        }
+        fs::create_dir_all(root.join("receipts")).expect("receipt dir");
+
+        let mut receipt = Receipt::synthetic(
+            "mutation_python",
+            StageStatus::Passed,
+            "base",
+            "head",
+            vec![],
+            vec![],
+            ReceiptSummary {
+                title: "Malicious plugin pass".to_string(),
+                details: "Plugin tried to claim broad mutation evidence.".to_string(),
+            },
+            RiskRefs::sample(),
+        );
+        receipt.plugin_identity = Some(PluginIdentity {
+            name: "evil-mutator".to_string(),
+            version: "0.0.1".to_string(),
+            provenance: "untrusted-github".to_string(),
+            signature: None,
+            sandbox_boundary: "none".to_string(),
+        });
+        receipt.plugin_permissions = Some(pramaan_core::PluginPermissions {
+            may_emit_receipts: true,
+            may_emit_artifacts: true,
+            may_read_previous_receipts: true,
+            may_modify_previous_receipts: true,
+            may_modify_manifest: true,
+        });
+        fs::write(
+            root.join("receipts").join("evil.receipt.json"),
+            serde_json::to_vec_pretty(&receipt).expect("receipt json"),
+        )
+        .expect("write receipt");
+
+        let error = build_manifest(&root, BundleBuildOptions::synthetic("base", "head"))
+            .expect_err("dangerous plugin receipt should fail");
+        assert!(error.to_string().contains("plugin trust validation"));
 
         fs::remove_dir_all(&root).expect("cleanup temp bundle");
     }

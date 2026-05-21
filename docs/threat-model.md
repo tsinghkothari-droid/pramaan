@@ -75,6 +75,12 @@ Plugins must not be allowed to edit prior receipts or bundle manifests directly.
 Every plugin-emitted receipt should identify plugin name, version, provenance,
 permissions, and sandbox boundary. A plugin can contribute evidence, but the
 bundle builder remains responsible for final manifest construction and hashing.
+Phase 31 adds a plugin trust validator: plugin receipts with missing identity,
+dangerous manifest/receipt write permissions, untrusted unsigned provenance, no
+sandbox boundary, or path escape attempts are rejected before manifest
+construction. This protects the evidence ledger from obvious plugin poisoning;
+it does not prove a permitted plugin's parser, test runner, or mutation engine
+is bug-free.
 
 ## Redaction Boundary
 

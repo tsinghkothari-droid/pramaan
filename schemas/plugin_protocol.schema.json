@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/plugin_protocol.schema.json",
+  "title": "Pramaan Plugin Protocol",
+  "description": "Subprocess JSON contract for plugins that emit Pramaan evidence receipts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plugin", "permissions", "isolation", "commands"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "pramaan.plugin_protocol.v1"
+    },
+    "plugin": {
+      "$ref": "receipt.schema.json#/$defs/plugin_identity"
+    },
+    "permissions": {
+      "$ref": "receipt.schema.json#/$defs/plugin_permissions"
+    },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundary", "network", "write_scope"],
+      "properties": {
+        "boundary": {
+          "type": "string",
+          "enum": ["subprocess", "container", "wasm"]
+        },
+        "network": {
+          "type": "string",
+          "enum": ["none", "allowlisted"]
+        },
+        "write_scope": {
+          "type": "string",
+          "enum": ["plugin_output_dir"]
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "stdin", "stdout"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stdin": {
+            "type": "string",
+            "const": "json"
+          },
+          "stdout": {
+            "type": "string",
+            "const": "json"
+          }
+        }
+      }
+    }
+  }
+}
