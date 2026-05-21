@@ -83,16 +83,20 @@ it can run in parallel.
 | Order | Phase | What to make | Why now | Blocks |
 | --- | --- | --- | --- | --- |
 | 1 | Phase 26 | External pilot reports and live GitHub Action proof | Public Alpha is currently no-go without real-repo evidence. | Public Alpha claims |
+| 1.5 | Phase 26.5 | Agent harness interface for Claude Code, Codex, Cursor-style agents, and custom harnesses | Agents should call Pramaan before claiming done. | Agent adoption |
 | 2 | Phase 27 | Parser-backed oracle extractors | Confidence and signing are weaker if oracle evidence is still parser-light. | Phase 28.5 confidence inputs |
 | 3 | Phase 28 | Real Hypothesis/fast-check harnesses and replay | Confidence needs real executed evidence, not only deterministic fallback. | Phase 28.5 confidence inputs |
+| 3.25 | Phase 28.25 | AI evidence-seeking probe generator | AI should generate better probes, but only executed probes count. | Phase 28.5 confidence inputs |
 | 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
 | 5 | Phase 29 | Sigstore/cosign, GitHub attestations, in-toto/SLSA VSA, offline verify | Trust evidence must leave CI as a verifiable artifact. | Real MVP trust gate |
 | 6 | Phase 30 | Redaction profiles and public-safe bundle export | External pilots and demos need shareable bundles. | Public bundle sharing |
 | 7 | Phase 31 | Plugin protocol, identity, permissions, and isolation | Plugin expansion is dangerous before verifier supply-chain trust exists. | Third-party plugin work |
 | 8 | Phase 32 | SARIF export, OPA/policy parity, CI hardening, agentic workflow-injection checks | Findings should appear in existing security review surfaces. | Enterprise/security adoption |
+| 8.5 | Phase 32.5 | Policy pack library and enterprise profiles | Teams need risk-tuned policies without editing code. | Enterprise/security adoption |
 | 9 | Phase 33 | 25-scenario adversarial and secure-code corpus | Real MVP needs broader failure-mode proof before scale claims. | Phase 40 corpus 100 |
 | 10 | Phase 34 | Reviewer overrides, baselines, drift, and confidence calibration | Prevent alert fatigue and make confidence less hand-tuned. | Real MVP calibration gate |
 | 11 | Phase 35 | Operator docs, screenshots, troubleshooting, and release packaging | External maintainers need to install and inspect bundles unaided. | Real MVP adoption gate |
+| 11.5 | Phase 35.5 | Reviewer UX and local HTML report | A bundle must be understood in 30 seconds without a hosted dashboard. | Real MVP adoption gate |
 | 12 | Phase 36 | Python/TypeScript/Rust plugin depth | Depth beats adding shallow Go/Java too early. | Language expansion |
 | 13 | Phase 37 | Provider-neutral forge design and GitLab support plan | Avoid hard-coding GitHub before enterprise pilots. | GitLab/Gitea/Bitbucket work |
 | 14 | Phase 38 | Multi-agent provenance and handoff tracking | Agent chains need attribution before trend analysis becomes serious. | Serious v1 provenance |
@@ -103,9 +107,15 @@ Execution guardrails:
 
 - Start with Phase 26 unless the user explicitly asks for a narrower phase.
 - Do not market public Alpha before Phase 26 has external pilot evidence.
+- Do not ask coding agents to self-certify completion before Phase 26.5 lands.
+- Do not count AI-generated probes as evidence before Phase 28.25 executes them
+  in a sandbox.
 - Do not sign or attest confidence scores before Phase 28.5 exists.
+- Do not offer enterprise policy-pack claims before Phase 32.5 exists.
 - Do not expand plugins before Phase 31 defines trust and isolation.
 - Do not publish public-demo bundles before Phase 30 redaction tests pass.
+- Do not dashboard-first the product; Phase 35.5 must ship static report and PR
+  summary UX first.
 - Do not call the project Serious v1 before Phase 40 closes or rejects the
   release gate.
 
@@ -168,16 +178,20 @@ unfinished task family below into an executable GSD phase.
 | GSD phase | Priority | What it completes |
 | --- | --- | --- |
 | Phase 26 | Alpha gate | Three external real-repository pilots, live GitHub Action proof, runtime/noise metrics, and a public-Alpha go/no-go update. |
+| Phase 26.5 | Agent adoption | `pramaan agent done-gate`, agent decision schema, `AGENTS.md`, Claude Code hook/command templates, and blocked-agent fixtures. |
 | Phase 27 | P1 hardening | Full parser-backed oracle extractors for Python, TypeScript, and Rust with negative fixtures and dependency justifications. |
 | Phase 28 | P1 hardening | Safe real Hypothesis and fast-check generated-harness execution, replay CLI contracts, and budget/timeout evidence. |
+| Phase 28.25 | 10x evidence depth | AI-generated probes for tests, properties, differential inputs, and security checks; only sandbox-executed probes count. |
 | Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
 | Phase 29 | P2 trust | Sigstore/cosign bundle signing, GitHub artifact attestation, SLSA VSA-style output, and offline bundle verification. |
 | Phase 30 | P2 trust | Redaction profiles and public-demo bundle export tests for secrets, private paths, internal hosts, and CI metadata. |
 | Phase 31 | P2 security | Plugin protocol, plugin identity/provenance, least-privilege receipt permissions, and isolated plugin execution threat model. |
 | Phase 32 | P2 security | SARIF export, policy-as-code parity, CI hardening expansion, CodeQL/security-scanner integration, and agentic workflow-injection checks. |
+| Phase 32.5 | Enterprise adoption | Built-in policy packs for startup-fast, open-source-maintainer, security-sensitive, fintech-strict, and private-preview. |
 | Phase 33 | P2 evals | Adversarial corpus expansion to 25 scenarios, including secure-code and malicious-verifier cases. |
 | Phase 34 | P2 feedback | Reviewer override persistence, repo baselines, calibration, drift exports, and agent-author trend metrics. |
 | Phase 35 | P2 adoption | Operator guide, plugin-author guide, security model, troubleshooting docs, screenshots, and release packaging. |
+| Phase 35.5 | Adoption UX | Local HTML report and PR markdown report with blockers, warnings, ran/skipped stages, oracle changes, replay commands, and override fields. |
 | Phase 36 | P2 language depth | Deep Python, TypeScript, and Rust plugin quality before Go/Java expansion. |
 | Phase 37 | P3 enterprise | Provider-neutral forge abstraction, GitLab attestation/OIDC design, and Gitea/Bitbucket notes. |
 | Phase 38 | P3 provenance | Multi-agent provenance chains, intermediate commit attribution, and handoff metadata. |

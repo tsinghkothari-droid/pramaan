@@ -417,6 +417,22 @@ remain public Alpha blockers.
 3. At least one live GitHub Action run uploads a bundle and renders a useful PR summary.
 4. Public Alpha decision is updated from evidence, not internal fixture confidence.
 
+## Phase 26.5: Agent Harness Interface for Coding Agents
+
+**Goal:** Make Pramaan callable by Claude Code, Codex, Cursor-style agents, and
+custom harnesses as a completion gate before an agent claims done.
+
+**Priority:** Agent adoption
+
+**Success Criteria:**
+
+1. `pramaan agent done-gate` emits pass, warn, or block JSON with required
+   actions.
+2. `agent_decision.schema.json` defines the machine-readable contract.
+3. `AGENTS.md` and Claude Code command/hook templates instruct agents not to
+   claim completion while the gate blocks.
+4. A blocked oracle fixture returns actionable repair instructions.
+
 ## Phase 27: Parser-Backed Oracle Extractors
 
 **Goal:** Close the current structured-extractor risk with parser-backed Python, TypeScript, and Rust oracle evidence.
@@ -441,6 +457,22 @@ remain public Alpha blockers.
 2. Seeds, generated counts, corpus hashes, counterexamples, shrink data, and tool versions are recorded.
 3. `pramaan replay` can reproduce recorded failing generated cases.
 4. Missing tools remain skipped evidence, not mitigated evidence.
+
+## Phase 28.25: AI Evidence-Seeking Probe Generator
+
+**Goal:** Use AI to generate candidate tests, properties, differential inputs,
+and security probes while counting only sandbox-executed evidence.
+
+**Priority:** 10x evidence depth
+
+**Success Criteria:**
+
+1. `pramaan probe plan` creates a probe plan from claim, diff, risk IDs, and
+   residual/skipped evidence.
+2. Probe schema records prompt hash, risk IDs, candidate code, sandbox result,
+   kept/rejected status, and rejection reason.
+3. Generated probes compile/run in isolation before contributing mitigation.
+4. Weak, non-compiling, or irrelevant probes are preserved as rejected evidence.
 
 ## Phase 28.5: Auditable Confidence Vote and Calibration Schema
 
@@ -514,6 +546,22 @@ aggregates receipts without pretending to prove correctness.
 3. Agentic workflow-injection fixtures map untrusted PR/issue/comment text to stable risk IDs.
 4. Optional CodeQL/security scanner evidence is correlation, not sole gate.
 
+## Phase 32.5: Policy Pack Library and Enterprise Profiles
+
+**Goal:** Provide selectable policy packs for different adoption contexts
+without changing Pramaan code.
+
+**Priority:** Enterprise adoption
+
+**Success Criteria:**
+
+1. Built-in policy profiles exist for `startup-fast`, `open-source-maintainer`,
+   `security-sensitive`, `fintech-strict`, and `private-preview`.
+2. `pramaan policy list` and `policy explain --profile <id>` work.
+3. GitHub Action accepts a `policy-profile` input.
+4. Policy fixtures cover pass, warn, fail, waiver, and security-sensitive path
+   escalation.
+
 ## Phase 33: Adversarial Corpus 25 and Secure-Code Scenarios
 
 **Goal:** Grow the adversarial corpus to 25 high-signal scenarios before larger eval claims.
@@ -553,6 +601,21 @@ aggregates receipts without pretending to prove correctness.
 2. PR summary screenshots or rendered examples cover pass, warning, and fail cases.
 3. Release packaging workflow or manual release checklist is staged.
 4. Marketplace status is documented honestly.
+
+## Phase 35.5: Reviewer UX and Local HTML Report
+
+**Goal:** Make proof bundles inspectable in under 30 seconds without requiring
+a hosted dashboard.
+
+**Priority:** Adoption UX
+
+**Success Criteria:**
+
+1. `pramaan report html --bundle <path>` emits a local static report.
+2. `pramaan report markdown --bundle <path>` emits PR-comment-ready markdown.
+3. Reports group blockers, warnings, ran/skipped stages, oracle changes,
+   replay commands, and override fields.
+4. Weakened-test demo report is manually understandable in under 30 seconds.
 
 ## Phase 36: Language Plugin Depth for Python, TypeScript, and Rust
 
@@ -646,8 +709,8 @@ aggregates receipts without pretending to prove correctness.
 the remaining P0/P1 tasks in `TASKS.md`; they do not change the original 111
 research-mapped requirement count.
 
-**Research-driven continuation track:** Phases 26-40 plus the Phase 28.5 trust
-insert map the remaining
+**Research-driven continuation track:** Phases 26-40 plus decimal inserts
+26.5, 28.25, 28.5, 32.5, and 35.5 map the remaining
 unchecked P1/P2/P3 and Serious v1 task families to executable GSD plans after
 the 2026-05-21 internet research refresh. They are delivery phases, not a new
 requirement-counting scheme.
