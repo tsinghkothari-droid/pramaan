@@ -749,7 +749,7 @@ Phase 28.5 acceptance criteria:
 - [ ] Add real-world replay cases from open-source bug-fix PRs.
 - [ ] Add flaky-case quarantine rules.
 - [ ] Track false positives, false negatives, runtime, and reviewer time-to-understand.
-- [ ] Create a benchmark report template.
+- [x] Create a benchmark report template.
 - [x] Add repo-level baseline calibration: expected mutation survival range, expected skipped-stage profile, runtime baseline, and noise-floor warnings.
 - [x] Add trend/drift export across bundles: mutation survival drift, oracle-risk drift, skipped-stage drift, runtime drift, residual-risk families, and agent-author fields.
 - [ ] Add benchmark-integrity mutation harness to detect agents overfitting eval tasks or hidden-test assumptions.

@@ -266,6 +266,12 @@ work.
 
 ## Phase 17: Policy, CI Hardening, and Evaluation Intelligence
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Policy profiles,
+policy explanation, CI hardening signals, SLA budget evidence, VSA schemas,
+redaction profiles, SARIF/Rego exports, corpus taxonomy, and benchmark report
+templates are present. Non-GitHub execution and empirical benchmark-integrity
+mutation remain future work.
+
 **Goal:** Add policy-as-code gates, CI attack resistance, performance SLA enforcement, VSA output, redaction profiles, and benchmark/evaluation intelligence based on current research.
 
 **Requirements:** POL-01, POL-02, CI-01, CI-02, VSA-01, REDACT-01, EVAL-03, SEC-01, SLA-01, FORGE-01, CORP-01, SUMM-01
