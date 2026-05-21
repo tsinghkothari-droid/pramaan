@@ -74,7 +74,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        node "$GITHUB_ACTION_PATH/resolve-refs.mjs" \
+        node "$GITHUB_ACTION_PATH/action/resolve-refs.mjs" \
           --base "${{ inputs.base-ref }}" \
           --head "${{ inputs.head-ref }}" \
           --github-output "$GITHUB_OUTPUT"
@@ -143,7 +143,7 @@ runs:
           --profile "${{ inputs.policy-profile }}" \
           | tee "${{ steps.config.outputs.out_dir }}/policy.log"
         cat "${{ steps.config.outputs.out_dir }}/policy.log" >> "${{ steps.config.outputs.out_dir }}/pramaan.log"
-        node "$GITHUB_ACTION_PATH/render-summary.mjs" \
+        node "$GITHUB_ACTION_PATH/action/render-summary.mjs" \
           --manifest "${{ steps.config.outputs.out_dir }}/bundle.manifest.json" \
           --log "${{ steps.config.outputs.out_dir }}/pramaan.log" \
           --out "$summary_path" \
