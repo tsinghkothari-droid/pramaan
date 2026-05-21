@@ -2,7 +2,7 @@
 
 **Verification infrastructure for AI-authored pull requests.**
 
-![Pramaan portal lab hero](assets/readme/pramaan-generated-hero.png)
+![Pramaan terminal evidence summary](assets/readme/pramaan-terminal-evidence.svg)
 
 AI coding agents are becoming fast enough to write a meaningful share of the
 world's software. The bottleneck is no longer generation. The bottleneck is
@@ -78,6 +78,8 @@ See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
   guidance.
 - [Troubleshooting](docs/troubleshooting.md): slow mutation, missing tools,
   flaky tests, forked PRs, and bundle verification.
+- [Changelog](CHANGELOG.md): release notes and residual-risk notes by version.
+- [Security Policy](SECURITY.md): disclosure path for evidence-integrity issues.
 - [Release Packaging](docs/release.md): manual release gates and artifact
   checklist.
 - [Rendered Examples](docs/rendered-examples/README.md): pass, warning, fail,

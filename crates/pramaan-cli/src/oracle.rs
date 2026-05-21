@@ -11,6 +11,19 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 pub fn run_oracle(base_repo: PathBuf, head_repo: PathBuf, out: PathBuf) -> Result<()> {
+    run_oracle_with_options(base_repo, head_repo, out, false)
+}
+
+pub fn run_oracle_quiet(base_repo: PathBuf, head_repo: PathBuf, out: PathBuf) -> Result<()> {
+    run_oracle_with_options(base_repo, head_repo, out, true)
+}
+
+fn run_oracle_with_options(
+    base_repo: PathBuf,
+    head_repo: PathBuf,
+    out: PathBuf,
+    quiet: bool,
+) -> Result<()> {
     let base_repo = base_repo
         .canonicalize()
         .with_context(|| format!("resolving base repository {}", base_repo.display()))?;
@@ -43,14 +56,16 @@ pub fn run_oracle(base_repo: PathBuf, head_repo: PathBuf, out: PathBuf) -> Resul
     .context("building oracle proof bundle manifest")?;
     let manifest_path = write_manifest(&out, &manifest).context("writing oracle manifest")?;
 
-    render_oracle_summary(
-        &base_repo,
-        &head_repo,
-        &out,
-        &receipt_path,
-        &manifest_path,
-        &diff,
-    );
+    if !quiet {
+        render_oracle_summary(
+            &base_repo,
+            &head_repo,
+            &out,
+            &receipt_path,
+            &manifest_path,
+            &diff,
+        );
+    }
     Ok(())
 }
 

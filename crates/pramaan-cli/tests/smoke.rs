@@ -1116,6 +1116,31 @@ fn bundle_export_redacted_scrubs_sensitive_bundle_copy() {
         .expect("receipts")
         .iter()
         .any(|receipt| receipt["path"] == "receipts/bundle-redaction.receipt.json"));
+
+    let alias_export = root.join("public-demo-alias");
+    let alias_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "export",
+            "redacted",
+            source.to_str().expect("utf-8 source path"),
+            "--profile",
+            "public-demo",
+            "--out",
+            alias_export.to_str().expect("utf-8 alias export path"),
+        ])
+        .output()
+        .expect("run pramaan export redacted");
+    assert!(
+        alias_output.status.success(),
+        "redaction export alias failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&alias_output.stdout),
+        String::from_utf8_lossy(&alias_output.stderr)
+    );
+    assert!(
+        alias_export.join("bundle.manifest.json").exists(),
+        "top-level export redacted alias should write a manifest"
+    );
 }
 
 #[test]
@@ -1771,6 +1796,14 @@ fn verify_runs_real_stages_when_none_skipped() {
         !stdout.contains("synthetic_verification"),
         "synthetic_verification fallback must not be emitted when real stages ran; got stdout:\n{stdout}"
     );
+    assert!(
+        !stdout.contains("Pramaan oracle integrity complete"),
+        "verify should render one coherent summary, not nested oracle summaries; got stdout:\n{stdout}"
+    );
+    assert!(
+        !stdout.contains("Pramaan differential fuzz complete"),
+        "verify should render one coherent summary, not nested fuzz summaries; got stdout:\n{stdout}"
+    );
 
     let oracle_receipt = out.join("receipts").join("oracle-integrity.receipt.json");
     assert!(
@@ -2163,6 +2196,59 @@ fn report_commands_render_reviewer_sections() {
 }
 
 #[test]
+fn command_help_lists_subcommands_with_descriptions() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+
+    for (args, expected) in [
+        (
+            vec!["--help"],
+            "Execution-grounded receipts for AI-generated code changes.",
+        ),
+        (
+            vec!["bundle", "--help"],
+            "Inspect, attest, verify, or redact an emitted Pramaan bundle.",
+        ),
+        (
+            vec!["export", "--help"],
+            "Export Pramaan evidence to review and policy formats.",
+        ),
+        (
+            vec!["agent", "--help"],
+            "Emit agent-facing done-gate decisions and explanations.",
+        ),
+        (
+            vec!["report", "--help"],
+            "Render local reviewer reports from a Pramaan bundle.",
+        ),
+        (
+            vec!["doctor", "--help"],
+            "Diagnose local configuration, tool availability, and rollout risks.",
+        ),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+            .current_dir(&workspace)
+            .args(args)
+            .output()
+            .expect("run pramaan help");
+        assert!(
+            output.status.success(),
+            "help command failed\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            stdout.contains(expected),
+            "help output should contain description {expected:?}; got:\n{stdout}"
+        );
+    }
+}
+
+#[test]
 fn doctor_reports_config_and_tool_availability() {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -2233,6 +2319,9 @@ skip = ["oracle"]
     assert_eq!(report["config"]["redaction_profile"], "reviewer-redacted");
     assert_eq!(report["config"]["mutation_enabled"], true);
     assert_eq!(report["config"]["fuzz_seed"], 4242);
+    assert!(report["blockers"].as_array().unwrap().is_empty());
+    assert!(report["warnings"].as_array().unwrap().is_empty());
+    assert!(report["informational"].as_array().unwrap().is_empty());
     assert!(report["tools"]
         .as_array()
         .unwrap()

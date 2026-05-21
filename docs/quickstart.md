@@ -10,6 +10,25 @@ ordinary CI green -> Pramaan oracle receipt red -> bundle verifies -> reviewer c
 
 Pramaan still produces evidence, not correctness proof.
 
+## Install
+
+Until the crate is published, use the repository build:
+
+```powershell
+cargo build -p pramaan-cli --release
+target\release\pramaan.exe --help
+```
+
+After the first crates.io publish, the intended one-command install path is:
+
+```powershell
+cargo install pramaan-cli
+```
+
+Tagged releases are also staged to publish platform archives from
+`.github/workflows/release.yml`; release binaries are not yet a production
+claim until that workflow has run on a real tag.
+
 ## One Command
 
 From the repository root:

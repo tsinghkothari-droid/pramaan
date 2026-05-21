@@ -48,20 +48,35 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    #[command(about = "Run the receipt-first verification pipeline for a base/head diff.")]
     Verify(VerifyArgs),
+    #[command(about = "Inspect, attest, verify, or redact an emitted Pramaan bundle.")]
     Bundle(BundleArgs),
+    #[command(about = "Run language static checks and emit static-check receipts.")]
     StaticChecks(StaticChecksArgs),
+    #[command(about = "Compare base/head tests and fixtures for weakened oracles.")]
     Oracle(OracleArgs),
+    #[command(about = "Run diff-scoped mutation adapters where tools are available.")]
     Mutation(MutationArgs),
+    #[command(about = "Run differential property/fuzz evidence for changed functions.")]
     Fuzz(FuzzArgs),
+    #[command(about = "Explain Pramaan policy decisions for a bundle.")]
     Policy(PolicyArgs),
+    #[command(about = "Build or explain the auditable confidence vote for a bundle.")]
     Confidence(ConfidenceArgs),
+    #[command(about = "Emit agent-facing done-gate decisions and explanations.")]
     Agent(AgentArgs),
+    #[command(about = "Plan and execute bounded evidence-seeking probe candidates.")]
     Probe(ProbeArgs),
+    #[command(about = "Replay a recorded fuzz/property evidence case.")]
     Replay(ReplayArgs),
+    #[command(about = "Export Pramaan evidence to review and policy formats.")]
     Export(ExportArgs),
+    #[command(about = "Persist reviewer overrides and analyze calibration/drift evidence.")]
     Feedback(FeedbackArgs),
+    #[command(about = "Render local reviewer reports from a Pramaan bundle.")]
     Report(ReportArgs),
+    #[command(about = "Diagnose local configuration, tool availability, and rollout risks.")]
     Doctor(DoctorArgs),
 }
 
@@ -96,10 +111,15 @@ struct BundleArgs {
 
 #[derive(Debug, Subcommand)]
 enum BundleCommands {
+    #[command(about = "Verify bundle manifest hashes and referenced artifacts.")]
     Verify(BundleVerifyArgs),
+    #[command(about = "Emit local/offline VSA and in-toto-style attestation material.")]
     Attest(BundleAttestArgs),
+    #[command(about = "Verify local/offline VSA and in-toto-style attestation material.")]
     VerifyOffline(BundleVerifyOfflineArgs),
+    #[command(about = "Export a redacted copy of a bundle for reviewers or public demos.")]
     ExportRedacted(BundleExportRedactedArgs),
+    #[command(about = "Write cosign signing-readiness evidence without claiming CI identity.")]
     CosignPlan(BundleCosignPlanArgs),
 }
 
@@ -152,8 +172,12 @@ struct ExportArgs {
 
 #[derive(Debug, Subcommand)]
 enum ExportCommands {
+    #[command(about = "Export bundle risks as SARIF for code-scanning surfaces.")]
     Sarif(ExportSarifArgs),
+    #[command(about = "Export starter Rego policy matching Pramaan's default policy.")]
     Rego(ExportRegoArgs),
+    #[command(about = "Alias for `bundle export-redacted`; export a redacted bundle copy.")]
+    Redacted(BundleExportRedactedArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -177,7 +201,9 @@ struct FeedbackArgs {
 
 #[derive(Debug, Subcommand)]
 enum FeedbackCommands {
+    #[command(about = "Persist a human override decision as first-class evidence.")]
     Override(FeedbackOverrideArgs),
+    #[command(about = "Analyze local bundles for baseline drift and calibration evidence.")]
     Analyze(FeedbackAnalyzeArgs),
 }
 
@@ -223,7 +249,9 @@ struct ReportArgs {
 
 #[derive(Debug, Subcommand)]
 enum ReportCommands {
+    #[command(about = "Render a PR-comment-ready Markdown reviewer report.")]
     Markdown(ReportMarkdownArgs),
+    #[command(about = "Render a local static HTML reviewer report.")]
     Html(ReportHtmlArgs),
 }
 
@@ -251,7 +279,9 @@ struct PolicyArgs {
 
 #[derive(Debug, Subcommand)]
 enum PolicyCommands {
+    #[command(about = "Explain a bundle under a named built-in policy profile.")]
     Explain(PolicyExplainArgs),
+    #[command(about = "List built-in Pramaan policy profiles.")]
     List,
 }
 
@@ -270,6 +300,7 @@ struct ConfidenceArgs {
 
 #[derive(Debug, Subcommand)]
 enum ConfidenceCommands {
+    #[command(about = "Build confidence artifacts and explain the evidence vote.")]
     Explain(ConfidenceExplainArgs),
 }
 
@@ -288,7 +319,9 @@ struct AgentArgs {
 
 #[derive(Debug, Subcommand)]
 enum AgentCommands {
+    #[command(about = "Run verification and emit an agent-facing done-gate decision.")]
     DoneGate(AgentDoneGateArgs),
+    #[command(about = "Explain an existing bundle in agent-facing JSON.")]
     Explain(AgentExplainArgs),
 }
 
@@ -318,7 +351,9 @@ struct ProbeArgs {
 
 #[derive(Debug, Subcommand)]
 enum ProbeCommands {
+    #[command(about = "Generate a provider-neutral probe plan from bundle risks.")]
     Plan(ProbePlanArgs),
+    #[command(about = "Execute bounded safe-marker probes in a sandboxed temp directory.")]
     Execute(ProbeExecuteArgs),
 }
 
@@ -2087,6 +2122,7 @@ fn run_export(args: ExportArgs) -> Result<()> {
     match args.command {
         ExportCommands::Sarif(args) => run_export_sarif(args.bundle, args.out),
         ExportCommands::Rego(args) => run_export_rego(args.out),
+        ExportCommands::Redacted(args) => run_bundle_export_redacted(args),
     }
 }
 
@@ -2246,18 +2282,20 @@ fn run_bundle(args: BundleArgs) -> Result<()> {
             println!("verification_result: {}", report.verification_result);
             Ok(())
         }
-        BundleCommands::ExportRedacted(args) => {
-            let report = export_redacted_bundle(&args.path, &args.out, &args.profile)
-                .context("exporting redacted bundle")?;
-            println!("Pramaan redacted bundle export complete");
-            println!("bundle: {}", report.bundle_root.display());
-            println!("manifest: {}", report.manifest_path.display());
-            println!("profile: {}", report.profile);
-            println!("redacted_files: {}", report.redacted_files.len());
-            Ok(())
-        }
+        BundleCommands::ExportRedacted(args) => run_bundle_export_redacted(args),
         BundleCommands::CosignPlan(args) => run_bundle_cosign_plan(args),
     }
+}
+
+fn run_bundle_export_redacted(args: BundleExportRedactedArgs) -> Result<()> {
+    let report = export_redacted_bundle(&args.path, &args.out, &args.profile)
+        .context("exporting redacted bundle")?;
+    println!("Pramaan redacted bundle export complete");
+    println!("bundle: {}", report.bundle_root.display());
+    println!("manifest: {}", report.manifest_path.display());
+    println!("profile: {}", report.profile);
+    println!("redacted_files: {}", report.redacted_files.len());
+    Ok(())
 }
 
 #[derive(Debug, Default, Serialize)]
@@ -2292,7 +2330,9 @@ struct DoctorReport {
     config_present: bool,
     config: PramaanConfig,
     tools: Vec<DoctorTool>,
+    blockers: Vec<String>,
     warnings: Vec<String>,
+    informational: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -2353,7 +2393,9 @@ fn run_bundle_cosign_plan(args: BundleCosignPlanArgs) -> Result<()> {
 
 fn run_doctor(args: DoctorArgs) -> Result<()> {
     let config = PramaanConfig::load(&args.config)?;
+    let blockers = Vec::new();
     let mut warnings = Vec::new();
+    let mut informational = Vec::new();
     if !args.config.exists() {
         warnings.push("No .pramaan.toml config was found; CLI defaults will be used.".to_string());
     }
@@ -2361,7 +2403,7 @@ fn run_doctor(args: DoctorArgs) -> Result<()> {
         warnings.push("internal-full redaction is not safe for public bundle sharing.".to_string());
     }
     if config.mutation_enabled != Some(true) {
-        warnings.push(
+        informational.push(
             "Mutation remains opt-in; missing mutation evidence is residual risk.".to_string(),
         );
     }
@@ -2392,7 +2434,9 @@ fn run_doctor(args: DoctorArgs) -> Result<()> {
         config_present: args.config.exists(),
         config,
         tools,
+        blockers,
         warnings,
+        informational,
     };
     if let Some(out) = args.out {
         write_json(&out, &report)?;
@@ -2566,13 +2610,13 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     let mut stages_run: Vec<&'static str> = Vec::new();
 
     if !skip.contains("static_checks") {
-        static_checks::run_static_checks(head_worktree.clone(), args.out.clone())
+        static_checks::run_static_checks_quiet(head_worktree.clone(), args.out.clone())
             .context("running static_checks stage")?;
         stages_run.push("static_checks");
     }
 
     if !skip.contains("oracle") {
-        oracle::run_oracle(
+        oracle::run_oracle_quiet(
             base_worktree.clone(),
             head_worktree.clone(),
             args.out.clone(),
@@ -2582,7 +2626,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     }
 
     if !skip.contains("fuzz") {
-        fuzz::run_fuzz(
+        fuzz::run_fuzz_quiet(
             base_worktree.clone(),
             head_worktree.clone(),
             Some(claim_scope_path.clone()),
@@ -2594,7 +2638,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     }
 
     if with_mutation && !skip.contains("mutation") {
-        mutation::run_mutation(
+        mutation::run_mutation_quiet(
             head_worktree.clone(),
             args.out.clone(),
             Vec::new(),
