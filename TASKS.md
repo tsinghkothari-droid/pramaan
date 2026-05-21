@@ -809,10 +809,10 @@ Phase 28.5 acceptance criteria:
 
 ## P3: Adapter Certification
 
-- [ ] Keep adapter certification as an adjacent mode, not a distraction from PR verification.
+- [x] Keep adapter certification as an adjacent mode, not a distraction from PR verification.
 - [ ] Add certification checks for MCP tool names, descriptions, schemas, auth scopes, idempotency, retry behavior, rate limits, and auditability.
 - [ ] Add adapter proof-bundle examples.
-- [ ] Add failure-mode taxonomy for agent tool adapters.
+- [x] Add failure-mode taxonomy for agent tool adapters.
 - [ ] Integrate adapter certification only after the core PR-verification bundle is trusted.
 
 ## Release Gates

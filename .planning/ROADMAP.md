@@ -224,6 +224,11 @@ calibrated benchmark reports remain future work.
 
 ## Phase 15: Documentation, Language Expansion, and Adapter Gates
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Adoption docs,
+rendered examples, language readiness gates, and bounded adapter-certification
+docs/schema/fixture are present. Full language depth and adapter product work
+remain later phases.
+
 **Goal:** Prepare Pramaan for external adoption while keeping PR verification as the primary product.
 
 **Requirements:** DOCS-01, DOCS-02, LANG-01, LANG-02, ADPT-05
