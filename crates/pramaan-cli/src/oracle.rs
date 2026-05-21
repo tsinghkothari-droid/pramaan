@@ -41,7 +41,7 @@ pub fn run_oracle(base_repo: PathBuf, head_repo: PathBuf, out: PathBuf) -> Resul
 fn oracle_receipt(
     base_repo: &Path,
     head_repo: &Path,
-    diff_path: &Path,
+    _diff_path: &Path,
     diff_digest: &str,
     diff: &OracleDiff,
 ) -> Receipt {
@@ -86,12 +86,12 @@ fn oracle_receipt(
         ],
         outputs: vec![OutputRef {
             name: "oracle_diff".to_string(),
-            path: portable_path(diff_path),
+            path: "oracle-diff.json".to_string(),
             digest: Some(diff_digest.to_string()),
         }],
         artifacts: vec![ArtifactRef {
             name: "oracle_diff_json".to_string(),
-            path: portable_path(diff_path),
+            path: "oracle-diff.json".to_string(),
             media_type: Some("application/json".to_string()),
             digest: Some(diff_digest.to_string()),
         }],

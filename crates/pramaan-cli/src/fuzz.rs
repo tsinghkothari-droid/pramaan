@@ -120,9 +120,9 @@ fn fuzz_receipt(
     base_repo: &Path,
     head_repo: &Path,
     claim_scope: Option<&Path>,
-    evidence_path: &Path,
+    _evidence_path: &Path,
     evidence_digest: &str,
-    replay_path: &Path,
+    _replay_path: &Path,
     replay_digest: &str,
     evidence: &FuzzRunEvidence,
     started_at: chrono::DateTime<Utc>,
@@ -178,25 +178,25 @@ fn fuzz_receipt(
         outputs: vec![
             OutputRef {
                 name: "fuzz_evidence".to_string(),
-                path: portable_path(evidence_path),
+                path: "differential-fuzz.json".to_string(),
                 digest: Some(evidence_digest.to_string()),
             },
             OutputRef {
                 name: "fuzz_replay".to_string(),
-                path: portable_path(replay_path),
+                path: "fuzz-replay.json".to_string(),
                 digest: Some(replay_digest.to_string()),
             },
         ],
         artifacts: vec![
             ArtifactRef {
                 name: "differential_fuzz_json".to_string(),
-                path: portable_path(evidence_path),
+                path: "differential-fuzz.json".to_string(),
                 media_type: Some("application/json".to_string()),
                 digest: Some(evidence_digest.to_string()),
             },
             ArtifactRef {
                 name: "replay_artifact".to_string(),
-                path: evidence.replay_path.clone(),
+                path: "fuzz-replay.json".to_string(),
                 media_type: Some("application/json".to_string()),
                 digest: Some(replay_digest.to_string()),
             },

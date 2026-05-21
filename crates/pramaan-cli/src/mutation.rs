@@ -398,17 +398,12 @@ fn receipt(
     limitations: Vec<String>,
     metadata: BTreeMap<String, String>,
 ) -> Receipt {
-    let mut artifacts = vec![ArtifactRef {
-        name: "mutation_command".to_string(),
-        path: plan.command.join(" "),
-        media_type: Some("text/x-shellscript".to_string()),
-        digest: None,
-    }];
+    let mut artifacts = Vec::new();
 
-    if let Some((path, digest)) = raw_output {
+    if let Some((_path, digest)) = raw_output {
         artifacts.push(ArtifactRef {
             name: "mutation_raw_output".to_string(),
-            path: portable_path(path),
+            path: format!("mutation/{}-raw.txt", plan.language.as_str()),
             media_type: Some("text/plain".to_string()),
             digest: Some(digest),
         });
