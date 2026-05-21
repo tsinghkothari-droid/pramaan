@@ -112,6 +112,7 @@ it can run in parallel.
 | 11 | Phase 35 | Operator docs, screenshots, troubleshooting, and release packaging | External maintainers need to install and inspect bundles unaided. | Real MVP adoption gate |
 | 11.5 | Phase 35.5 | Reviewer UX and local HTML report | A bundle must be understood in 30 seconds without a hosted dashboard. | Real MVP adoption gate |
 | 11.6 | Phase 35.6 | License-safe reviewer interface patterns | Borrow mature pull-request tooling ergonomics without importing names, text, prompts, configuration, screenshots, or source code. | Real MVP adoption gate |
+| 11.7 | Phase 35.7 | Machine verification and human sign-off gate | Agents must produce evidence, but humans must approve meaning, risk, usefulness, public claims, and release readiness. | Real MVP governance gate |
 | 12 | Phase 36 | Python/TypeScript/Rust plugin depth | Depth beats adding shallow Go/Java too early. | Language expansion |
 | 13 | Phase 37 | Provider-neutral forge design and GitLab support plan | Avoid hard-coding GitHub before enterprise pilots. | GitLab/Gitea/Bitbucket work |
 | 14 | Phase 38 | Multi-agent provenance and handoff tracking | Agent chains need attribution before trend analysis becomes serious. | Serious v1 provenance |
@@ -136,6 +137,9 @@ Execution guardrails:
 - Do not publish public-demo bundles before Phase 30 redaction tests pass.
 - Do not dashboard-first the product; Phase 35.5 must ship static report and PR
   summary UX first.
+- Do not treat any agent-written phase as human-approved; Phase 35.7 requires
+  machine-verification evidence plus human sign-off for public claims, releases,
+  Marketplace publishing, and Serious v1 gates.
 - Do not call the project Serious v1 before Phase 40 closes or rejects the
   release gate.
 - Use `.planning/AUTONOMOUS_GSD_BEFORE_PHASE_36_PROMPT.md` when handing the
@@ -224,6 +228,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 35 | P2 adoption | Operator guide, plugin-author guide, security model, troubleshooting docs, screenshots, and release packaging. |
 | Phase 35.5 | Adoption UX | Local HTML report and PR markdown report with blockers, warnings, ran/skipped stages, oracle changes, replay commands, and override fields. |
 | Phase 35.6 | Adoption UX and license hygiene | PR URL entrypoint, original reviewer commands, `.pramaan.toml`, persistent summaries, and public docs that avoid named adjacent-project references. |
+| Phase 35.7 | Governance gate | Machine-verification and human-signoff templates plus docs defining what agents can prove and what humans must approve. |
 | Phase 36 | P2 language depth | Deep Python, TypeScript, and Rust plugin quality before Go/Java expansion. |
 | Phase 37 | P3 enterprise | Provider-neutral forge abstraction, GitLab attestation/OIDC design, and Gitea/Bitbucket notes. |
 | Phase 38 | P3 provenance | Multi-agent provenance chains, intermediate commit attribution, and handoff metadata. |
@@ -450,19 +455,35 @@ AI coding agents and real reviewers. They are planned, not complete.
 
 #### Phase 35.6: License-Safe Reviewer Interface Patterns
 
-- [ ] Add or stage `pramaan verify-pr --url <pull-request-url>` as the clean
+- [x] Add or stage `pramaan verify-pr --url <pull-request-url>` as the clean
   PR URL entrypoint.
-- [ ] Define original reviewer commands: `/pramaan verify`,
+- [x] Define original reviewer commands: `/pramaan verify`,
   `/pramaan explain`, `/pramaan replay`, and `/pramaan policy <profile>`.
-- [ ] Add `.pramaan.toml` documentation for policy profile, stage budgets,
+- [x] Add `.pramaan.toml` documentation for policy profile, stage budgets,
   redaction, mutation opt-in, report behavior, and summary update behavior.
-- [ ] Update the Action/report plan so repeated runs update one persistent
+- [x] Update the Action/report plan so repeated runs update one persistent
   summary instead of creating noisy repeated comments.
-- [ ] Keep all public docs category-level: no copied prompts, config keys,
+- [x] Keep all public docs category-level: no copied prompts, config keys,
   command names, screenshots, text, or branded terminology from adjacent
   projects.
-- [ ] Add a verification check that risky adjacent-project names do not appear
-  in public docs or planning files.
+- [x] Add a verification check that risky adjacent-project names do not appear
+  in selected public-facing docs.
+
+Phase 35.6 is complete as a docs/interface-contract slice. Runtime `verify-pr`,
+`doctor`, `.pramaan.toml` loading, and forge-specific persistent PR summary
+updates remain future implementation work.
+
+#### Phase 35.7: Machine Verification and Human Sign-Off Gate
+
+- [x] Add `docs/human-signoff.md`.
+- [x] Add `.planning/templates/MACHINE_VERIFICATION.md`.
+- [x] Add `.planning/templates/HUMAN_SIGNOFF.md`.
+- [x] Require future GSD phase closeouts to include machine evidence and a
+  prepared human sign-off artifact.
+- [x] Update autonomous continuation instructions so agents do not
+  self-approve human-only decisions.
+- [x] Block public claims, releases, Marketplace publishing, and Serious v1
+  decisions until human sign-off exists.
 
 ### P0: Assertion Truth Audit Gate
 

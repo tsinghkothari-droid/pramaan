@@ -7,9 +7,9 @@ Status: completed
 ## What Landed
 
 - Added `docs/competitive-benchmark.md` with a public positioning matrix for
-  AI PR reviewers, reviewdog-style aggregators, test-change monitors,
-  Pynguin/EvoSuite-style test generators, mutation/property engines, GitHub
-  artifact attestations, SLSA VSA, Sigstore, and in-toto.
+  review assistants, quality-report aggregators, test-change monitors,
+  test generators, mutation/property engines, artifact attestations, SLSA VSA,
+  Sigstore, and in-toto.
 - Linked the benchmark from `README.md` and narrowed the differentiation claim:
   Pramaan is an evidence-bundle verifier, not a blanket replacement for
   reviewers, CI, SAST, generated tests, or supply-chain attestation systems.
@@ -34,7 +34,7 @@ Status: completed
 
 ## Self-Check
 
-- [x] Competitive matrix exists and cites each compared category.
+- [x] Competitive matrix exists and covers each compared category.
 - [x] Competitors and reusable primitives are separated.
 - [x] README language remains evidence-first and avoids correctness-proof or
   superiority claims.

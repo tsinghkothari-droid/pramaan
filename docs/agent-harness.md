@@ -47,7 +47,7 @@ same decision JSON without rerunning verification.
 
 ## Trust Boundary
 
-The harness is not a second AI reviewer. It does not judge code style or infer
+The harness is not a second review assistant. It does not judge code style or infer
 correctness. It maps Pramaan receipts and policy outcomes into completion
 instructions that an agent can follow. Human override is intentionally explicit:
 an agent may surface the override option, but it cannot grant the override to

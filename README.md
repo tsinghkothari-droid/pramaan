@@ -84,6 +84,10 @@ See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
   and bundle-inspection examples.
 - [Reviewer UX](docs/reviewer-ux.md): local HTML/Markdown reports for
   blocker-first bundle inspection.
+- [Reviewer Interface](docs/reviewer-interface.md): original command names,
+  config contract, and PR review-surface boundaries.
+- [Human Sign-Off](docs/human-signoff.md): what agents can self-verify and
+  where human approval is required.
 - [Competitive Benchmark](docs/competitive-benchmark.md): what Pramaan
   overlaps, reuses, and does differently from review assistants,
   quality-report aggregators, test generators, and attestation primitives.

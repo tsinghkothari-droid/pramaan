@@ -63,7 +63,7 @@ intended for audit.
 ## Non-Goals
 
 - Proving arbitrary code correctness.
-- Becoming a generic AI reviewer.
+- Becoming a generic review assistant.
 - Hiding uncertainty behind one score.
 - Relying on an LLM critic as the primary gate.
 - Shipping a dashboard before the evidence model works.

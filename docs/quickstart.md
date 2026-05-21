@@ -79,4 +79,4 @@ Pass condition:
 - It is not calibrated confidence.
 - It is not production Sigstore/cosign signing.
 - It is not full compiler-AST oracle extraction.
-- It is not proof that every AI reviewer misses this case.
+- It is not proof that every review assistant misses this case.

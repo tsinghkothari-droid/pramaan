@@ -924,7 +924,11 @@ source code from adjacent projects.
 
 **Priority:** Adoption UX and license hygiene
 
-**Status:** Planned 2026-05-21.
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS for docs and interface
+contracts. Public docs now use category-level prior-art language and
+`docs/reviewer-interface.md` stages original commands, `.pramaan.toml`, and PR
+URL workflow expectations. Runtime `verify-pr`, `doctor`, config loading, and
+forge-specific persistent PR summary updates remain future implementation work.
 
 **Success Criteria:**
 
@@ -939,6 +943,31 @@ source code from adjacent projects.
    comments.
 5. Public docs avoid named adjacent-project references and use category-level
    prior-art language.
+
+## Phase 35.7: Machine Verification and Human Sign-Off Gate
+
+**Goal:** Require every meaningful GSD phase to separate agent-produced
+machine evidence from human approval of meaning, risk, usefulness, claims, and
+release readiness.
+
+**Priority:** Development-process integrity
+
+**Status:** Completed 2026-05-21 for governance docs and templates. Human
+approval itself remains intentionally blank until a human reviewer completes the
+phase-level `HUMAN_SIGNOFF.md`.
+
+**Success Criteria:**
+
+1. `docs/human-signoff.md` defines the boundary between agent self-verification
+   and human approval.
+2. `.planning/templates/MACHINE_VERIFICATION.md` captures files changed,
+   commands run, generated evidence, known gaps, and residual risks.
+3. `.planning/templates/HUMAN_SIGNOFF.md` captures human approval, rejection,
+   required changes, accepted risks, and public-release readiness.
+4. Autonomous GSD continuation instructions require agents to prepare both
+   artifacts without self-approving human-only decisions.
+5. Public claims, releases, Marketplace publishing, and Serious v1 gates are
+   blocked until human sign-off exists.
 
 ## Phase 36: Language Plugin Depth for Python, TypeScript, and Rust
 

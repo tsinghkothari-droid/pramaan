@@ -100,7 +100,7 @@
 
 ### Advanced Stages
 
-- **ADV-01**: Adversarial test amplification via Pynguin/EvoSuite/CodaMosa-style tools.
+- **ADV-01**: Adversarial test amplification via search-based and hybrid test-generation tools.
 - **ADV-02**: Optional formal verification receipts through Kani, CBMC, or Dafny where specs exist.
 - **ADV-03**: Dual critic output with position-swap mitigation, marked as non-gating signal.
 - **ADV-04**: Go and Java language plugins.

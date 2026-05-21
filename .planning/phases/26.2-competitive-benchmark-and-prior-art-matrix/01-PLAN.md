@@ -8,7 +8,7 @@ comprehensive.
 
 ## Why This Phase Exists
 
-The public market already has AI PR reviewers, structural risk triage tools,
+The public market already has review assistants, structural risk triage tools,
 test-change monitors, quality aggregators, and attestation primitives. Pramaan
 should not pretend those do not exist. The stronger claim is narrower:
 Pramaan combines execution-grounded PR evidence, oracle integrity, policy
@@ -16,12 +16,12 @@ decisions, and proof-bundle trust in one auditable loop.
 
 ## Tools To Compare
 
-- PR-Agent and similar AI PR reviewers.
-- OpenReview-style sandboxed AI review loops.
-- inspect-style structural risk triage.
-- Testomatio/check-tests-style test-change detection.
-- quality-monitor/reviewdog-style report aggregation.
-- actions/attest, SLSA verifier, Sigstore, and in-toto primitives.
+- Review-assistant tools.
+- Sandboxed review loops.
+- Structural risk triage tools.
+- Test-change detection systems.
+- Quality-report aggregation systems.
+- Artifact attestation, SLSA verifier, Sigstore, and in-toto primitives.
 
 ## Files To Change
 
@@ -46,7 +46,7 @@ decisions, and proof-bundle trust in one auditable loop.
 
 ## Verification
 
-- `docs/competitive-benchmark.md` exists and cites every compared tool.
+- `docs/competitive-benchmark.md` exists and covers every compared category.
 - Claim audit contains entries for any superiority or differentiation claims.
 - README language stays honest: evidence bundle, not correctness proof.
 

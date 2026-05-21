@@ -50,6 +50,8 @@ Execute remaining pre-36 phases in this exact order:
 7. Phase 28.26: Sandbox Execution for Generated Probes
 8. Phase 32.75: Anti-Gaming and Verifier-Abuse Hardening
 9. Phase 35.5: Reviewer UX and Local HTML Report
+10. Phase 35.6: License-Safe Reviewer Interface Patterns
+11. Phase 35.7: Machine Verification and Human Sign-Off Gate
 
 For each phase:
 1. Read the phase plan in `.planning/phases/<phase>/01-PLAN.md`.
@@ -65,15 +67,20 @@ For each phase:
    - what was deferred
    - verification commands and results
    - residual risks
-7. Run verification:
+7. Add or update `.planning/phases/<phase>/MACHINE_VERIFICATION.md` from
+   `.planning/templates/MACHINE_VERIFICATION.md`.
+8. Prepare `.planning/phases/<phase>/HUMAN_SIGNOFF.md` from
+   `.planning/templates/HUMAN_SIGNOFF.md`, but do not mark human approval
+   yourself.
+9. Run verification:
    - `cargo fmt --check`
    - `cargo test --workspace`
    - `cargo clippy --workspace -- -D warnings`
    - `node scripts/check-claim-audit.mjs`
    - `node --test action/render-summary.test.mjs`
    - any phase-specific validator introduced by the phase
-8. Commit each phase separately with a clear message.
-9. Push to GitHub after each successful phase.
+10. Commit each phase separately with a clear message.
+11. Push to GitHub after each successful phase.
 
 If a phase cannot be completed honestly:
 - split it into the smallest useful follow-up phase;
@@ -96,6 +103,10 @@ Non-negotiable honesty rules:
 - Do not claim the reviewer UX is solved until Phase 35.5 produces local HTML
   and markdown reports that show blockers, warnings, skipped stages, oracle
   changes, replay commands, and override fields.
+- Do not claim agent-written work is human-approved. Agents produce
+  `MACHINE_VERIFICATION.md`; humans complete `HUMAN_SIGNOFF.md`.
+- Do not publish public claims, releases, Marketplace listings, or Serious v1
+  decisions without human sign-off.
 
 Before final response:
 - run `git status --short`;

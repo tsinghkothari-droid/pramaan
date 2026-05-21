@@ -26,6 +26,11 @@ wording, not on any claim of production readiness.
 
 Phase 35.6: License-Safe Reviewer Interface Patterns
 
+Phase 35.7's machine-verification/human-signoff governance gate is adopted and
+complete for docs/templates. Future phase closeouts should now prepare both
+artifacts, but humans must complete `HUMAN_SIGNOFF.md` before public claims,
+releases, Marketplace publishing, or Serious v1 decisions.
+
 Optional pre-alpha proof phases can run in parallel if they do not hide
 residual risk: Phase 26.3 competitor-gap fixtures and Phase 26.4 minimum
 lovable verifier loop.
@@ -159,5 +164,6 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Completed Phase 28.26 sandbox execution for generated probes. | `pramaan probe execute` now materializes bounded safe-marker probes under a temp sandbox, runs language-native commands with timeouts, preserves rejected compile/static/binding failures, writes execution reports, and updates the `ai_probe_generation` receipt. |
 | 2026-05-21 | Completed Phase 32.75 anti-gaming hardening. | Claim scope now flags verifier-surface path changes as `R-094`/`R-095`, security-sensitive policy profiles hard-fail those risks, and `corpus/verifier-abuse-fixtures.v0.1.json` validates six anti-gaming scenarios. |
 | 2026-05-21 | Completed Phase 35.5 local reviewer reports. | `pramaan report markdown` and `pramaan report html` now render blocker-first bundle reports with ran/skipped stages, oracle test-change evidence, replay commands, human override fields, examples, docs, and matching Action summary sections. |
-| 2026-05-21 | Added Phase 35.6 license-safe reviewer interface patterns. | Pramaan can learn from category-level pull-request tooling ergonomics while keeping all names, copy, command design, configuration, screenshots, and implementation original to this MIT-licensed repo. |
 | 2026-05-21 | Completed Phase 28.15 fuzz harness truthfulness gate. | Tool-backed Hypothesis/fast-check failures now affect canonical fuzz evidence, harness timeouts are enforced, harness nonzero exits become receipts, unsafe dynamic JavaScript evaluation is removed, and tool/deterministic case counts are separated. |
+| 2026-05-21 | Added Phase 35.6 license-safe reviewer interface patterns. | Pramaan can learn from category-level pull-request tooling ergonomics while keeping all names, copy, command design, configuration, screenshots, and implementation original to this MIT-licensed repo. |
+| 2026-05-21 | Added Phase 35.7 machine verification and human sign-off gate. | Future agent-written phases must produce machine evidence, but humans approve meaning, severity, usefulness, public claims, release readiness, and accepted residual risk. |
