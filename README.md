@@ -74,6 +74,9 @@ See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
   checklist.
 - [Rendered Examples](docs/rendered-examples/README.md): pass, warning, fail,
   and bundle-inspection examples.
+- [Pre-Phase-36 GSD Prompt](.planning/AUTONOMOUS_GSD_BEFORE_PHASE_36_PROMPT.md):
+  paste-ready autonomous prompt for finishing all remaining GSD phases before
+  language-depth expansion.
 
 ## The Pramaan Answer
 

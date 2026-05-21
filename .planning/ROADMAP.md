@@ -436,6 +436,57 @@ and capture the uploaded proof bundle plus rendered job summary.
 4. `TASKS.md`, `.planning/STATE.md`, and `.planning/ROADMAP.md` distinguish
    live Action evidence from local action-summary tests.
 
+## Phase 26.2: Competitive Benchmark and Prior-Art Matrix
+
+**Goal:** Make Pramaan's public positioning evidence-grounded by comparing it
+against adjacent GitHub tools and primitives before claiming superiority.
+
+**Priority:** Positioning
+
+**Success Criteria:**
+
+1. `docs/competitive-benchmark.md` compares Pramaan against PR-Agent,
+   OpenReview, inspect, Testomatio, quality-monitor, actions/attest,
+   SLSA verifier, and in-toto primitives.
+2. The benchmark separates competitors from reusable primitives.
+3. Each comparison records overlap, Pramaan's differentiated evidence layer,
+   and what Pramaan should not duplicate.
+4. README or marketing claims that imply "more comprehensive" are tied to the
+   benchmark or softened.
+
+## Phase 26.3: Competitor-Gap Fixtures
+
+**Goal:** Convert "Pramaan catches what other tools miss" into executable
+fixtures rather than marketing copy.
+
+**Priority:** Demo credibility
+
+**Success Criteria:**
+
+1. Fixtures cover weakened assertions, added skips, fixture/snapshot drift,
+   hallucinated API usage, false-green CI, unsigned quality reports, and hidden
+   skipped verification stages.
+2. Each fixture maps to stable risk IDs, expected receipts, and expected policy
+   decision.
+3. A gap report explains which adjacent tool category would miss or under-report
+   the scenario.
+4. Stale, duplicate, or unmapped gap fixtures fail validation.
+
+## Phase 26.4: Minimum Lovable Verifier Loop
+
+**Goal:** Prove the first product wedge feels complete: one command, one
+report, one proof bundle, one killer demo, and a 30-second reviewer answer.
+
+**Priority:** Real MVP wedge
+
+**Success Criteria:**
+
+1. A fresh reviewer can run one command and get a bundle plus report.
+2. The canonical weakened-test demo is the default quickstart path.
+3. The report explains blockers, skipped stages, confidence explanation, and
+   replay/inspection commands without requiring source-code archaeology.
+4. Any skipped required stage that looks like a pass is treated as a blocker.
+
 ## Phase 26.5: Agent Harness Interface for Coding Agents
 
 **Status:** Completed 2026-05-21. The deterministic agent done gate, explain
@@ -488,6 +539,7 @@ subprocess choices, parser-version evidence, and disagreement reporting.
    and disagreement counts.
 4. Claim audit stops marking full compiler AST extraction as planned only after
    executable fixtures pass.
+
 ## Phase 28: Tool-Backed Property, Fuzz, and Replay
 
 **Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Recorded-case replay CLI
@@ -685,6 +737,25 @@ future hardening.
 3. GitHub Action accepts a `policy-profile` input.
 4. Policy fixtures cover pass, warn, fail, waiver, and security-sensitive path
    escalation.
+
+## Phase 32.75: Anti-Gaming and Verifier-Abuse Hardening
+
+**Goal:** Make Pramaan resistant to PRs or plugins that try to game the
+verification surface itself.
+
+**Priority:** Trust hardening
+
+**Success Criteria:**
+
+1. Malicious PR fixtures cover relaxed config, removed hooks, skipped tests,
+   altered fixtures, poisoned snapshots, and changed verification scripts.
+2. Verifier-abuse fixtures cover artifact path escape, receipt tampering,
+   hidden skipped stages, fake tool output, timeout laundering, and benchmark
+   overfitting.
+3. Policy rules escalate verifier-surface changes according to the selected
+   policy profile.
+4. Skipped required stages cannot improve confidence, and plugin/PR code cannot
+   overwrite existing receipts or manifests.
 
 ## Phase 33: Adversarial Corpus 25 and Secure-Code Scenarios
 

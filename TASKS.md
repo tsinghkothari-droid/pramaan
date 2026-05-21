@@ -60,6 +60,11 @@ Use `TASKS.md` in this order:
    re-open completed P0/P1 work unless the claim audit or pilot evidence says
    the implementation is stale.
 
+For autonomous continuation before Phase 36, use the paste-ready prompt in
+`.planning/AUTONOMOUS_GSD_BEFORE_PHASE_36_PROMPT.md`. It orders the remaining
+pre-36 phases, keeps the proof/evidence language honest, and requires a
+separate verified commit and push per phase.
+
 ### Priority Completion Snapshot
 
 This table is the quick answer for whether P0, P1, and P2 are complete.
@@ -84,6 +89,9 @@ it can run in parallel.
 | --- | --- | --- | --- | --- |
 | 1 | Phase 26 | External local pilot reports for Python, TypeScript, and Rust repositories | Public Alpha needed real-repo evidence beyond internal fixtures. | Public Alpha evidence |
 | 1.1 | Phase 26.1 | Live GitHub Action proof on a real PR or PR-like branch | Public Alpha is still no-go until CI artifact and summary evidence exist. | Public Alpha claims |
+| 1.2 | Phase 26.2 | Competitive benchmark and prior-art matrix | The repo should prove where Pramaan is different from AI reviewers, test monitors, and attestation tools. | Positioning and scope discipline |
+| 1.3 | Phase 26.3 | Competitor-gap fixtures | "Pramaan catches what X misses" must be executable evidence, not a marketing sentence. | Demo credibility |
+| 1.4 | Phase 26.4 | Minimum lovable verifier loop | One command, one report, one proof bundle, one killer demo should feel complete before expanding. | Real MVP wedge |
 | 1.5 | Phase 26.5 | Agent harness interface for Claude Code, Codex, Cursor-style agents, and custom harnesses | Agents should call Pramaan before claiming done. | Agent adoption |
 | 2 | Phase 27 | Parser-backed subset oracle extractors | Confidence and signing are weaker if oracle evidence is still parser-light. | Phase 28.5 confidence inputs |
 | 2.1 | Phase 27.1 | Full compiler AST oracle extractors | Full AST parser support needs dependency and runtime justification. | Public full-AST claims |
@@ -96,6 +104,7 @@ it can run in parallel.
 | 7 | Phase 31 | Plugin protocol schema, trust validator, dangerous-permission rejection, and malicious-plugin fixture landed. | Plugin expansion is dangerous before verifier supply-chain trust exists. | Third-party plugin work |
 | 8 | Phase 32 | SARIF export, Rego policy export, and agentic workflow-injection checks landed. | Findings should appear in existing security review surfaces. | Enterprise/security adoption |
 | 8.5 | Phase 32.5 | Built-in policy packs, profile CLI, fixtures, and Action profile input landed. | Teams need risk-tuned policies without editing code. | Enterprise/security adoption |
+| 8.75 | Phase 32.75 | Anti-gaming and verifier-abuse hardening | Malicious or over-optimized PRs must not game skipped stages, config, fixtures, hooks, or receipts. | Corpus and trust hardening |
 | 9 | Phase 33 | 25-scenario adversarial and secure-code corpus | Real MVP needs broader failure-mode proof before scale claims. | Phase 40 corpus 100 |
 | 10 | Phase 34 | Reviewer overrides, baselines, drift, and confidence calibration | Prevent alert fatigue and make confidence less hand-tuned. | Real MVP calibration gate |
 | 11 | Phase 35 | Operator docs, screenshots, troubleshooting, and release packaging | External maintainers need to install and inspect bundles unaided. | Real MVP adoption gate |
@@ -110,6 +119,10 @@ Execution guardrails:
 
 - Start with Phase 26 unless the user explicitly asks for a narrower phase.
 - Do not market public Alpha before Phase 26.1 has live GitHub Action evidence.
+- Do not claim Pramaan is better than AI reviewers before Phase 26.2 and Phase
+  26.3 create a benchmark matrix and executable competitor-gap fixtures.
+- Do not broaden engines before Phase 26.4 proves the minimum lovable verifier
+  loop is coherent end to end.
 - Do not ask coding agents to self-certify completion before Phase 26.5 lands.
 - Do not count AI-generated probes as evidence before Phase 28.26 executes them
   in a sandbox.
@@ -121,6 +134,8 @@ Execution guardrails:
   summary UX first.
 - Do not call the project Serious v1 before Phase 40 closes or rejects the
   release gate.
+- Use `.planning/AUTONOMOUS_GSD_BEFORE_PHASE_36_PROMPT.md` when handing the
+  remaining pre-36 sequence to a fresh autonomous agent.
 
 ### P0 Product Direction Tasks
 
@@ -182,6 +197,9 @@ unfinished task family below into an executable GSD phase.
 | --- | --- | --- |
 | Phase 26 | Alpha gate | Three external real-repository local pilots, runtime/noise metrics, and a public-Alpha no-go update. |
 | Phase 26.1 | Alpha gate | Live GitHub Action proof, uploaded bundle artifact, job summary evidence, and a public-Alpha go/no-go update. |
+| Phase 26.2 | Positioning | Competitive benchmark matrix against PR-Agent, OpenReview, inspect, Testomatio, quality-monitor, and actions/attest. |
+| Phase 26.3 | Demo credibility | Executable "Pramaan catches what X misses" fixtures for weakened assertions, skipped tests, fixture drift, false-green CI, and unsigned aggregate reports. |
+| Phase 26.4 | Product wedge | Minimum lovable verifier loop: one command, one report, one proof bundle, one killer demo, and a 30-second reviewer pass. |
 | Phase 26.5 | Agent adoption | `pramaan agent done-gate`, agent decision schema, `AGENTS.md`, Claude Code hook/command templates, and blocked-agent fixtures. |
 | Phase 27 | P1 hardening | Parser-backed subset oracle extractors for Python, TypeScript, and Rust with negative fixtures and honest residual full-AST split. |
 | Phase 27.1 | P1 hardening split | Full compiler AST oracle extractors with dependency justifications, parser-version evidence, and disagreement reporting. |
@@ -194,6 +212,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 31 | P2 security | Plugin protocol schema, plugin identity/provenance validation, least-privilege receipt permissions, and malicious plugin rejection. |
 | Phase 32 | P2 security | SARIF export, Rego policy export, claim-scope workflow-injection checks, and GitHub code-scanning guidance. |
 | Phase 32.5 | Enterprise adoption | Built-in policy packs, profile fixtures, `policy list`, `policy explain --profile`, and GitHub Action `policy-profile`. |
+| Phase 32.75 | Trust hardening | Anti-gaming fixtures and verifier-abuse checks for weakened config, hidden skipped stages, hook bypass, fixture poisoning, receipt tampering, and benchmark overfitting. |
 | Phase 33 | P2 evals | Adversarial corpus expansion to 25 scenarios, including secure-code and malicious-verifier cases. |
 | Phase 34 | P2 feedback | Reviewer override persistence, repo baselines, calibration, drift exports, and agent-author trend metrics. |
 | Phase 35 | P2 adoption | Operator guide, plugin-author guide, security model, troubleshooting docs, screenshots, and release packaging. |
@@ -209,14 +228,17 @@ public Alpha until Phase 26.1 has live GitHub Action evidence. Do not expand the
 plugin ecosystem until Phase 31 defines plugin trust and isolation. Do not claim
 public-safe bundle sharing until Phase 30 redaction tests pass. Do not claim
 Serious v1 until Phase 40 closes the 100-scenario corpus and final release gate.
-Phase 28.5 must land before Phase 29 so any confidence vote is signed and
-auditable instead of being an unsigned UI-only score.
+Phase 28.5 must land before Phase 29 so any confidence vote is digest-linked
+and attestable instead of being an unsigned UI-only score.
 
 Unfinished task-family mapping:
 
 | Open task family | Owning phases |
 | --- | --- |
 | Public Alpha blockers | 26, 27, 28, 29 |
+| Competitive benchmark and prior art | 26.2 |
+| Competitor-gap proof fixtures | 26.3 |
+| Minimum lovable verifier packaging | 26.4 |
 | Agent harness for coding agents | 26.5 |
 | Full AST/parser oracle integrations | 27.1 |
 | Real Hypothesis/fast-check campaigns | 28.1 |
@@ -227,6 +249,7 @@ Unfinished task-family mapping:
 | Plugin trust and verifier security | 31 |
 | CI/security review integrations | 32 |
 | Policy packs and enterprise profiles | 32.5 |
+| Anti-gaming and verifier-abuse hardening | 32.75, 33 |
 | Adversarial corpus and secure-code scenarios | 33, 40 |
 | Reviewer feedback, calibration, and drift | 34 |
 | Documentation and adoption | 35 |
@@ -273,6 +296,50 @@ Public Alpha blockers:
 
 These tasks expand the right-direction phases that make Pramaan useful to real
 AI coding agents and real reviewers. They are planned, not complete.
+
+#### Phase 26.2: Competitive Benchmark and Prior-Art Matrix
+
+- [ ] Add `docs/competitive-benchmark.md`.
+- [ ] Compare Pramaan against PR-Agent, OpenReview, inspect, Testomatio,
+  quality-monitor, actions/attest, SLSA verifier, and in-toto primitives.
+- [ ] For each tool, record overlap, what Pramaan should reuse, what Pramaan
+  should not duplicate, and what evidence gap remains.
+- [ ] Add a "not a competitor" section for tools that are primitives rather
+  than replacement products.
+- [ ] Add an adoption-positioning table: AI reviewer, CI quality aggregator,
+  supply-chain attestor, evidence-bundle verifier.
+- [ ] Add claim-audit rows for any README/marketing claim that says Pramaan is
+  broader, stronger, or more comprehensive than existing tools.
+- [ ] Add a maintenance note requiring this benchmark to refresh before public
+  Alpha and Serious v1.
+
+#### Phase 26.3: Competitor-Gap Fixtures
+
+- [ ] Add fixture scenarios where ordinary AI PR review would likely pass but
+  Pramaan should block or warn.
+- [ ] Cover weakened assertions, added skips, fixture/snapshot drift,
+  hallucinated API usage, false-green CI, unsigned aggregate quality reports,
+  and hidden skipped verification stages.
+- [ ] Map every scenario to stable risk IDs and expected Pramaan receipts.
+- [ ] Add a report that says which public-tool category would miss or
+  under-report each scenario.
+- [ ] Add CI validation that stale or duplicate gap fixtures fail.
+- [ ] Keep competitor names out of brittle test names where possible; test the
+  failure mode, not another project's implementation detail.
+
+#### Phase 26.4: Minimum Lovable Verifier Loop
+
+- [ ] Define the one-command path from checkout to proof bundle.
+- [ ] Define the one-report path for a reviewer to understand blockers in under
+  30 seconds.
+- [ ] Pick one killer demo as the canonical first-run example and keep all
+  public quickstart docs pointed at it.
+- [ ] Ensure the generated bundle contains receipts, manifest, policy summary,
+  confidence explanation when available, and clear skipped-stage evidence.
+- [ ] Add a manual UAT script where a fresh reviewer runs the command, opens
+  the report, and explains the blocker without reading source code first.
+- [ ] Treat any skipped stage that looks like a pass as a release blocker.
+- [ ] Defer broad language expansion until this loop feels complete.
 
 #### Phase 26.5: Agent Harness Interface
 
@@ -332,6 +399,21 @@ AI coding agents and real reviewers. They are planned, not complete.
 - [x] Document when each policy pack should be used.
 - [x] Keep policy packs as deterministic gates; no LLM judge can override hard
   gates.
+
+#### Phase 32.75: Anti-Gaming and Verifier-Abuse Hardening
+
+- [ ] Add malicious PR fixtures for relaxed config, removed hooks, skipped
+  tests, altered fixtures, poisoned snapshots, and changed verification scripts.
+- [ ] Add verifier-abuse fixtures for artifact path escape, receipt tampering,
+  hidden skipped stages, fake tool output, timeout laundering, and benchmark
+  overfitting.
+- [ ] Add policy rules that make suspicious verifier-surface changes
+  warning-or-blocking depending on policy profile.
+- [ ] Ensure skipped required stages cannot silently improve confidence.
+- [ ] Ensure generated receipts cannot be overwritten by plugins or PR code.
+- [ ] Add docs explaining Pramaan's adversary model: careless AI, overfitted AI,
+  malicious contributor, and compromised verification plugin.
+- [ ] Feed accepted scenarios into Phase 33 and Phase 40 corpus counts.
 
 #### Phase 35.5: Reviewer UX and Local HTML Report
 
