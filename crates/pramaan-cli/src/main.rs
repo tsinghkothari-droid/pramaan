@@ -2,8 +2,9 @@ use anyhow::{Context, Result};
 use chrono::Utc;
 use clap::{Parser, Subcommand};
 use pramaan_bundle::{
-    build_manifest, read_manifest, sha256_hex, verify_bundle, write_manifest, BundleBuildOptions,
-    BundleManifest, MANIFEST_FILE_NAME,
+    build_manifest, emit_offline_attestations, read_manifest, sha256_hex, verify_bundle,
+    verify_offline_attestations, write_manifest, BundleBuildOptions, BundleManifest,
+    MANIFEST_FILE_NAME,
 };
 use pramaan_core::{
     build_agent_decision, build_confidence_artifact, canonical_json_bytes, default_policy_profile,
@@ -68,10 +69,22 @@ struct BundleArgs {
 #[derive(Debug, Subcommand)]
 enum BundleCommands {
     Verify(BundleVerifyArgs),
+    Attest(BundleAttestArgs),
+    VerifyOffline(BundleVerifyOfflineArgs),
 }
 
 #[derive(Debug, Parser)]
 struct BundleVerifyArgs {
+    path: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct BundleAttestArgs {
+    path: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct BundleVerifyOfflineArgs {
     path: PathBuf,
 }
 
@@ -997,6 +1010,27 @@ fn run_bundle(args: BundleArgs) -> Result<()> {
             println!("manifest: {}", report.manifest_path.display());
             println!("receipts_checked: {}", report.checked_receipts);
             println!("artifacts_checked: {}", report.checked_artifacts);
+            Ok(())
+        }
+        BundleCommands::Attest(args) => {
+            let report = emit_offline_attestations(&args.path)
+                .context("emitting offline attestation material")?;
+            println!("Pramaan offline attestation complete");
+            println!("vsa: {}", report.vsa_path.display());
+            println!("in_toto: {}", report.statement_path.display());
+            println!("manifest_digest: {}", report.manifest_digest.prefixed());
+            println!("verification_result: {}", report.verification_result);
+            println!("note: local/offline attestation is evidence, not a correctness proof");
+            Ok(())
+        }
+        BundleCommands::VerifyOffline(args) => {
+            let report = verify_offline_attestations(&args.path)
+                .context("verifying offline attestation material")?;
+            println!("Pramaan offline attestation verification complete");
+            println!("vsa: {}", report.vsa_path.display());
+            println!("in_toto: {}", report.statement_path.display());
+            println!("manifest_digest: {}", report.manifest_digest.prefixed());
+            println!("verification_result: {}", report.verification_result);
             Ok(())
         }
     }

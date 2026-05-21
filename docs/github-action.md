@@ -43,6 +43,7 @@ The wrapper runs:
 ```bash
 cargo build --locked -p pramaan-cli
 target/debug/pramaan verify --base "$BASE_REF" --head "$HEAD_REF" --out target/pramaan
+target/debug/pramaan bundle attest target/pramaan
 target/debug/pramaan policy explain target/pramaan
 ```
 
@@ -50,6 +51,11 @@ It then uploads `target/pramaan` as the `pramaan-proof-bundle` artifact and
 appends a summary to `GITHUB_STEP_SUMMARY`. The policy explanation is appended
 to the run log before summary rendering so reviewers can see the default gate
 reasoning without opening raw JSON.
+
+`bundle attest` emits local/offline `attestations/bundle.vsa.json` and
+`attestations/bundle.in-toto.json` files before upload. These files can be
+checked later with `pramaan bundle verify-offline target/pramaan`. They are
+downloadable tamper evidence, not proof of GitHub runner identity.
 
 ## Inputs
 
@@ -138,6 +144,11 @@ steps:
 The wrapper attests `target/pramaan/bundle.manifest.json`. The uploaded proof
 bundle remains the review artifact; attestation adds CI provenance for the
 manifest and should be read beside the residual risk families in the summary.
+
+This GitHub-native attestation is separate from the local/offline VSA files that
+Pramaan always emits in the composite action. Use `attest: "true"` only when the
+workflow grants OIDC and attestation permissions and the repository policy
+allows provenance publication.
 
 ## Summary Shape
 

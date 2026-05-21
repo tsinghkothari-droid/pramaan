@@ -14,7 +14,7 @@ Phase 28 real Hypothesis/fast-check harnesses.
 
 ## Current Phase
 
-Phase 29: Attestation, VSA, and Offline Verification
+Phase 30: Redaction Profiles and Public Bundle Export
 
 Public Alpha gate still open: Phase 26.1 Live GitHub Action Proof.
 
@@ -42,7 +42,8 @@ gate.
   harnesses first or require plugin isolation before tool-backed campaigns.
 - Whether Phase 28.26 should execute generated probes through language-native
   subprocess harnesses first or require plugin isolation before execution.
-- Whether Phase 29 should use cosign subprocess first or a Rust Sigstore crate.
+- Which production identity path should follow Phase 29's local/offline VSA:
+  cosign subprocess, Rust Sigstore crate, or GitHub artifact attestations first.
 - Whether the Phase 28.5 deterministic starter weights should be adjusted after
   the first three external pilots, before Phase 34 formal calibration.
 - Whether Phase 31 isolation starts with subprocess/container boundaries or a WASM boundary.
@@ -102,3 +103,4 @@ gate.
 | 2026-05-21 | Executed Phase 28 recorded-case replay. | `pramaan replay` now reads differential fuzz evidence, prints deterministic case details, and keeps real Hypothesis/fast-check execution split to Phase 28.1. |
 | 2026-05-21 | Executed Phase 28.25 provider-neutral AI probe planning. | `pramaan probe plan` now writes `pramaan.probe.v1` plans and `ai_probe_generation` receipts while keeping every candidate pending until sandbox execution; generated-probe execution is split to Phase 28.26. |
 | 2026-05-21 | Completed Phase 28.5 uncalibrated confidence bridge. | Confidence artifacts now have schema/fixture contract tests plus critical-path and invalid-attestation hard gates; Phase 34 still owns real calibration. |
+| 2026-05-21 | Executed Phase 29 local/offline attestation. | `pramaan bundle attest` now emits local VSA and in-toto files, `pramaan bundle verify-offline` checks them against manifest/confidence digests, and production Sigstore/GitHub identity remains explicit future hardening. |

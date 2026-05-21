@@ -4,6 +4,10 @@ Pramaan v1 treats signing and attestation as evidence metadata, not as a magic
 verdict. A bundle can be signable locally for development, or it can carry
 GitHub artifact attestation metadata when produced by CI.
 
+Phase 29 adds a local/offline VSA path. See [Signing and Offline
+Attestation](signing.md) for the `pramaan bundle attest` and
+`pramaan bundle verify-offline` commands.
+
 ## Local Dev Signing
 
 Local dev signing metadata uses:

@@ -91,7 +91,7 @@ it can run in parallel.
 | 3.1 | Phase 28.1 | Safe Hypothesis/fast-check harness execution | Real tool-backed campaigns need sandboxed generated harnesses. | Public tool-backed property claims |
 | 3.25 | Phase 28.25 | AI evidence-seeking probe generator | AI should generate better probes, but only executed probes count. | Phase 28.5 confidence inputs |
 | 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
-| 5 | Phase 29 | Sigstore/cosign, GitHub attestations, in-toto/SLSA VSA, offline verify | Trust evidence must leave CI as a verifiable artifact. | Real MVP trust gate |
+| 5 | Phase 29 | Local/offline in-toto/SLSA VSA and offline verify landed; production Sigstore/cosign identity remains planned. | Trust evidence must leave CI as a verifiable artifact. | Real MVP trust gate |
 | 6 | Phase 30 | Redaction profiles and public-safe bundle export | External pilots and demos need shareable bundles. | Public bundle sharing |
 | 7 | Phase 31 | Plugin protocol, identity, permissions, and isolation | Plugin expansion is dangerous before verifier supply-chain trust exists. | Third-party plugin work |
 | 8 | Phase 32 | SARIF export, OPA/policy parity, CI hardening, agentic workflow-injection checks | Findings should appear in existing security review surfaces. | Enterprise/security adoption |
@@ -189,7 +189,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 28.1 | P1 hardening split | Safe real Hypothesis and fast-check generated-harness execution with budget/timeout/tool-version evidence. |
 | Phase 28.25 | 10x evidence depth | AI-generated probes for tests, properties, differential inputs, and security checks; only sandbox-executed probes count. |
 | Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
-| Phase 29 | P2 trust | Sigstore/cosign bundle signing, GitHub artifact attestation, SLSA VSA-style output, and offline bundle verification. |
+| Phase 29 | P2 trust | Local/offline SLSA VSA-style output, in-toto wrapping, composite-action attestation emission, and offline bundle verification; production Sigstore/cosign identity remains a hardening follow-up. |
 | Phase 30 | P2 trust | Redaction profiles and public-demo bundle export tests for secrets, private paths, internal hosts, and CI metadata. |
 | Phase 31 | P2 security | Plugin protocol, plugin identity/provenance, least-privilege receipt permissions, and isolated plugin execution threat model. |
 | Phase 32 | P2 security | SARIF export, policy-as-code parity, CI hardening expansion, CodeQL/security-scanner integration, and agentic workflow-injection checks. |
@@ -262,8 +262,8 @@ Public Alpha blockers:
   keep those claims explicitly planned under Phase 28.1.
 - [ ] Add full compiler/parser AST integrations for Python, TypeScript, and
   Rust, or keep those claims explicitly planned.
-- [ ] Add production signing/attestation path, or keep Sigstore/in-toto claims
-  explicitly planned.
+- [x] Add local/offline VSA and in-toto attestation evidence, while keeping
+  production Sigstore/GitHub identity claims explicitly planned.
 - [ ] Prove the GitHub Action on a live PR, not only through local Action
   summary tests.
 - [x] Add an auditable confidence-vote schema and receipt, or keep all
@@ -570,13 +570,16 @@ Phase 28.5 acceptance criteria:
 ## P2: Attestation and Signing
 
 - [ ] Add Sigstore keyless signing path for local and CI runs.
-- [ ] Add GitHub artifact attestation integration.
-- [ ] Map bundle manifest fields to in-toto/SLSA-compatible predicates.
-- [ ] Add offline verification mode for downloaded bundles.
-- [ ] Document public-repo and private-repo attestation differences.
+- [x] Add GitHub artifact attestation integration in the composite action and
+  workflow permission docs, with `attest: "true"` gated by repository policy.
+- [x] Map bundle manifest fields to local/offline in-toto/SLSA-compatible
+  predicates.
+- [x] Add offline verification mode for downloaded bundles.
+- [x] Document public-repo and private-repo attestation differences.
 - [ ] Add signing identity and certificate metadata to bundle summaries.
 - [ ] Define plugin trust model: plugin identity, version, signature, sandbox boundary, receipt permissions, and tamper resistance.
-- [ ] Add SLSA Verification Summary Attestation output mode for Pramaan's final verifier decision.
+- [x] Add SLSA Verification Summary Attestation output mode for Pramaan's
+  final verifier decision.
 - [ ] Add redaction profiles: internal-full, reviewer-redacted, public-demo, and summary-only.
 
 ## P2: Adversarial Corpus and Evals

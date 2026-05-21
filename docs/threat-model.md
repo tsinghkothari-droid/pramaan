@@ -49,6 +49,13 @@ Sigstore, GitHub artifact attestations, and in-toto statements can improve
 provenance, but they cannot rescue evidence produced on a fully compromised
 runner.
 
+Phase 29's local/offline VSA path lives inside this boundary. It helps a
+reviewer detect bundle, manifest, confidence-artifact, or attestation edits
+after emission, but it does not identify the human or CI identity that emitted
+the files. Treat `pramaan bundle verify-offline` as downloadable consistency
+verification. Treat GitHub artifact attestations or future Sigstore keyless
+certificates as the separate identity/provenance layer.
+
 ## Malicious PR Code Boundary
 
 Pramaan must assume tests, build scripts, fixtures, mutation targets, and fuzz

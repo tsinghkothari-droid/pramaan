@@ -590,12 +590,22 @@ calibration.
 
 **Priority:** P2 trust
 
+**Status:** Completed 2026-05-21 for local/offline VSA and in-toto
+attestation consistency checks. Production Sigstore/cosign identity and live
+GitHub attestation evidence remain later hardening, not current guarantees.
+
 **Success Criteria:**
 
-1. Bundle manifests can be signed through cosign or Sigstore-compatible flow.
-2. GitHub artifact attestation integration is documented and exercised where permissions allow.
-3. Pramaan emits an in-toto/SLSA-compatible VSA-style verification summary that can reference the confidence artifact.
-4. Offline verification rejects tampered bundle, signature, manifest, and attestation fixtures.
+1. Bundle manifests can emit local/offline in-toto and SLSA VSA-style
+   attestation material.
+2. GitHub artifact attestation integration is documented and wired where
+   permissions allow.
+3. Pramaan emits an in-toto/SLSA-compatible VSA-style verification summary
+   that can reference the confidence artifact.
+4. Offline verification rejects tampered bundle, manifest, confidence, and
+   attestation fixtures.
+5. Production Sigstore/cosign signer identity remains explicitly planned until
+   certificate and transparency-log verification are implemented.
 
 ## Phase 30: Redaction Profiles and Public Bundle Export
 

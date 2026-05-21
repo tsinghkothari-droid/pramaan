@@ -123,6 +123,13 @@ runs:
           --out "${{ steps.config.outputs.out_dir }}" \
           ${{ inputs.pramaan-args }} 2>&1 | tee "$log_path"
 
+    - name: Emit local offline attestation
+      shell: bash
+      run: |
+        set -euo pipefail
+        target/debug/pramaan bundle attest "${{ steps.config.outputs.out_dir }}" \
+          | tee -a "${{ steps.config.outputs.out_dir }}/pramaan.log"
+
     - name: Render risk summary
       shell: bash
       run: |

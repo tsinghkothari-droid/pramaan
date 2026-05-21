@@ -5,13 +5,19 @@ use pramaan_core::{
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest as ShaDigest, Sha256};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use thiserror::Error;
 
 pub const BUNDLE_SCHEMA_VERSION: &str = "pramaan.bundle.v1";
+pub const VSA_SCHEMA_VERSION: &str = "pramaan.vsa.v1";
 pub const MANIFEST_FILE_NAME: &str = "bundle.manifest.json";
+pub const ATTESTATIONS_DIR_NAME: &str = "attestations";
+pub const VSA_FILE_NAME: &str = "bundle.vsa.json";
+pub const IN_TOTO_FILE_NAME: &str = "bundle.in-toto.json";
+pub const IN_TOTO_STATEMENT_TYPE: &str = "https://in-toto.io/Statement/v1";
+pub const SLSA_VSA_PREDICATE_TYPE: &str = "https://slsa.dev/verification_summary/v1";
 
 #[derive(Debug, Error)]
 pub enum BundleError {
@@ -276,8 +282,202 @@ pub struct VerificationReport {
     pub checked_artifacts: usize,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct InTotoSubject {
+    pub name: String,
+    pub digest: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VsaVerifier {
+    pub id: String,
+    pub version: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VsaPolicy {
+    pub id: String,
+    pub uri: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VsaConfidenceArtifact {
+    pub path: String,
+    pub digest: Digest,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VerificationSummaryAttestation {
+    pub schema_version: String,
+    pub predicate_type: String,
+    pub subject: Vec<InTotoSubject>,
+    pub verifier: VsaVerifier,
+    pub time_verified: String,
+    pub policy: VsaPolicy,
+    pub verification_result: String,
+    pub manifest_digest: Digest,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub confidence_artifact: Option<VsaConfidenceArtifact>,
+    pub verified_levels: Vec<String>,
+    pub dependency_levels: Vec<String>,
+    pub resource_uri: String,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct InTotoStatement {
+    #[serde(rename = "_type")]
+    pub statement_type: String,
+    pub subject: Vec<InTotoSubject>,
+    #[serde(rename = "predicateType")]
+    pub predicate_type: String,
+    pub predicate: VerificationSummaryAttestation,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OfflineAttestationReport {
+    pub vsa_path: PathBuf,
+    pub statement_path: PathBuf,
+    pub manifest_digest: Digest,
+    pub verification_result: String,
+}
+
 pub fn sha256_hex(bytes: impl AsRef<[u8]>) -> String {
     Digest::sha256(bytes).prefixed()
+}
+
+pub fn emit_offline_attestations(bundle_root: &Path) -> Result<OfflineAttestationReport> {
+    verify_bundle(bundle_root)?;
+    let manifest_path = bundle_root.join(MANIFEST_FILE_NAME);
+    let mut manifest = read_manifest(&manifest_path)?;
+    let statement_relative_path = format!("{ATTESTATIONS_DIR_NAME}/{IN_TOTO_FILE_NAME}");
+
+    manifest.integrity.artifact_attestation = Some(ArtifactAttestation {
+        provider: "slsa".to_string(),
+        status: "present".to_string(),
+        attestation_path: Some(statement_relative_path),
+        issuer: None,
+        subject: Some(MANIFEST_FILE_NAME.to_string()),
+        workflow: None,
+        repository: None,
+        commit_sha: None,
+        transparency_mode: Some("none".to_string()),
+    });
+    manifest.integrity.manifest_digest = manifest_digest(&manifest)?;
+    write_manifest(bundle_root, &manifest)?;
+
+    let summary = verification_summary_for_manifest(&manifest);
+    let statement = InTotoStatement {
+        statement_type: IN_TOTO_STATEMENT_TYPE.to_string(),
+        subject: summary.subject.clone(),
+        predicate_type: SLSA_VSA_PREDICATE_TYPE.to_string(),
+        predicate: summary.clone(),
+    };
+
+    let attestations_dir = bundle_root.join(ATTESTATIONS_DIR_NAME);
+    fs::create_dir_all(&attestations_dir).map_err(|source| BundleError::Io {
+        path: attestations_dir.clone(),
+        source,
+    })?;
+    let vsa_path = attestations_dir.join(VSA_FILE_NAME);
+    let statement_path = attestations_dir.join(IN_TOTO_FILE_NAME);
+    write_json_file(&vsa_path, &summary)?;
+    write_json_file(&statement_path, &statement)?;
+
+    verify_offline_attestations(bundle_root)
+}
+
+pub fn verify_offline_attestations(bundle_root: &Path) -> Result<OfflineAttestationReport> {
+    verify_bundle(bundle_root)?;
+    let manifest_path = bundle_root.join(MANIFEST_FILE_NAME);
+    let manifest = read_manifest(&manifest_path)?;
+    let attestation = manifest
+        .integrity
+        .artifact_attestation
+        .as_ref()
+        .ok_or_else(|| {
+            BundleError::Integrity("manifest has no attestation metadata".to_string())
+        })?;
+    if attestation.status != "present" && attestation.status != "verified" {
+        return Err(BundleError::Integrity(format!(
+            "attestation status {} is not verifiable offline",
+            attestation.status
+        )));
+    }
+    let statement_relative_path = attestation
+        .attestation_path
+        .as_ref()
+        .ok_or_else(|| BundleError::Integrity("attestation_path is missing".to_string()))?;
+    if !is_safe_relative_manifest_path(statement_relative_path) {
+        return Err(BundleError::Schema(format!(
+            "{statement_relative_path} must be a relative path inside the bundle"
+        )));
+    }
+
+    let statement_path = bundle_root.join(statement_relative_path);
+    let statement_dir = statement_path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| bundle_root.join(ATTESTATIONS_DIR_NAME));
+    let vsa_path = statement_dir.join(VSA_FILE_NAME);
+    let statement: InTotoStatement = read_json_file(&statement_path)?;
+    let vsa: VerificationSummaryAttestation = read_json_file(&vsa_path)?;
+
+    if statement.statement_type != IN_TOTO_STATEMENT_TYPE {
+        return Err(BundleError::Integrity(format!(
+            "unsupported in-toto statement type {}",
+            statement.statement_type
+        )));
+    }
+    if statement.predicate_type != SLSA_VSA_PREDICATE_TYPE {
+        return Err(BundleError::Integrity(format!(
+            "unsupported predicate type {}",
+            statement.predicate_type
+        )));
+    }
+    if statement.predicate != vsa {
+        return Err(BundleError::Integrity(
+            "in-toto predicate does not match bundle VSA artifact".to_string(),
+        ));
+    }
+
+    let expected = verification_summary_for_manifest(&manifest);
+    if vsa.subject != expected.subject {
+        return Err(BundleError::Integrity(
+            "VSA subject digest does not match current bundle manifest".to_string(),
+        ));
+    }
+    if vsa.manifest_digest != expected.manifest_digest {
+        return Err(BundleError::Integrity(format!(
+            "VSA manifest digest mismatch: expected {}, found {}",
+            expected.manifest_digest.prefixed(),
+            vsa.manifest_digest.prefixed()
+        )));
+    }
+    if vsa.verification_result != expected.verification_result {
+        return Err(BundleError::Integrity(format!(
+            "VSA result mismatch: expected {}, found {}",
+            expected.verification_result, vsa.verification_result
+        )));
+    }
+    if vsa.confidence_artifact != expected.confidence_artifact {
+        return Err(BundleError::Integrity(
+            "VSA confidence artifact reference does not match bundle manifest".to_string(),
+        ));
+    }
+
+    Ok(OfflineAttestationReport {
+        vsa_path,
+        statement_path,
+        manifest_digest: expected.manifest_digest,
+        verification_result: expected.verification_result,
+    })
 }
 
 pub fn build_manifest(bundle_root: &Path, options: BundleBuildOptions) -> Result<BundleManifest> {
@@ -680,6 +880,87 @@ fn manifest_digest(manifest: &BundleManifest) -> Result<Digest> {
         source,
     })?;
     Ok(Digest::sha256(bytes))
+}
+
+fn verification_summary_for_manifest(manifest: &BundleManifest) -> VerificationSummaryAttestation {
+    let mut subject_digest = BTreeMap::new();
+    subject_digest.insert(
+        manifest.integrity.manifest_digest.algorithm.clone(),
+        manifest.integrity.manifest_digest.value.clone(),
+    );
+    let verification_result = vsa_result_for_manifest(manifest);
+    VerificationSummaryAttestation {
+        schema_version: VSA_SCHEMA_VERSION.to_string(),
+        predicate_type: SLSA_VSA_PREDICATE_TYPE.to_string(),
+        subject: vec![InTotoSubject {
+            name: MANIFEST_FILE_NAME.to_string(),
+            digest: subject_digest,
+        }],
+        verifier: VsaVerifier {
+            id: "pramaan-offline-verifier".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        },
+        time_verified: timestamp(Utc::now()),
+        policy: VsaPolicy {
+            id: "pramaan-local-offline-v0".to_string(),
+            uri: "https://docs.pramaan.dev/policies/local-offline-v0".to_string(),
+        },
+        verification_result: verification_result.clone(),
+        manifest_digest: manifest.integrity.manifest_digest.clone(),
+        confidence_artifact: confidence_artifact_ref(manifest),
+        verified_levels: vec!["bundle_hash_integrity".to_string()],
+        dependency_levels: Vec::new(),
+        resource_uri: MANIFEST_FILE_NAME.to_string(),
+        summary: format!(
+            "Offline VSA records Pramaan bundle hash integrity as {verification_result}; it is evidence, not a correctness proof."
+        ),
+    }
+}
+
+fn vsa_result_for_manifest(manifest: &BundleManifest) -> String {
+    if matches!(manifest.final_status.as_str(), "failed" | "error") {
+        "FAILED".to_string()
+    } else if manifest.final_status == "passed"
+        && manifest.risk_summary.residual.is_empty()
+        && manifest.risk_summary.skipped.is_empty()
+    {
+        "PASSED".to_string()
+    } else {
+        "WARNING".to_string()
+    }
+}
+
+fn confidence_artifact_ref(manifest: &BundleManifest) -> Option<VsaConfidenceArtifact> {
+    manifest
+        .artifacts
+        .iter()
+        .find(|artifact| artifact.path == "confidence.json")
+        .map(|artifact| VsaConfidenceArtifact {
+            path: artifact.path.clone(),
+            digest: artifact.digest.clone(),
+        })
+}
+
+fn write_json_file<T: Serialize>(path: &Path, value: &T) -> Result<()> {
+    let bytes = serde_json::to_vec_pretty(value).map_err(|source| BundleError::Json {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    fs::write(path, bytes).map_err(|source| BundleError::Io {
+        path: path.to_path_buf(),
+        source,
+    })
+}
+
+fn read_json_file<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T> {
+    let bytes = fs::read(path).map_err(|source| BundleError::Io {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    serde_json::from_slice(&bytes).map_err(|source| BundleError::Json {
+        path: path.to_path_buf(),
+        source,
+    })
 }
 
 fn placeholder_manifest_digest() -> Digest {

@@ -353,6 +353,84 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
         String::from_utf8_lossy(&updated_bundle_output.stdout),
         String::from_utf8_lossy(&updated_bundle_output.stderr)
     );
+
+    let attest_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args(["bundle", "attest", out.to_str().expect("utf-8 output path")])
+        .output()
+        .expect("run pramaan bundle attest");
+    assert!(
+        attest_output.status.success(),
+        "bundle attest failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&attest_output.stdout),
+        String::from_utf8_lossy(&attest_output.stderr)
+    );
+    let attest_stdout = String::from_utf8_lossy(&attest_output.stdout);
+    assert!(attest_stdout.contains("Pramaan offline attestation complete"));
+    assert!(attest_stdout.contains("verification_result: WARNING"));
+    assert!(attest_stdout.contains("not a correctness proof"));
+
+    let vsa_path = out.join("attestations").join("bundle.vsa.json");
+    let statement_path = out.join("attestations").join("bundle.in-toto.json");
+    assert!(vsa_path.exists(), "VSA artifact exists");
+    assert!(statement_path.exists(), "in-toto statement exists");
+    let vsa: serde_json::Value =
+        serde_json::from_slice(&fs::read(&vsa_path).expect("read VSA")).expect("VSA JSON");
+    assert_eq!(vsa["schema_version"], "pramaan.vsa.v1");
+    assert_eq!(
+        vsa["predicate_type"],
+        "https://slsa.dev/verification_summary/v1"
+    );
+    assert_eq!(vsa["verification_result"], "WARNING");
+    assert_eq!(vsa["confidence_artifact"]["path"], "confidence.json");
+
+    let offline_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "bundle",
+            "verify-offline",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan bundle verify-offline");
+    assert!(
+        offline_output.status.success(),
+        "offline verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&offline_output.stdout),
+        String::from_utf8_lossy(&offline_output.stderr)
+    );
+    assert!(String::from_utf8_lossy(&offline_output.stdout)
+        .contains("Pramaan offline attestation verification complete"));
+
+    let mut tampered_vsa = vsa;
+    tampered_vsa["verification_result"] = json!("PASSED");
+    fs::write(
+        &vsa_path,
+        serde_json::to_vec_pretty(&tampered_vsa).expect("serialize tampered VSA"),
+    )
+    .expect("tamper VSA result");
+    let tampered_offline_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "bundle",
+            "verify-offline",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan bundle verify-offline on tampered VSA");
+    assert!(
+        !tampered_offline_output.status.success(),
+        "tampered VSA should fail\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&tampered_offline_output.stdout),
+        String::from_utf8_lossy(&tampered_offline_output.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&tampered_offline_output.stderr).contains("VSA result mismatch")
+            || String::from_utf8_lossy(&tampered_offline_output.stderr)
+                .contains("in-toto predicate does not match"),
+        "stderr should describe attestation tamper: {}",
+        String::from_utf8_lossy(&tampered_offline_output.stderr)
+    );
 }
 
 #[test]

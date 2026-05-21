@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/in_toto_statement.schema.json",
+  "title": "Pramaan in-toto Statement",
+  "description": "An in-toto Statement wrapper for the Pramaan local/offline VSA predicate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["_type", "subject", "predicateType", "predicate"],
+  "properties": {
+    "_type": {
+      "type": "string",
+      "const": "https://in-toto.io/Statement/v1"
+    },
+    "subject": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "vsa.schema.json#/$defs/subject"
+      }
+    },
+    "predicateType": {
+      "type": "string",
+      "const": "https://slsa.dev/verification_summary/v1"
+    },
+    "predicate": {
+      "$ref": "vsa.schema.json"
+    }
+  }
+}

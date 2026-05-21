@@ -69,6 +69,23 @@ manifest so the new artifacts are digest-linked. The confidence vote is
 uncalibrated residual-risk evidence for reviewers; it is not a correctness
 proof or a merge authorization.
 
+Emit local/offline attestation material with:
+
+```powershell
+cargo run -p pramaan-cli -- bundle attest target/pramaan
+```
+
+Then verify the downloaded bundle plus VSA/in-toto files with:
+
+```powershell
+cargo run -p pramaan-cli -- bundle verify-offline target/pramaan
+```
+
+Offline attestation verification is stricter than `bundle verify` because it
+also checks that `attestations/bundle.vsa.json` and
+`attestations/bundle.in-toto.json` agree with the current manifest digest,
+deterministic local VSA result, and `confidence.json` digest when present.
+
 ## Path Policy
 
 Bundle manifest paths must stay inside the bundle root. The verifier rejects
@@ -85,5 +102,6 @@ stage receipt, but they are not added as file artifacts to the manifest.
 
 Local bundle verification proves local self-consistency: manifest digest,
 receipt parsing, file size, and SHA-256 hashes. It does not prove signer identity
-or CI provenance by itself. Sigstore, GitHub artifact attestations, and stronger
-signing verification remain separate hardening paths.
+or CI provenance by itself. The local/offline VSA path adds downloadable
+attestation consistency checks, but Sigstore, GitHub artifact attestations, and
+stronger signing verification remain separate hardening paths.
