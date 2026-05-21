@@ -49,7 +49,7 @@ risk before Alpha.
 | CLAIM-BUNDLE-001 | `docs/bundle-verification.md` | Manifest references artifacts by digest and rejects tampering. | executable-test | `crates/pramaan-bundle/src/lib.rs` | `cargo test -p pramaan-bundle` | pass | None. |
 | CLAIM-REDACTION-001 | `docs/receipt-model.md` | Common secrets and private paths are redacted by helper. | executable-test | `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core redaction` | pass | Enterprise logs need broader fixtures. |
 | CLAIM-DEMO-001 | `docs/demo.md` | Public demos are inspectable in under 30 seconds. | manual-proof | `docs/demo.md`, `examples/proof-bundles/` | `cargo run -p pramaan-cli -- oracle --base-repo examples/fixtures/oracle/base --head-repo examples/fixtures/oracle/head --out target/pramaan-pilot/oracle` | pass-with-risk | Needs user study/external reviewer timing before marketing as measured. |
-| CLAIM-PILOT-001 | `.planning/ROADMAP.md` | Three external real repositories were validated. | accepted-risk | `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `Get-Content .planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | blocked | Required before public Alpha. |
+| CLAIM-PILOT-001 | `.planning/ROADMAP.md` | Three external real repositories were validated. | manual-proof | `.planning/reports/phase-26-external-alpha-pilots.md` | `powershell -ExecutionPolicy Bypass -File scripts/run-phase26-pilots.ps1 -SkipClone` | pass | Live GitHub Action proof remains separate. |
 | CLAIM-RELEASE-001 | `TASKS.md` | Alpha MVP gates are satisfied. | accepted-risk | `TASKS.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "Alpha MVP|not yet|NO_GO" TASKS.md .planning` | blocked | Private preview only until external repository pilots close. |
 | CLAIM-STATUS-CAP-001 | `STATUS.md` | STATUS: Rust workspace and CLI skeleton | executable-test | `Cargo.toml`, `crates/pramaan-cli/src/main.rs` | `cargo build --workspace` | pass | Keep smoke tests green. |
 | CLAIM-STATUS-CAP-002 | `STATUS.md` | STATUS: Receipt model with risk IDs and artifact refs | executable-test | `crates/pramaan-core/src/lib.rs`, `schemas/receipt.schema.json` | `cargo test -p pramaan-core` | pass | Keep schema/runtime fixture tests aligned. |
@@ -73,28 +73,29 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-020 | `STATUS.md` | STATUS: Replay command for failing generated cases | planned | `TASKS.md`, `.planning/ROADMAP.md` | Not implemented yet | pass | Keep future-only. |
 | CLAIM-STATUS-CAP-021 | `STATUS.md` | STATUS: GitHub Action wrapper | executable-test | `action.yml`, `action/render-summary.test.mjs` | `node --test action/render-summary.test.mjs` | pass | Live GitHub pilot remains required. |
 | CLAIM-STATUS-CAP-022 | `STATUS.md` | STATUS: Policy-as-code and `pramaan policy explain` | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs` | `cargo test --workspace` | pass | External policy-file loading remains future work. |
-| CLAIM-STATUS-CAP-023 | `STATUS.md` | STATUS: Threat model for malicious PRs/verifier plugins | manual-proof | `docs/threat-model.md` | `Get-Content docs/threat-model.md` | pass | Documentation is not enforcement. |
-| CLAIM-STATUS-CAP-024 | `STATUS.md` | STATUS: Redaction helpers for shareable evidence | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` | pass | Redaction profiles remain broader future work. |
-| CLAIM-STATUS-CAP-025 | `STATUS.md` | STATUS: Adapter certification mode | checked-fixture | `docs/adapter-certification.md`, `examples/fixtures/adapter_certification.synthetic.json` | Fixture/manual inspection | pass | Keep adjacent, not core v0.1 path. |
-| CLAIM-STATUS-CAP-026 | `STATUS.md` | STATUS: Public claim audit gate | executable-test | `docs/claim-audit.md`, `scripts/check-claim-audit.mjs` | `node scripts/check-claim-audit.mjs` | pass | Keep the ledger updated after every phase. |
-| CLAIM-STATUS-CAP-027 | `STATUS.md` | STATUS: Auditable confidence vote | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/confidence.schema.json`, `docs/confidence.md` | `cargo test --workspace` | pass | Keep status Partial until calibration and broader fixtures land. |
+| CLAIM-STATUS-CAP-023 | `STATUS.md` | STATUS: Auditable confidence vote | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/confidence.schema.json`, `docs/confidence.md` | `cargo test --workspace` | pass | Keep status Partial until calibration and broader fixtures land. |
+| CLAIM-STATUS-CAP-024 | `STATUS.md` | STATUS: Agent completion gate | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/agent_decision.schema.json`, `docs/agent-harness.md` | `cargo test --workspace` | pass | Keep status Partial until richer IDE/MCP integrations exist. |
+| CLAIM-STATUS-CAP-025 | `STATUS.md` | STATUS: Threat model for malicious PRs/verifier plugins | manual-proof | `docs/threat-model.md` | `Get-Content docs/threat-model.md` | pass | Documentation is not enforcement. |
+| CLAIM-STATUS-CAP-026 | `STATUS.md` | STATUS: Redaction helpers for shareable evidence | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` | pass | Redaction profiles remain broader future work. |
+| CLAIM-STATUS-CAP-027 | `STATUS.md` | STATUS: Adapter certification mode | checked-fixture | `docs/adapter-certification.md`, `examples/fixtures/adapter_certification.synthetic.json` | Fixture/manual inspection | pass | Keep adjacent, not core v0.1 path. |
+| CLAIM-STATUS-CAP-028 | `STATUS.md` | STATUS: Public claim audit gate | executable-test | `docs/claim-audit.md`, `scripts/check-claim-audit.mjs` | `node scripts/check-claim-audit.mjs` | pass | Keep the ledger updated after every phase. |
 
 ## Counts
 
 | Bucket | Count |
 | --- | ---: |
-| Total claims audited | 55 |
-| `STATUS.md` capability rows covered | 27 |
-| Executable-test claims | 35 |
-| Checked-fixture/manual-proof claims | 8 |
-| Partial/planned/accepted-risk claims | 12 |
+| Total claims audited | 56 |
+| `STATUS.md` capability rows covered | 28 |
+| Executable-test claims | 36 |
+| Checked-fixture/manual-proof claims | 9 |
+| Partial/planned/accepted-risk claims | 11 |
 | False-or-stale claims left in public copy | 0 |
 | Public Alpha blockers | 3 |
 
 ## Public Alpha Blockers
 
-1. Run Pramaan on three external real repositories and record noise, skipped
-   stages, runtime, and reviewer time-to-understand.
+1. Prove the GitHub Action on a live PR, including uploaded bundle artifact and
+   rendered job summary.
 2. Add safe generated harness execution for Hypothesis and fast-check, or keep
    those claims explicitly planned.
 3. Keep every full-AST or production-signing statement narrowed until parser and

@@ -6,10 +6,10 @@ use pramaan_bundle::{
     BundleManifest, MANIFEST_FILE_NAME,
 };
 use pramaan_core::{
-    build_confidence_artifact, default_policy_profile, evaluate_default_policy,
-    render_confidence_markdown, risk_family, timestamp, AgentAttribution, ArtifactRef,
-    AttributionConfidence, ClaimScope, ConfidenceDecision, EvidenceSensitivity, OutputRef,
-    PluginIdentity, PluginPermissions, PolicyDecision, PolicyStageEvidence, Receipt,
+    build_agent_decision, build_confidence_artifact, default_policy_profile,
+    evaluate_default_policy, render_confidence_markdown, risk_family, timestamp, AgentAttribution,
+    ArtifactRef, AttributionConfidence, ClaimScope, ConfidenceDecision, EvidenceSensitivity,
+    OutputRef, PluginIdentity, PluginPermissions, PolicyDecision, PolicyStageEvidence, Receipt,
     ReceiptSummary, RedactionManifest, RiskRefs, StageBudget, StageStatus, ToolIdentity,
     RECEIPT_SCHEMA_VERSION,
 };
@@ -42,6 +42,7 @@ enum Commands {
     Fuzz(FuzzArgs),
     Policy(PolicyArgs),
     Confidence(ConfidenceArgs),
+    Agent(AgentArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -99,6 +100,36 @@ enum ConfidenceCommands {
 
 #[derive(Debug, Parser)]
 struct ConfidenceExplainArgs {
+    bundle: PathBuf,
+    #[arg(long)]
+    out: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
+struct AgentArgs {
+    #[command(subcommand)]
+    command: AgentCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum AgentCommands {
+    DoneGate(AgentDoneGateArgs),
+    Explain(AgentExplainArgs),
+}
+
+#[derive(Debug, Parser)]
+struct AgentDoneGateArgs {
+    #[arg(long)]
+    base: String,
+    #[arg(long)]
+    head: String,
+    #[arg(long, default_value = "target/pramaan-agent")]
+    out: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct AgentExplainArgs {
+    #[arg(long)]
     bundle: PathBuf,
     #[arg(long)]
     out: Option<PathBuf>,
@@ -174,7 +205,45 @@ fn main() -> Result<()> {
         ),
         Commands::Policy(args) => run_policy(args),
         Commands::Confidence(args) => run_confidence(args),
+        Commands::Agent(args) => run_agent(args),
     }
+}
+
+fn run_agent(args: AgentArgs) -> Result<()> {
+    match args.command {
+        AgentCommands::DoneGate(args) => run_agent_done_gate(args),
+        AgentCommands::Explain(args) => run_agent_explain(args.bundle, args.out),
+    }
+}
+
+fn run_agent_done_gate(args: AgentDoneGateArgs) -> Result<()> {
+    let out = args.out.clone();
+    run_verify(VerifyArgs {
+        base: args.base,
+        head: args.head,
+        out: out.clone(),
+    })?;
+    run_agent_explain(out, None)
+}
+
+fn run_agent_explain(bundle: PathBuf, out: Option<PathBuf>) -> Result<()> {
+    let manifest_path = if bundle.is_dir() {
+        bundle.join(MANIFEST_FILE_NAME)
+    } else {
+        bundle.clone()
+    };
+    let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
+    let stages = policy_stage_evidence_from_manifest(&manifest);
+    let decision = build_agent_decision(portable_path(&bundle), &stages);
+    let out_path = out.or_else(|| bundle.is_dir().then(|| bundle.join("agent-decision.json")));
+    if let Some(path) = out_path {
+        write_json(&path, &decision)?;
+    }
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&decision).context("serializing agent decision")?
+    );
+    Ok(())
 }
 
 fn run_confidence(args: ConfidenceArgs) -> Result<()> {
@@ -267,6 +336,20 @@ fn read_bundle_receipts(bundle_root: &Path, manifest: &BundleManifest) -> Result
         }
     }
     Ok(receipts)
+}
+
+fn policy_stage_evidence_from_manifest(manifest: &BundleManifest) -> Vec<PolicyStageEvidence> {
+    manifest
+        .stages
+        .iter()
+        .map(|stage| PolicyStageEvidence {
+            id: stage.id.clone(),
+            status: stage.status.clone(),
+            residual_risks: stage.residual_risks.clone(),
+            not_applicable_risks: stage.not_applicable_risks.clone(),
+            stage_budget: stage.stage_budget.clone(),
+        })
+        .collect()
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -423,17 +506,7 @@ fn run_policy_explain(bundle: PathBuf) -> Result<()> {
         bundle
     };
     let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
-    let stages = manifest
-        .stages
-        .iter()
-        .map(|stage| PolicyStageEvidence {
-            id: stage.id.clone(),
-            status: stage.status.clone(),
-            residual_risks: stage.residual_risks.clone(),
-            not_applicable_risks: stage.not_applicable_risks.clone(),
-            stage_budget: stage.stage_budget.clone(),
-        })
-        .collect::<Vec<_>>();
+    let stages = policy_stage_evidence_from_manifest(&manifest);
     let profile = default_policy_profile();
     let evaluation = evaluate_default_policy(&stages);
 

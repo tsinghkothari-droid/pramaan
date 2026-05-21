@@ -438,6 +438,9 @@ and capture the uploaded proof bundle plus rendered job summary.
 
 ## Phase 26.5: Agent Harness Interface for Coding Agents
 
+**Status:** Completed 2026-05-21. The deterministic agent done gate, explain
+command, schema, docs, command template, and pass/warn/block tests are in place.
+
 **Goal:** Make Pramaan callable by Claude Code, Codex, Cursor-style agents, and
 custom harnesses as a completion gate before an agent claims done.
 

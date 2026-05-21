@@ -1,0 +1,15 @@
+{
+  "schema_version": "pramaan.agent_decision.v1",
+  "decision": "block",
+  "reason": "Pramaan policy blocked completion with 1 hard failure(s).",
+  "bundle_path": "examples/agent-harness/blocked-oracle-bundle",
+  "blocking_stages": [
+    "oracle_integrity"
+  ],
+  "warnings": [],
+  "required_actions": [
+    "oracle_integrity: Restore or strengthen the changed tests/fixtures, then rerun Pramaan oracle and the agent done gate."
+  ],
+  "agent_message": "Stop. Do not claim the task is done. Fix the blocking Pramaan findings or ask the human for an explicit override.",
+  "human_override_allowed": true
+}

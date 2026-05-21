@@ -43,3 +43,23 @@ surface: absence of a tool is evidence the reviewer needs, not a pass.
 - Risky parsers, test runners, mutation engines, and fuzzers should run behind
   stronger sandbox boundaries before enterprise use.
 - Adapter output should be hash-linked when it is used for a policy decision.
+
+## Agent Harness Boundary
+
+Agent harnesses are consumers of Pramaan evidence, not privileged plugins. A
+Claude Code/Codex/Cursor-style wrapper may call:
+
+```powershell
+pramaan agent done-gate --base <base-ref> --head <head-ref> --out target/pramaan-agent
+```
+
+or:
+
+```powershell
+pramaan agent explain --bundle target/pramaan-agent
+```
+
+The returned `agent_decision` JSON is derived from receipts and policy results.
+Harnesses must not rewrite receipts, manifests, plugin identity, or policy
+outcomes. If the decision is `block`, the agent should stop and repair the
+blocking stage or ask a human for explicit override.

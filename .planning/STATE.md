@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Research-driven continuation track. Phases 22.5 and 23-26
+**Current focus:** Research-driven continuation track. Phases 22.5 and 23-26.5
 are complete with explicit residual risk. Phase 28.5 now has a first
 implemented confidence-vote slice. Public Alpha remains blocked by Phase 26.1
 live GitHub Action proof, plus Phase 27 compiler/parser oracle hardening and
@@ -14,7 +14,7 @@ Phase 28 real Hypothesis/fast-check harnesses.
 
 ## Current Phase
 
-Phase 26.5: Agent Harness Interface for Coding Agents
+Phase 27: Parser-Backed Oracle Extractors
 
 Public Alpha gate still open: Phase 26.1 Live GitHub Action Proof.
 
@@ -34,8 +34,8 @@ gate.
 
 - Whether Phase 26.1 should use this repository, a throwaway public fixture
   repository, or a fork PR for the live Action proof.
-- Whether Phase 26.5 should ship MCP first, CLI JSON first, or both in the
-  same slice.
+- Whether the later agent harness should add MCP/hook integrations beyond the
+  Phase 26.5 CLI JSON gate.
 - Which model/provider boundary Phase 28.25 should use for AI probe generation
   without making a vendor-specific dependency part of the evidence contract.
 - Whether Phase 29 should use cosign subprocess first or a Rust Sigstore crate.
@@ -93,3 +93,4 @@ gate.
 | 2026-05-21 | Added decimal GSD phases for the right product directions. | Agent harness, AI evidence-seeking probes, policy-pack profiles, and reviewer UX are now explicit executable phases instead of loose strategy notes. |
 | 2026-05-21 | Executed Phase 28.5 first slice. | Pramaan now emits `confidence.json`, `confidence.md`, and a `confidence_vote` receipt from bundle receipts using uncalibrated deterministic weights, hard gates, dependency discounts, Wilson/rule-of-three statistical notes, and manifest-linked artifact digests. |
 | 2026-05-21 | Executed Phase 26 external local pilots. | Pramaan ran against public Python, TypeScript, and Rust repositories with runtime/noise/residual-risk evidence recorded; live GitHub Action proof is split to Phase 26.1, so public Alpha remains no-go. |
+| 2026-05-21 | Executed Phase 26.5 agent harness interface. | Coding agents can now run `pramaan agent done-gate` or `pramaan agent explain` and receive deterministic pass/warn/block JSON with required actions; agents still cannot self-certify or override Pramaan. |

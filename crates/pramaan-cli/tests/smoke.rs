@@ -2,6 +2,8 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
+use pramaan_bundle::{build_manifest, write_manifest, BundleBuildOptions};
+use pramaan_core::{Receipt, ReceiptSummary, RiskRefs, StageStatus};
 use serde_json::json;
 
 #[test]
@@ -112,6 +114,38 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     assert!(policy_stdout.contains("decision: warning"));
     assert!(policy_stdout.contains("required_stages: claim_scope, sandbox_setup"));
     assert!(policy_stdout.contains("partial_evidence:claim_scope"));
+
+    let agent_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "agent",
+            "explain",
+            "--bundle",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan agent explain");
+
+    assert!(
+        agent_output.status.success(),
+        "agent explain failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&agent_output.stdout),
+        String::from_utf8_lossy(&agent_output.stderr)
+    );
+    let agent_decision_path = out.join("agent-decision.json");
+    assert!(agent_decision_path.exists(), "agent decision JSON exists");
+    let agent_decision: serde_json::Value =
+        serde_json::from_slice(&fs::read(agent_decision_path).expect("read agent decision"))
+            .expect("agent decision json");
+    assert_eq!(
+        agent_decision["schema_version"],
+        "pramaan.agent_decision.v1"
+    );
+    assert_eq!(agent_decision["decision"], "warn");
+    assert!(agent_decision["agent_message"]
+        .as_str()
+        .expect("agent message")
+        .contains("Do not present this as cleanly verified"));
 
     let claim_receipt: serde_json::Value =
         serde_json::from_slice(&fs::read(claim_receipt_path).expect("read claim receipt"))
@@ -319,6 +353,130 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
         String::from_utf8_lossy(&updated_bundle_output.stdout),
         String::from_utf8_lossy(&updated_bundle_output.stderr)
     );
+}
+
+#[test]
+fn agent_explain_blocks_weakened_oracle_bundle() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-agent-block-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean agent output");
+    }
+    fs::create_dir_all(out.join("receipts")).expect("create receipt dir");
+
+    let receipts = [
+        Receipt::synthetic(
+            "claim_scope",
+            StageStatus::Passed,
+            "base",
+            "head",
+            vec![],
+            vec![],
+            ReceiptSummary {
+                title: "Claim scope passed".to_string(),
+                details: "Agent fixture claim scope.".to_string(),
+            },
+            RiskRefs {
+                mitigated: vec!["R-003".to_string()],
+                residual: vec![],
+                not_applicable: vec![],
+            },
+        ),
+        Receipt::synthetic(
+            "sandbox_setup",
+            StageStatus::Passed,
+            "base",
+            "head",
+            vec![],
+            vec![],
+            ReceiptSummary {
+                title: "Sandbox passed".to_string(),
+                details: "Agent fixture sandbox.".to_string(),
+            },
+            RiskRefs {
+                mitigated: vec!["R-021".to_string()],
+                residual: vec![],
+                not_applicable: vec![],
+            },
+        ),
+        Receipt::synthetic(
+            "oracle_integrity",
+            StageStatus::Failed,
+            "base",
+            "head",
+            vec![],
+            vec![],
+            ReceiptSummary {
+                title: "Oracle integrity failed".to_string(),
+                details: "A test assertion was weakened.".to_string(),
+            },
+            RiskRefs {
+                mitigated: vec![],
+                residual: vec!["R-011".to_string(), "R-014".to_string()],
+                not_applicable: vec![],
+            },
+        ),
+    ];
+
+    for receipt in receipts {
+        let path = out
+            .join("receipts")
+            .join(format!("{}.receipt.json", receipt.stage.replace('_', "-")));
+        fs::write(
+            path,
+            serde_json::to_vec_pretty(&receipt).expect("serialize fixture receipt"),
+        )
+        .expect("write fixture receipt");
+    }
+    let manifest = build_manifest(
+        &out,
+        BundleBuildOptions::synthetic("base".to_string(), "head".to_string()),
+    )
+    .expect("build fixture manifest");
+    write_manifest(&out, &manifest).expect("write fixture manifest");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "agent",
+            "explain",
+            "--bundle",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan agent explain");
+
+    assert!(
+        output.status.success(),
+        "agent explain failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let decision: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("agent decision stdout is JSON");
+    assert_eq!(decision["decision"], "block");
+    assert!(decision["blocking_stages"]
+        .as_array()
+        .expect("blocking stages array")
+        .iter()
+        .any(|stage| stage == "oracle_integrity"));
+    assert!(decision["required_actions"]
+        .as_array()
+        .expect("required actions")
+        .iter()
+        .any(|action| action
+            .as_str()
+            .expect("action string")
+            .contains("Restore or strengthen")));
 }
 
 #[test]

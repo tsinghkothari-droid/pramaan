@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 pub const RECEIPT_SCHEMA_VERSION: &str = "pramaan.receipt.v1";
 pub const CLAIM_SCOPE_SCHEMA_VERSION: &str = "pramaan.claim_scope.v1";
 pub const CONFIDENCE_SCHEMA_VERSION: &str = "pramaan.confidence.v1";
+pub const AGENT_DECISION_SCHEMA_VERSION: &str = "pramaan.agent_decision.v1";
 pub const CONFIDENCE_ALGORITHM_VERSION: &str = "pramaan-confidence-v0.1-uncalibrated";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -1910,6 +1911,37 @@ pub struct PolicyEvaluation {
     pub decision: PolicyDecision,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AgentGateDecision {
+    Pass,
+    Warn,
+    Block,
+}
+
+impl AgentGateDecision {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Pass => "pass",
+            Self::Warn => "warn",
+            Self::Block => "block",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AgentDecision {
+    pub schema_version: String,
+    pub decision: AgentGateDecision,
+    pub reason: String,
+    pub bundle_path: String,
+    pub blocking_stages: Vec<String>,
+    pub warnings: Vec<String>,
+    pub required_actions: Vec<String>,
+    pub agent_message: String,
+    pub human_override_allowed: bool,
+}
+
 pub fn default_policy_profile() -> PolicyProfile {
     PolicyProfile {
         policy_id: "pramaan-default-v0".to_string(),
@@ -1954,6 +1986,129 @@ pub fn default_policy_profile() -> PolicyProfile {
 
 pub fn evaluate_default_policy(stages: &[PolicyStageEvidence]) -> PolicyEvaluation {
     evaluate_policy(&default_policy_profile(), stages)
+}
+
+pub fn build_agent_decision(bundle_path: String, stages: &[PolicyStageEvidence]) -> AgentDecision {
+    let evaluation = evaluate_default_policy(stages);
+    let decision = match evaluation.outcome {
+        PolicyOutcome::Passed => AgentGateDecision::Pass,
+        PolicyOutcome::Warning => AgentGateDecision::Warn,
+        PolicyOutcome::Failed => AgentGateDecision::Block,
+    };
+    let blocking_stages = blocking_stages_from_failures(&evaluation.decision.hard_failures);
+    let required_actions = required_actions_for_agent(&evaluation, &blocking_stages);
+    let reason = match decision {
+        AgentGateDecision::Pass => {
+            "Required Pramaan stages passed without policy warnings.".to_string()
+        }
+        AgentGateDecision::Warn => format!(
+            "Pramaan found {} residual warning(s); report them before claiming completion.",
+            evaluation.decision.warnings.len()
+        ),
+        AgentGateDecision::Block => format!(
+            "Pramaan policy blocked completion with {} hard failure(s).",
+            evaluation.decision.hard_failures.len()
+        ),
+    };
+    let agent_message = match decision {
+        AgentGateDecision::Pass => {
+            "Pramaan passed the required completion gate. You may summarize the verified evidence without claiming correctness proof.".to_string()
+        }
+        AgentGateDecision::Warn => {
+            "Do not present this as cleanly verified. Summarize the warnings and ask for human acceptance if they matter.".to_string()
+        }
+        AgentGateDecision::Block => {
+            "Stop. Do not claim the task is done. Fix the blocking Pramaan findings or ask the human for an explicit override.".to_string()
+        }
+    };
+
+    AgentDecision {
+        schema_version: AGENT_DECISION_SCHEMA_VERSION.to_string(),
+        decision,
+        reason,
+        bundle_path,
+        blocking_stages,
+        warnings: evaluation.decision.warnings,
+        required_actions,
+        agent_message,
+        human_override_allowed: decision != AgentGateDecision::Pass,
+    }
+}
+
+fn blocking_stages_from_failures(hard_failures: &[String]) -> Vec<String> {
+    let mut stages = Vec::new();
+    for failure in hard_failures {
+        if let Some(rest) = failure.strip_prefix("stage_status:") {
+            if let Some((stage, _status)) = rest.split_once(':') {
+                stages.push(stage.to_string());
+            }
+        } else if let Some(stage) = failure.strip_prefix("missing_required_stage:") {
+            stages.push(stage.to_string());
+        } else if let Some(rest) = failure.strip_prefix("required_stage_incomplete:") {
+            if let Some((stage, _status)) = rest.split_once(':') {
+                stages.push(stage.to_string());
+            }
+        } else if let Some(stage) = failure.strip_prefix("stage_budget_exhausted:") {
+            stages.push(stage.to_string());
+        }
+    }
+    stages.sort();
+    stages.dedup();
+    stages
+}
+
+fn required_actions_for_agent(
+    evaluation: &PolicyEvaluation,
+    blocking_stages: &[String],
+) -> Vec<String> {
+    let mut actions = Vec::new();
+    for stage in blocking_stages {
+        let action = match stage.as_str() {
+            "oracle_integrity" => {
+                "Restore or strengthen the changed tests/fixtures, then rerun Pramaan oracle and the agent done gate."
+            }
+            "claim_scope" => {
+                "Provide PR title/body, issue text, or maintainer scope notes so claim-scope evidence is not missing or incomplete."
+            }
+            "sandbox_setup" => {
+                "Fix sandbox/worktree setup so Pramaan can inspect the base and head revisions reproducibly."
+            }
+            "mutation_python_mutmut" | "mutation_typescript_stryker" | "mutation_rust_cargo_mutants" => {
+                "Review mutation survivors or tool failures, add meaningful tests, and rerun the mutation stage."
+            }
+            "differential_fuzz" => {
+                "Investigate generated-input divergence or replay the failing case before claiming completion."
+            }
+            _ => "Inspect the blocking Pramaan stage receipt and rerun the gate after remediation.",
+        };
+        actions.push(format!("{stage}: {action}"));
+    }
+
+    for failure in &evaluation.decision.hard_failures {
+        if failure.starts_with("stage_budget_exhausted:") {
+            actions.push(format!(
+                "{failure}: Increase the stage budget only if the human accepts the slower verification cost."
+            ));
+        } else if failure.starts_with("missing_required_stage:") {
+            actions.push(format!("{failure}: Generate the missing required receipt."));
+        }
+    }
+
+    if actions.is_empty() && !evaluation.decision.warnings.is_empty() {
+        actions.push(
+            "Summarize every Pramaan warning and residual risk in the final agent response."
+                .to_string(),
+        );
+    }
+    if actions.is_empty() {
+        actions.push(
+            "No blocking action required; preserve the bundle path in the final response."
+                .to_string(),
+        );
+    }
+    actions.sort();
+    actions.dedup();
+    actions
 }
 
 pub fn evaluate_policy(
@@ -3234,6 +3389,62 @@ mod tests {
     }
 
     #[test]
+    fn agent_decision_blocks_oracle_failures_with_actions() {
+        let decision = build_agent_decision(
+            "target/pramaan-agent".to_string(),
+            &[
+                policy_stage("claim_scope", "passed", vec![], vec![], None),
+                policy_stage("sandbox_setup", "passed", vec![], vec![], None),
+                policy_stage("oracle_integrity", "failed", vec!["R-011"], vec![], None),
+            ],
+        );
+
+        assert_eq!(decision.schema_version, AGENT_DECISION_SCHEMA_VERSION);
+        assert_eq!(decision.decision, AgentGateDecision::Block);
+        assert!(decision
+            .blocking_stages
+            .contains(&"oracle_integrity".to_string()));
+        assert!(decision
+            .required_actions
+            .iter()
+            .any(|action| action.contains("Restore or strengthen")));
+        assert!(decision.agent_message.contains("Do not claim"));
+        assert!(decision.human_override_allowed);
+    }
+
+    #[test]
+    fn agent_decision_warns_on_residual_risk() {
+        let decision = build_agent_decision(
+            "target/pramaan-agent".to_string(),
+            &[
+                policy_stage("claim_scope", "passed", vec!["R-090"], vec![], None),
+                policy_stage("sandbox_setup", "passed", vec![], vec![], None),
+            ],
+        );
+
+        assert_eq!(decision.decision, AgentGateDecision::Warn);
+        assert!(decision.blocking_stages.is_empty());
+        assert!(!decision.warnings.is_empty());
+        assert!(decision.human_override_allowed);
+    }
+
+    #[test]
+    fn agent_decision_passes_clean_required_stages() {
+        let decision = build_agent_decision(
+            "target/pramaan-agent".to_string(),
+            &[
+                policy_stage("claim_scope", "passed", vec![], vec![], None),
+                policy_stage("sandbox_setup", "passed", vec![], vec![], None),
+            ],
+        );
+
+        assert_eq!(decision.decision, AgentGateDecision::Pass);
+        assert!(decision.blocking_stages.is_empty());
+        assert!(decision.warnings.is_empty());
+        assert!(!decision.human_override_allowed);
+    }
+
+    #[test]
     fn confidence_hard_gate_dominates_clean_evidence() {
         let clean_static = confidence_stage(
             "static_hallucination",
@@ -3440,6 +3651,10 @@ jobs:
             (
                 include_str!("../../../examples/fixtures/confidence.synthetic.json"),
                 "pramaan.confidence.v1",
+            ),
+            (
+                include_str!("../../../examples/agent-harness/blocked-oracle-agent-decision.json"),
+                "pramaan.agent_decision.v1",
             ),
         ];
 

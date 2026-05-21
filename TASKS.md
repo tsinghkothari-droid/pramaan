@@ -240,7 +240,7 @@ Unfinished task-family mapping:
 Evidence already in the repo:
 
 - [x] P0/P1 phases 18-25 have landed with summaries, docs, and verification.
-- [x] Claim audit covers 55 claims and all 27 `STATUS.md` capability rows.
+- [x] Claim audit covers 56 claims and all 28 `STATUS.md` capability rows.
 - [x] Internal pilot runs cover oracle, mutation, Python fuzz, and TypeScript
   fuzz fixtures with runtimes recorded.
 - [x] Three external local pilots cover Python, TypeScript, and Rust
@@ -272,22 +272,22 @@ AI coding agents and real reviewers. They are planned, not complete.
 
 #### Phase 26.5: Agent Harness Interface
 
-- [ ] Add `schemas/agent_decision.schema.json` with `decision`, `reason`,
+- [x] Add `schemas/agent_decision.schema.json` with `decision`, `reason`,
   `bundle_path`, `blocking_stages`, `warnings`, `required_actions`,
   `agent_message`, and `human_override_allowed`.
-- [ ] Add `pramaan agent done-gate --base <ref> --head <ref> --out <dir>`.
-- [ ] Add `pramaan agent explain --bundle <path>`.
-- [ ] Add deterministic `pass`, `warn`, and `block` mapping from existing
+- [x] Add `pramaan agent done-gate --base <ref> --head <ref> --out <dir>`.
+- [x] Add `pramaan agent explain --bundle <path>`.
+- [x] Add deterministic `pass`, `warn`, and `block` mapping from existing
   policy, bundle, and oracle evidence.
-- [ ] Add an `AGENTS.md` template that tells Codex-style agents not to claim
+- [x] Add an `AGENTS.md` template that tells Codex-style agents not to claim
   done while Pramaan blocks.
-- [ ] Add Claude Code command/hook templates under docs or `.claude/commands/`
+- [x] Add Claude Code command/hook templates under docs or `.claude/commands/`
   if they can be kept provider-optional.
-- [ ] Add a blocked-agent fixture where a weakened-test PR returns
+- [x] Add a blocked-agent fixture where a weakened-test PR returns
   `decision=block`.
-- [ ] Add a warning fixture where skipped optional tools return
+- [x] Add a warning fixture where skipped optional tools return
   `decision=warn`.
-- [ ] Add docs explaining the agent harness is an evidence gate, not an agent
+- [x] Add docs explaining the agent harness is an evidence gate, not an agent
   self-certification loop.
 
 #### Phase 28.25: AI Evidence-Seeking Probe Generator
