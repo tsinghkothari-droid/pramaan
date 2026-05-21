@@ -204,6 +204,12 @@ Positive tool-backed mutation still depends on external tools being installed.
 
 ## Phase 14: Attestation, Corpus, and Evals
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Local/offline VSA and
+in-toto consistency checks, GitHub Action attestation wiring, offline
+verification, and the 25-scenario adversarial corpus are present. Production
+Sigstore/cosign identity, 75/100+ corpus scale, real-world replay cases, and
+calibrated benchmark reports remain future work.
+
 **Goal:** Make proof bundles durable and measurable through signing/attestation plus adversarial evaluation.
 
 **Requirements:** BNDL-07, BNDL-08, EVAL-01, EVAL-02
