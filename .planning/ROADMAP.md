@@ -481,6 +481,12 @@ aggregates receipts without pretending to prove correctness.
 
 **Priority:** P1/P2 trust insert
 
+**Status:** First executable slice landed: core artifact builder, CLI
+`pramaan confidence explain`, `schemas/confidence.schema.json`, reviewer
+Markdown output, confidence receipt, manifest-linked artifacts, and docs.
+Remaining work is broader fixture validation, unsupported-critical-path gates,
+bundle-tamper confidence fixtures, and Phase 34 calibration.
+
 **Success Criteria:**
 
 1. `schemas/confidence.schema.json` defines algorithm version, hard gates,

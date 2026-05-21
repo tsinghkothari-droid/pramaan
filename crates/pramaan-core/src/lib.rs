@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 
 pub const RECEIPT_SCHEMA_VERSION: &str = "pramaan.receipt.v1";
 pub const CLAIM_SCOPE_SCHEMA_VERSION: &str = "pramaan.claim_scope.v1";
+pub const CONFIDENCE_SCHEMA_VERSION: &str = "pramaan.confidence.v1";
+pub const CONFIDENCE_ALGORITHM_VERSION: &str = "pramaan-confidence-v0.1-uncalibrated";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -2040,6 +2042,674 @@ pub fn evaluate_policy(
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ConfidenceDecision {
+    Fail,
+    Warn,
+    Pass,
+}
+
+impl ConfidenceDecision {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Fail => "fail",
+            Self::Warn => "warn",
+            Self::Pass => "pass",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ConfidenceVoteKind {
+    Safe,
+    Risky,
+    Abstain,
+}
+
+impl ConfidenceVoteKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Safe => "safe",
+            Self::Risky => "risky",
+            Self::Abstain => "abstain",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConfidenceCalibration {
+    pub status: String,
+    pub dataset: String,
+    pub method: String,
+    pub notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConfidenceHardGate {
+    pub id: String,
+    pub stage: String,
+    pub reason: String,
+    pub risk_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConfidenceVote {
+    pub stage: String,
+    pub status: StageStatus,
+    pub vote: ConfidenceVoteKind,
+    pub cluster: String,
+    pub weight: u16,
+    pub discounted_weight: u16,
+    pub rationale: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConfidenceDependencyCluster {
+    pub id: String,
+    pub stages: Vec<String>,
+    pub dependency_discount_percent: u8,
+    pub rationale: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConfidenceStatisticalInterval {
+    pub stage: String,
+    pub kind: String,
+    pub successes: u64,
+    pub trials: u64,
+    pub estimate_per_million: u32,
+    pub conservative_bound_per_million: u32,
+    pub method: String,
+    pub interpretation: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConfidenceDriver {
+    pub stage: String,
+    pub impact: u16,
+    pub reason: String,
+    pub risk_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConfidenceArtifact {
+    pub schema_version: String,
+    pub algorithm_version: String,
+    pub decision: ConfidenceDecision,
+    pub confidence_score: u8,
+    pub residual_risk_score: u8,
+    pub calibration: ConfidenceCalibration,
+    pub hard_gates: Vec<ConfidenceHardGate>,
+    pub votes: Vec<ConfidenceVote>,
+    pub dependency_clusters: Vec<ConfidenceDependencyCluster>,
+    pub statistical_intervals: Vec<ConfidenceStatisticalInterval>,
+    pub top_risk_drivers: Vec<ConfidenceDriver>,
+    pub top_confidence_drivers: Vec<ConfidenceDriver>,
+    pub skipped_evidence: Vec<String>,
+    pub residual_risk_explanation: String,
+    pub limitations: Vec<String>,
+    pub receipt_count: usize,
+}
+
+pub fn build_confidence_artifact(receipts: &[Receipt]) -> ConfidenceArtifact {
+    let mut receipts = receipts
+        .iter()
+        .filter(|receipt| receipt.stage != "confidence_vote")
+        .collect::<Vec<_>>();
+    receipts.sort_by(|left, right| left.stage.cmp(&right.stage));
+
+    let mut votes = Vec::new();
+    let mut hard_gates = Vec::new();
+    let mut statistical_intervals = Vec::new();
+    let mut top_risk_drivers = Vec::new();
+    let mut top_confidence_drivers = Vec::new();
+    let mut skipped_evidence = Vec::new();
+    let mut cluster_counts = BTreeMap::<String, usize>::new();
+    let mut cluster_stages = BTreeMap::<String, Vec<String>>::new();
+    let mut risk_points: i32 = 420;
+    let mut limitations = vec![
+        "Confidence uses deterministic starter weights and is marked uncalibrated until Phase 34 supplies labeled outcomes.".to_string(),
+        "The artifact aggregates receipt evidence; it is not a proof that the PR is correct.".to_string(),
+    ];
+
+    for receipt in &receipts {
+        let cluster = confidence_cluster(receipt);
+        let vote = vote_for_receipt(receipt);
+        let weight = confidence_weight(receipt, &cluster);
+        let seen = cluster_counts.entry(cluster.clone()).or_default();
+        let discount_percent = dependency_discount_percent(&cluster, *seen);
+        let discounted_weight = ((u32::from(weight) * u32::from(discount_percent)) / 100) as u16;
+        *seen += 1;
+        cluster_stages
+            .entry(cluster.clone())
+            .or_default()
+            .push(receipt.stage.clone());
+
+        match vote {
+            ConfidenceVoteKind::Safe => {
+                let reduction = i32::from(discounted_weight) / 3;
+                risk_points -= reduction;
+                top_confidence_drivers.push(ConfidenceDriver {
+                    stage: receipt.stage.clone(),
+                    impact: discounted_weight,
+                    reason: format!(
+                        "{} passed with {} mitigated risk references.",
+                        receipt.stage,
+                        receipt.mitigated_risks.len()
+                    ),
+                    risk_ids: receipt.mitigated_risks.clone(),
+                });
+            }
+            ConfidenceVoteKind::Risky => {
+                let increase = i32::from(discounted_weight) / 2 + 80;
+                risk_points += increase;
+                top_risk_drivers.push(ConfidenceDriver {
+                    stage: receipt.stage.clone(),
+                    impact: discounted_weight,
+                    reason: format!(
+                        "{} reported status {} with residual risks {}.",
+                        receipt.stage,
+                        receipt.status.as_str(),
+                        risk_list_or_none(&receipt.residual_risks)
+                    ),
+                    risk_ids: receipt.residual_risks.clone(),
+                });
+            }
+            ConfidenceVoteKind::Abstain => {
+                let penalty = skipped_uncertainty_penalty(receipt, discounted_weight);
+                risk_points += i32::from(penalty);
+                skipped_evidence.push(format!(
+                    "{}:{} ({})",
+                    receipt.stage,
+                    receipt.status.as_str(),
+                    receipt.summary.title
+                ));
+                top_risk_drivers.push(ConfidenceDriver {
+                    stage: receipt.stage.clone(),
+                    impact: penalty,
+                    reason: format!(
+                        "{} did not produce executed evidence and is counted as uncertainty.",
+                        receipt.stage
+                    ),
+                    risk_ids: receipt
+                        .residual_risks
+                        .iter()
+                        .chain(receipt.not_applicable_risks.iter())
+                        .cloned()
+                        .collect(),
+                });
+            }
+        }
+
+        hard_gates.extend(hard_gates_for_receipt(receipt));
+        statistical_intervals.extend(statistical_intervals_for_receipt(receipt));
+
+        votes.push(ConfidenceVote {
+            stage: receipt.stage.clone(),
+            status: receipt.status,
+            vote,
+            cluster,
+            weight,
+            discounted_weight,
+            rationale: vote_rationale(receipt, vote),
+        });
+    }
+
+    if receipts.is_empty() {
+        limitations.push("No receipts were available for confidence aggregation.".to_string());
+        hard_gates.push(ConfidenceHardGate {
+            id: "HG-000".to_string(),
+            stage: "confidence_vote".to_string(),
+            reason: "No stage receipts were available.".to_string(),
+            risk_ids: vec!["R-090".to_string()],
+        });
+    }
+
+    top_risk_drivers.sort_by(|left, right| {
+        right
+            .impact
+            .cmp(&left.impact)
+            .then_with(|| left.stage.cmp(&right.stage))
+    });
+    top_risk_drivers.truncate(5);
+    top_confidence_drivers.sort_by(|left, right| {
+        right
+            .impact
+            .cmp(&left.impact)
+            .then_with(|| left.stage.cmp(&right.stage))
+    });
+    top_confidence_drivers.truncate(5);
+
+    let residual_risk_score = risk_points.clamp(0, 1_000) as u16;
+    let decision = if !hard_gates.is_empty() {
+        ConfidenceDecision::Fail
+    } else if residual_risk_score >= 500 || !skipped_evidence.is_empty() {
+        ConfidenceDecision::Warn
+    } else {
+        ConfidenceDecision::Pass
+    };
+    let confidence_score = ((1_000 - residual_risk_score) / 10) as u8;
+    let residual_risk_score = (residual_risk_score / 10) as u8;
+
+    ConfidenceArtifact {
+        schema_version: CONFIDENCE_SCHEMA_VERSION.to_string(),
+        algorithm_version: CONFIDENCE_ALGORITHM_VERSION.to_string(),
+        decision,
+        confidence_score,
+        residual_risk_score,
+        calibration: ConfidenceCalibration {
+            status: "uncalibrated".to_string(),
+            dataset: "none".to_string(),
+            method: "deterministic_starter_weights".to_string(),
+            notes: vec![
+                "Phase 34 must replace or validate these weights with labeled pilot outcomes.".to_string(),
+                "Scores are review prioritization evidence, not merge authorization.".to_string(),
+            ],
+        },
+        hard_gates,
+        votes,
+        dependency_clusters: dependency_clusters(cluster_stages),
+        statistical_intervals,
+        top_risk_drivers,
+        top_confidence_drivers,
+        skipped_evidence,
+        residual_risk_explanation: "Hard gates dominate the decision. Non-gated receipts vote safe, risky, or abstain with dependency discounts so correlated stages do not multiply into false certainty.".to_string(),
+        limitations,
+        receipt_count: receipts.len(),
+    }
+}
+
+pub fn render_confidence_markdown(artifact: &ConfidenceArtifact) -> String {
+    let mut output = String::new();
+    output.push_str("# Pramaan Confidence Vote\n\n");
+    output.push_str(&format!("Decision: **{}**\n\n", artifact.decision.as_str()));
+    output.push_str(&format!(
+        "Confidence score: **{}/100**  \nResidual risk score: **{}/100**  \nCalibration: **{}**\n\n",
+        artifact.confidence_score,
+        artifact.residual_risk_score,
+        artifact.calibration.status
+    ));
+    output.push_str(
+        "This is auditable residual-risk evidence, not a proof that the code is correct.\n\n",
+    );
+
+    output.push_str("## Hard Gates\n\n");
+    if artifact.hard_gates.is_empty() {
+        output.push_str("- none\n\n");
+    } else {
+        for gate in &artifact.hard_gates {
+            output.push_str(&format!(
+                "- `{}` from `{}`: {} ({})\n",
+                gate.id,
+                gate.stage,
+                gate.reason,
+                risk_list_or_none(&gate.risk_ids)
+            ));
+        }
+        output.push('\n');
+    }
+
+    output.push_str("## Votes\n\n");
+    output.push_str("| Stage | Status | Vote | Cluster | Weight | Why |\n");
+    output.push_str("|---|---:|---:|---|---:|---|\n");
+    for vote in &artifact.votes {
+        output.push_str(&format!(
+            "| `{}` | `{}` | `{}` | `{}` | {} | {} |\n",
+            vote.stage,
+            vote.status.as_str(),
+            vote.vote.as_str(),
+            vote.cluster,
+            vote.discounted_weight,
+            vote.rationale.replace('|', "/")
+        ));
+    }
+    output.push('\n');
+
+    output.push_str("## Top Risk Drivers\n\n");
+    render_driver_list(&mut output, &artifact.top_risk_drivers);
+    output.push_str("\n## Top Confidence Drivers\n\n");
+    render_driver_list(&mut output, &artifact.top_confidence_drivers);
+
+    output.push_str("\n## Statistical Notes\n\n");
+    if artifact.statistical_intervals.is_empty() {
+        output.push_str("- none\n");
+    } else {
+        for interval in &artifact.statistical_intervals {
+            output.push_str(&format!(
+                "- `{}` `{}`: estimate {} ppm, conservative bound {} ppm over {}/{} ({})\n",
+                interval.stage,
+                interval.kind,
+                interval.estimate_per_million,
+                interval.conservative_bound_per_million,
+                interval.successes,
+                interval.trials,
+                interval.method
+            ));
+        }
+    }
+
+    output.push_str("\n## Limitations\n\n");
+    for limitation in &artifact.limitations {
+        output.push_str(&format!("- {limitation}\n"));
+    }
+    output
+}
+
+fn render_driver_list(output: &mut String, drivers: &[ConfidenceDriver]) {
+    if drivers.is_empty() {
+        output.push_str("- none\n");
+    } else {
+        for driver in drivers {
+            output.push_str(&format!(
+                "- `{}` impact {}: {} ({})\n",
+                driver.stage,
+                driver.impact,
+                driver.reason,
+                risk_list_or_none(&driver.risk_ids)
+            ));
+        }
+    }
+}
+
+fn confidence_cluster(receipt: &Receipt) -> String {
+    let stage = receipt.stage.as_str();
+    if stage.contains("claim") {
+        "scope".to_string()
+    } else if stage.contains("oracle") || stage.contains("mutation") || stage.contains("fuzz") {
+        "test_quality".to_string()
+    } else if stage.contains("static") || stage.contains("hallucination") {
+        "static_semantic".to_string()
+    } else if stage.contains("sandbox") {
+        "supply_chain".to_string()
+    } else if stage.contains("bundle") || stage.contains("attestation") || stage.contains("sign") {
+        "bundle_integrity".to_string()
+    } else if stage.contains("policy") {
+        "policy".to_string()
+    } else if stage.contains("critic") || stage.contains("judge") {
+        "critic".to_string()
+    } else {
+        let mut families = receipt
+            .mitigated_risks
+            .iter()
+            .chain(receipt.residual_risks.iter())
+            .chain(receipt.not_applicable_risks.iter())
+            .map(|risk| risk_family(risk))
+            .filter(|family| *family != "unknown")
+            .collect::<BTreeSet<_>>();
+        families
+            .pop_first()
+            .unwrap_or("unknown")
+            .replace('_', "-")
+            .replace('-', "_")
+    }
+}
+
+fn confidence_weight(receipt: &Receipt, cluster: &str) -> u16 {
+    let base = match cluster {
+        "bundle_integrity" | "supply_chain" => 240,
+        "test_quality" => 220,
+        "static_semantic" => 140,
+        "scope" => 130,
+        "policy" => 120,
+        "critic" => 60,
+        _ => 90,
+    };
+    if receipt.stage.contains("oracle") {
+        base + 50
+    } else if receipt.stage.contains("mutation") || receipt.stage.contains("fuzz") {
+        base + 20
+    } else {
+        base
+    }
+}
+
+fn dependency_discount_percent(cluster: &str, seen_count: usize) -> u8 {
+    match (cluster, seen_count) {
+        (_, 0) => 100,
+        ("test_quality", _) => 50,
+        ("static_semantic", _) => 65,
+        ("bundle_integrity" | "supply_chain", _) => 75,
+        _ => 80,
+    }
+}
+
+fn vote_for_receipt(receipt: &Receipt) -> ConfidenceVoteKind {
+    match receipt.status {
+        StageStatus::Passed => {
+            if receipt.residual_risks.is_empty() {
+                ConfidenceVoteKind::Safe
+            } else {
+                ConfidenceVoteKind::Risky
+            }
+        }
+        StageStatus::Failed | StageStatus::TimedOut | StageStatus::Error => {
+            ConfidenceVoteKind::Risky
+        }
+        StageStatus::Skipped | StageStatus::NotApplicable => ConfidenceVoteKind::Abstain,
+    }
+}
+
+fn vote_rationale(receipt: &Receipt, vote: ConfidenceVoteKind) -> String {
+    match vote {
+        ConfidenceVoteKind::Safe => format!(
+            "{} passed with {} mitigated risks and no residual risks.",
+            receipt.stage,
+            receipt.mitigated_risks.len()
+        ),
+        ConfidenceVoteKind::Risky => format!(
+            "{} is {} and reports residual risks {}.",
+            receipt.stage,
+            receipt.status.as_str(),
+            risk_list_or_none(&receipt.residual_risks)
+        ),
+        ConfidenceVoteKind::Abstain => format!(
+            "{} is {}; missing evidence is an uncertainty penalty.",
+            receipt.stage,
+            receipt.status.as_str()
+        ),
+    }
+}
+
+fn skipped_uncertainty_penalty(receipt: &Receipt, discounted_weight: u16) -> u16 {
+    let mut penalty = (discounted_weight / 3).max(20);
+    if receipt.stage.contains("mutation") || receipt.stage.contains("fuzz") {
+        penalty += 25;
+    }
+    if receipt
+        .stage_budget
+        .as_ref()
+        .is_some_and(|budget| budget.partial_evidence)
+    {
+        penalty += 25;
+    }
+    penalty
+}
+
+fn hard_gates_for_receipt(receipt: &Receipt) -> Vec<ConfidenceHardGate> {
+    let mut gates = Vec::new();
+    let residual_families = receipt
+        .residual_risks
+        .iter()
+        .map(|risk| risk_family(risk))
+        .collect::<BTreeSet<_>>();
+
+    if receipt.stage == "oracle_integrity"
+        && matches!(
+            receipt.status,
+            StageStatus::Failed | StageStatus::Error | StageStatus::TimedOut
+        )
+    {
+        gates.push(ConfidenceHardGate {
+            id: "HG-ORACLE-001".to_string(),
+            stage: receipt.stage.clone(),
+            reason:
+                "Oracle integrity reported weakened, deleted, skipped, or sensitive test evidence."
+                    .to_string(),
+            risk_ids: receipt.residual_risks.clone(),
+        });
+    }
+
+    if residual_families.contains("bundle_integrity")
+        && matches!(
+            receipt.status,
+            StageStatus::Failed | StageStatus::Error | StageStatus::TimedOut
+        )
+    {
+        gates.push(ConfidenceHardGate {
+            id: "HG-BUNDLE-001".to_string(),
+            stage: receipt.stage.clone(),
+            reason: "Bundle integrity, signature, or attestation evidence failed.".to_string(),
+            risk_ids: receipt.residual_risks.clone(),
+        });
+    }
+
+    if receipt
+        .plugin_identity
+        .as_ref()
+        .is_some_and(|plugin| plugin.provenance.contains("untrusted"))
+    {
+        gates.push(ConfidenceHardGate {
+            id: "HG-PLUGIN-001".to_string(),
+            stage: receipt.stage.clone(),
+            reason: "Receipt came from an explicitly untrusted plugin.".to_string(),
+            risk_ids: vec!["R-092".to_string()],
+        });
+    }
+
+    if receipt
+        .stage_budget
+        .as_ref()
+        .is_some_and(|budget| budget.exhausted)
+    {
+        gates.push(ConfidenceHardGate {
+            id: "HG-BUDGET-001".to_string(),
+            stage: receipt.stage.clone(),
+            reason: "Stage exhausted its maximum evidence budget.".to_string(),
+            risk_ids: receipt
+                .residual_risks
+                .iter()
+                .chain(receipt.not_applicable_risks.iter())
+                .cloned()
+                .collect(),
+        });
+    }
+
+    gates
+}
+
+fn statistical_intervals_for_receipt(receipt: &Receipt) -> Vec<ConfidenceStatisticalInterval> {
+    let mut intervals = Vec::new();
+    if receipt.stage.contains("mutation") {
+        if let (Some(killed), Some(total)) = (
+            parse_u64_metadata(receipt, "mutants_killed"),
+            parse_u64_metadata(receipt, "mutants_total"),
+        ) {
+            if total > 0 {
+                intervals.push(ConfidenceStatisticalInterval {
+                    stage: receipt.stage.clone(),
+                    kind: "mutation_kill_rate".to_string(),
+                    successes: killed,
+                    trials: total,
+                    estimate_per_million: per_million(killed, total),
+                    conservative_bound_per_million: wilson_lower_bound_per_million(killed, total),
+                    method: "wilson_lower_bound_95_percent".to_string(),
+                    interpretation: "Use the lower bound, not the raw kill rate, when mutation samples are small.".to_string(),
+                });
+            }
+        }
+    }
+
+    if receipt.stage.contains("fuzz") || receipt.stage.contains("property") {
+        if let Some(generated) = parse_u64_metadata(receipt, "generated_input_count") {
+            let unexpected = parse_u64_metadata(receipt, "unexpected").unwrap_or(0);
+            if generated > 0 {
+                intervals.push(ConfidenceStatisticalInterval {
+                    stage: receipt.stage.clone(),
+                    kind: "zero_failure_residual_bound".to_string(),
+                    successes: generated.saturating_sub(unexpected),
+                    trials: generated,
+                    estimate_per_million: per_million(unexpected, generated),
+                    conservative_bound_per_million: if unexpected == 0 {
+                        rule_of_three_bound_per_million(generated)
+                    } else {
+                        per_million(unexpected, generated)
+                    },
+                    method: if unexpected == 0 {
+                        "rule_of_three_95_percent_upper_bound".to_string()
+                    } else {
+                        "observed_failure_rate".to_string()
+                    },
+                    interpretation: "A clean fuzz/property run bounds observed failures only for the generated input distribution.".to_string(),
+                });
+            }
+        }
+    }
+
+    intervals
+}
+
+fn dependency_clusters(
+    cluster_stages: BTreeMap<String, Vec<String>>,
+) -> Vec<ConfidenceDependencyCluster> {
+    cluster_stages
+        .into_iter()
+        .map(|(id, stages)| ConfidenceDependencyCluster {
+            dependency_discount_percent: if id == "test_quality" { 50 } else { 75 },
+            rationale: if id == "test_quality" {
+                "Oracle, mutation, and property/fuzz evidence share fixtures and issue scope, so later votes are discounted.".to_string()
+            } else {
+                "Multiple receipts in the same evidence family are useful but not independent.".to_string()
+            },
+            id,
+            stages,
+        })
+        .collect()
+}
+
+fn parse_u64_metadata(receipt: &Receipt, key: &str) -> Option<u64> {
+    receipt.metadata.get(key)?.parse().ok()
+}
+
+fn per_million(numerator: u64, denominator: u64) -> u32 {
+    if denominator == 0 {
+        0
+    } else {
+        ((numerator.saturating_mul(1_000_000) + denominator / 2) / denominator) as u32
+    }
+}
+
+fn wilson_lower_bound_per_million(successes: u64, trials: u64) -> u32 {
+    if trials == 0 {
+        return 0;
+    }
+    let n = trials as f64;
+    let p = successes as f64 / n;
+    let z = 1.96_f64;
+    let z2 = z * z;
+    let denominator = 1.0 + z2 / n;
+    let center = p + z2 / (2.0 * n);
+    let margin = z * ((p * (1.0 - p) + z2 / (4.0 * n)) / n).sqrt();
+    (((center - margin) / denominator).max(0.0) * 1_000_000.0).round() as u32
+}
+
+fn rule_of_three_bound_per_million(trials: u64) -> u32 {
+    if trials == 0 {
+        1_000_000
+    } else {
+        ((3_000_000 + trials / 2) / trials).min(1_000_000) as u32
+    }
+}
+
+fn risk_list_or_none(risk_ids: &[String]) -> String {
+    if risk_ids.is_empty() {
+        "none".to_string()
+    } else {
+        risk_ids.join(",")
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InputRef {
     pub name: String,
@@ -2564,6 +3234,151 @@ mod tests {
     }
 
     #[test]
+    fn confidence_hard_gate_dominates_clean_evidence() {
+        let clean_static = confidence_stage(
+            "static_hallucination",
+            StageStatus::Passed,
+            vec!["R-038"],
+            vec![],
+            vec![],
+            BTreeMap::new(),
+        );
+        let weakened_oracle = confidence_stage(
+            "oracle_integrity",
+            StageStatus::Failed,
+            vec!["R-011", "R-014"],
+            vec!["R-014"],
+            vec![],
+            BTreeMap::from([("findings".to_string(), "1".to_string())]),
+        );
+
+        let artifact = build_confidence_artifact(&[clean_static, weakened_oracle]);
+
+        assert_eq!(artifact.schema_version, CONFIDENCE_SCHEMA_VERSION);
+        assert_eq!(artifact.decision, ConfidenceDecision::Fail);
+        assert!(artifact
+            .hard_gates
+            .iter()
+            .any(|gate| gate.id == "HG-ORACLE-001"));
+        assert!(artifact
+            .top_confidence_drivers
+            .iter()
+            .any(|driver| driver.stage == "static_hallucination"));
+        assert!(render_confidence_markdown(&artifact).contains("not a proof"));
+    }
+
+    #[test]
+    fn confidence_penalizes_skipped_tools_as_uncertainty() {
+        let sandbox = confidence_stage(
+            "sandbox_setup",
+            StageStatus::Passed,
+            vec!["R-021"],
+            vec![],
+            vec![],
+            BTreeMap::new(),
+        );
+        let skipped_fuzz = confidence_stage(
+            "differential_fuzz",
+            StageStatus::Skipped,
+            vec![],
+            vec!["R-073"],
+            vec!["R-073"],
+            BTreeMap::from([("generated_input_count".to_string(), "0".to_string())]),
+        );
+
+        let artifact = build_confidence_artifact(&[sandbox, skipped_fuzz]);
+
+        assert_eq!(artifact.decision, ConfidenceDecision::Warn);
+        assert!(artifact
+            .skipped_evidence
+            .iter()
+            .any(|item| item.contains("differential_fuzz:skipped")));
+        assert!(artifact
+            .top_risk_drivers
+            .iter()
+            .any(|driver| driver.reason.contains("uncertainty")));
+    }
+
+    #[test]
+    fn confidence_records_wilson_and_rule_of_three_intervals() {
+        let mutation = confidence_stage(
+            "mutation_python_mutmut",
+            StageStatus::Passed,
+            vec!["R-068"],
+            vec![],
+            vec![],
+            BTreeMap::from([
+                ("mutants_killed".to_string(), "2".to_string()),
+                ("mutants_total".to_string(), "2".to_string()),
+            ]),
+        );
+        let fuzz = confidence_stage(
+            "differential_fuzz",
+            StageStatus::Passed,
+            vec!["R-073"],
+            vec![],
+            vec![],
+            BTreeMap::from([
+                ("generated_input_count".to_string(), "10".to_string()),
+                ("unexpected".to_string(), "0".to_string()),
+            ]),
+        );
+
+        let artifact = build_confidence_artifact(&[mutation, fuzz]);
+        let wilson = artifact
+            .statistical_intervals
+            .iter()
+            .find(|interval| interval.kind == "mutation_kill_rate")
+            .expect("mutation interval");
+        let rule_three = artifact
+            .statistical_intervals
+            .iter()
+            .find(|interval| interval.kind == "zero_failure_residual_bound")
+            .expect("fuzz interval");
+
+        assert_eq!(wilson.estimate_per_million, 1_000_000);
+        assert!(wilson.conservative_bound_per_million < 1_000_000);
+        assert_eq!(rule_three.conservative_bound_per_million, 300_000);
+    }
+
+    #[test]
+    fn confidence_artifact_round_trips_without_hash_drift() {
+        let receipt = confidence_stage(
+            "sandbox_setup",
+            StageStatus::Passed,
+            vec!["R-021"],
+            vec![],
+            vec![],
+            BTreeMap::new(),
+        );
+        let artifact = build_confidence_artifact(&[receipt]);
+
+        let first = canonical_json_bytes(&artifact).expect("first canonical bytes");
+        let decoded: ConfidenceArtifact =
+            serde_json::from_slice(&first).expect("confidence artifact decodes");
+        let second = canonical_json_bytes(&decoded).expect("second canonical bytes");
+
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn confidence_fixture_matches_runtime_contract() {
+        let artifact: ConfidenceArtifact = serde_json::from_str(include_str!(
+            "../../../examples/fixtures/confidence.synthetic.json"
+        ))
+        .expect("confidence fixture parses");
+
+        assert_eq!(artifact.schema_version, CONFIDENCE_SCHEMA_VERSION);
+        assert_eq!(artifact.algorithm_version, CONFIDENCE_ALGORITHM_VERSION);
+        assert_eq!(artifact.decision, ConfidenceDecision::Fail);
+        assert_eq!(artifact.calibration.status, "uncalibrated");
+        assert!(artifact
+            .hard_gates
+            .iter()
+            .any(|gate| gate.id == "HG-ORACLE-001"));
+    }
+
+    #[test]
     fn redaction_masks_secret_values_and_private_paths() {
         let redacted = redact_sensitive_text(
             "password=hunter2 token: ghp_123 C:\\Users\\Tushar\\repo /home/alex/project",
@@ -2621,6 +3436,10 @@ jobs:
             (
                 include_str!("../../../examples/fixtures/risk_taxonomy.synthetic.json"),
                 "pramaan.risk_taxonomy.v1",
+            ),
+            (
+                include_str!("../../../examples/fixtures/confidence.synthetic.json"),
+                "pramaan.confidence.v1",
             ),
         ];
 
@@ -2843,5 +3662,38 @@ jobs:
                 .collect(),
             stage_budget,
         }
+    }
+
+    fn confidence_stage(
+        stage: &str,
+        status: StageStatus,
+        mitigated_risks: Vec<&str>,
+        residual_risks: Vec<&str>,
+        not_applicable_risks: Vec<&str>,
+        metadata: BTreeMap<String, String>,
+    ) -> Receipt {
+        let mut receipt = Receipt::synthetic(
+            stage,
+            status,
+            "main",
+            "feature",
+            vec![],
+            vec![],
+            ReceiptSummary {
+                title: format!("{stage} {status:?}"),
+                details: "confidence test fixture".to_string(),
+            },
+            RiskRefs {
+                mitigated: mitigated_risks.into_iter().map(str::to_string).collect(),
+                residual: residual_risks.into_iter().map(str::to_string).collect(),
+                not_applicable: not_applicable_risks
+                    .into_iter()
+                    .map(str::to_string)
+                    .collect(),
+            },
+        );
+        receipt.limitations.clear();
+        receipt.metadata = metadata;
+        receipt
     }
 }

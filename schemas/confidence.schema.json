@@ -1,0 +1,316 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/confidence.schema.json",
+  "title": "Pramaan Confidence Vote Artifact",
+  "description": "A decomposed, auditable residual-risk vote over Pramaan receipts. This is evidence for review prioritization, not a proof of correctness.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "algorithm_version",
+    "decision",
+    "confidence_score",
+    "residual_risk_score",
+    "calibration",
+    "hard_gates",
+    "votes",
+    "dependency_clusters",
+    "statistical_intervals",
+    "top_risk_drivers",
+    "top_confidence_drivers",
+    "skipped_evidence",
+    "residual_risk_explanation",
+    "limitations",
+    "receipt_count"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "pramaan.confidence.v1"
+    },
+    "algorithm_version": {
+      "type": "string",
+      "const": "pramaan-confidence-v0.1-uncalibrated"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["fail", "warn", "pass"]
+    },
+    "confidence_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "residual_risk_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "calibration": {
+      "$ref": "#/$defs/calibration"
+    },
+    "hard_gates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hard_gate"
+      }
+    },
+    "votes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/vote"
+      }
+    },
+    "dependency_clusters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dependency_cluster"
+      }
+    },
+    "statistical_intervals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/statistical_interval"
+      }
+    },
+    "top_risk_drivers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/driver"
+      }
+    },
+    "top_confidence_drivers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/driver"
+      }
+    },
+    "skipped_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "residual_risk_explanation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "receipt_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "risk_id_array": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^R-[0-9]{3}$"
+      }
+    },
+    "calibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "dataset", "method", "notes"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["uncalibrated", "calibrated", "shadow"]
+        },
+        "dataset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "hard_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "stage", "reason", "risk_ids"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^HG-[A-Z0-9-]+$"
+        },
+        "stage": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_:-]*$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "risk_ids": {
+          "$ref": "#/$defs/risk_id_array"
+        }
+      }
+    },
+    "vote": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "status",
+        "vote",
+        "cluster",
+        "weight",
+        "discounted_weight",
+        "rationale"
+      ],
+      "properties": {
+        "stage": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_:-]*$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["passed", "failed", "skipped", "not_applicable", "timed_out", "error"]
+        },
+        "vote": {
+          "type": "string",
+          "enum": ["safe", "risky", "abstain"]
+        },
+        "cluster": {
+          "type": "string",
+          "minLength": 1
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "discounted_weight": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "dependency_cluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "stages",
+        "dependency_discount_percent",
+        "rationale"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "dependency_discount_percent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "statistical_interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "kind",
+        "successes",
+        "trials",
+        "estimate_per_million",
+        "conservative_bound_per_million",
+        "method",
+        "interpretation"
+      ],
+      "properties": {
+        "stage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["mutation_kill_rate", "zero_failure_residual_bound"]
+        },
+        "successes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "trials": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "estimate_per_million": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "conservative_bound_per_million": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interpretation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "driver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "impact", "reason", "risk_ids"],
+      "properties": {
+        "stage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "impact": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "risk_ids": {
+          "$ref": "#/$defs/risk_id_array"
+        }
+      }
+    }
+  }
+}

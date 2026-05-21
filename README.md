@@ -47,9 +47,10 @@ Pramaan is early-stage. The repo already ships a Rust CLI foundation, receipt
 schemas, bundle hash verification, sandbox/environment evidence, static-check
 adapters, structured oracle-integrity checks, demo fixtures, mutation adapters
 that run when tools are installed, deterministic differential replay evidence,
-and a GitHub Action wrapper. It does **not** yet ship production-grade Sigstore
-signing, enforced container isolation, real Hypothesis/fast-check execution,
-full compiler-AST oracle parsing, or a fully orchestrated `verify` pipeline that
+an uncalibrated auditable confidence vote, and a GitHub Action wrapper. It does
+**not** yet ship production-grade Sigstore signing, enforced container
+isolation, real Hypothesis/fast-check execution, full compiler-AST oracle
+parsing, calibrated confidence, or a fully orchestrated `verify` pipeline that
 runs every planned stage automatically.
 
 See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
@@ -69,6 +70,7 @@ PR diff
   -> Oracle integrity
   -> Delta mutation
   -> Property, fuzz, and differential checks
+  -> Auditable confidence vote
   -> Bundle integrity and signing/attestation
   -> GitHub Action summary
 ```

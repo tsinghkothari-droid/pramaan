@@ -1,14 +1,17 @@
 use anyhow::{Context, Result};
+use chrono::Utc;
 use clap::{Parser, Subcommand};
 use pramaan_bundle::{
     build_manifest, read_manifest, sha256_hex, verify_bundle, write_manifest, BundleBuildOptions,
-    MANIFEST_FILE_NAME,
+    BundleManifest, MANIFEST_FILE_NAME,
 };
 use pramaan_core::{
-    default_policy_profile, evaluate_default_policy, risk_family, AgentAttribution, ArtifactRef,
-    AttributionConfidence, ClaimScope, EvidenceSensitivity, OutputRef, PluginIdentity,
-    PluginPermissions, PolicyDecision, PolicyStageEvidence, Receipt, ReceiptSummary,
-    RedactionManifest, RiskRefs, StageBudget, StageStatus,
+    build_confidence_artifact, default_policy_profile, evaluate_default_policy,
+    render_confidence_markdown, risk_family, timestamp, AgentAttribution, ArtifactRef,
+    AttributionConfidence, ClaimScope, ConfidenceDecision, EvidenceSensitivity, OutputRef,
+    PluginIdentity, PluginPermissions, PolicyDecision, PolicyStageEvidence, Receipt,
+    ReceiptSummary, RedactionManifest, RiskRefs, StageBudget, StageStatus, ToolIdentity,
+    RECEIPT_SCHEMA_VERSION,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use std::collections::BTreeMap;
@@ -38,6 +41,7 @@ enum Commands {
     Mutation(MutationArgs),
     Fuzz(FuzzArgs),
     Policy(PolicyArgs),
+    Confidence(ConfidenceArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -80,6 +84,24 @@ enum PolicyCommands {
 #[derive(Debug, Parser)]
 struct PolicyExplainArgs {
     bundle: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct ConfidenceArgs {
+    #[command(subcommand)]
+    command: ConfidenceCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum ConfidenceCommands {
+    Explain(ConfidenceExplainArgs),
+}
+
+#[derive(Debug, Parser)]
+struct ConfidenceExplainArgs {
+    bundle: PathBuf,
+    #[arg(long)]
+    out: Option<PathBuf>,
 }
 
 #[derive(Debug, Parser)]
@@ -151,7 +173,241 @@ fn main() -> Result<()> {
             args.seed,
         ),
         Commands::Policy(args) => run_policy(args),
+        Commands::Confidence(args) => run_confidence(args),
     }
+}
+
+fn run_confidence(args: ConfidenceArgs) -> Result<()> {
+    match args.command {
+        ConfidenceCommands::Explain(args) => run_confidence_explain(args.bundle, args.out),
+    }
+}
+
+fn run_confidence_explain(bundle: PathBuf, out: Option<PathBuf>) -> Result<()> {
+    let manifest_path = if bundle.is_dir() {
+        bundle.join(MANIFEST_FILE_NAME)
+    } else {
+        bundle
+    };
+    let bundle_root = manifest_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .to_path_buf();
+    let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
+    let receipts = read_bundle_receipts(&bundle_root, &manifest)?;
+    let artifact = build_confidence_artifact(&receipts);
+    let markdown = render_confidence_markdown(&artifact);
+    let write_into_bundle = out.is_none();
+    let out_dir = out.unwrap_or_else(|| bundle_root.clone());
+    fs::create_dir_all(&out_dir)
+        .with_context(|| format!("creating confidence output directory {}", out_dir.display()))?;
+
+    let json_path = out_dir.join("confidence.json");
+    let markdown_path = out_dir.join("confidence.md");
+    write_json(&json_path, &artifact)?;
+    fs::write(&markdown_path, markdown)
+        .with_context(|| format!("writing {}", markdown_path.display()))?;
+
+    if write_into_bundle {
+        let json_digest = digest_file(&json_path)?;
+        let markdown_digest = digest_file(&markdown_path)?;
+        let receipt_path = bundle_root
+            .join("receipts")
+            .join("confidence-vote.receipt.json");
+        let receipt = confidence_receipt(
+            &manifest,
+            &artifact,
+            &json_path,
+            &json_digest,
+            &markdown_path,
+            &markdown_digest,
+            &bundle_root,
+        );
+        write_json(&receipt_path, &receipt)?;
+        let updated_manifest = build_manifest(
+            &bundle_root,
+            BundleBuildOptions {
+                bundle_id: manifest.bundle_id,
+                run_id: manifest.run_id,
+                repository: manifest.repository,
+            },
+        )
+        .context("rebuilding bundle manifest with confidence artifacts")?;
+        write_manifest(&bundle_root, &updated_manifest)
+            .context("writing updated bundle manifest")?;
+    }
+
+    println!("Pramaan confidence explanation complete");
+    println!("manifest: {}", manifest_path.display());
+    println!("confidence_json: {}", json_path.display());
+    println!("confidence_md: {}", markdown_path.display());
+    println!("decision: {}", artifact.decision.as_str());
+    println!("confidence_score: {}", artifact.confidence_score);
+    println!("residual_risk_score: {}", artifact.residual_risk_score);
+    Ok(())
+}
+
+fn read_bundle_receipts(bundle_root: &Path, manifest: &BundleManifest) -> Result<Vec<Receipt>> {
+    let mut receipts = Vec::new();
+    for receipt_ref in &manifest.receipts {
+        let path = bundle_root.join(&receipt_ref.path);
+        let receipt: Receipt = serde_json::from_slice(
+            &fs::read(&path).with_context(|| format!("reading receipt {}", path.display()))?,
+        )
+        .with_context(|| format!("parsing receipt {}", path.display()))?;
+        if receipt.schema_version != RECEIPT_SCHEMA_VERSION {
+            anyhow::bail!(
+                "{} has unsupported receipt schema_version {}",
+                path.display(),
+                receipt.schema_version
+            );
+        }
+        if receipt.stage != "confidence_vote" {
+            receipts.push(receipt);
+        }
+    }
+    Ok(receipts)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn confidence_receipt(
+    manifest: &BundleManifest,
+    artifact: &pramaan_core::ConfidenceArtifact,
+    json_path: &Path,
+    json_digest: &str,
+    markdown_path: &Path,
+    markdown_digest: &str,
+    bundle_root: &Path,
+) -> Receipt {
+    let now = timestamp(Utc::now());
+    let residual_risks = confidence_residual_risks(artifact);
+    Receipt {
+        schema_version: RECEIPT_SCHEMA_VERSION.to_string(),
+        stage: "confidence_vote".to_string(),
+        status: match artifact.decision {
+            ConfidenceDecision::Fail => StageStatus::Failed,
+            ConfidenceDecision::Warn | ConfidenceDecision::Pass => StageStatus::Passed,
+        },
+        tool: ToolIdentity::new("pramaan-confidence", env!("CARGO_PKG_VERSION")),
+        started_at: now.clone(),
+        ended_at: now,
+        exit_code: Some(if artifact.decision == ConfidenceDecision::Fail {
+            1
+        } else {
+            0
+        }),
+        inputs: vec![pramaan_core::InputRef {
+            name: "bundle_manifest".to_string(),
+            value: MANIFEST_FILE_NAME.to_string(),
+            digest: Some(manifest.integrity.manifest_digest.prefixed()),
+        }],
+        outputs: vec![
+            OutputRef {
+                name: "confidence_json".to_string(),
+                path: bundle_path(bundle_root, json_path),
+                digest: Some(json_digest.to_string()),
+            },
+            OutputRef {
+                name: "confidence_markdown".to_string(),
+                path: bundle_path(bundle_root, markdown_path),
+                digest: Some(markdown_digest.to_string()),
+            },
+        ],
+        artifacts: vec![
+            ArtifactRef {
+                name: "confidence_json".to_string(),
+                path: bundle_path(bundle_root, json_path),
+                media_type: Some("application/json".to_string()),
+                digest: Some(json_digest.to_string()),
+            },
+            ArtifactRef {
+                name: "confidence_markdown".to_string(),
+                path: bundle_path(bundle_root, markdown_path),
+                media_type: Some("text/markdown".to_string()),
+                digest: Some(markdown_digest.to_string()),
+            },
+        ],
+        summary: ReceiptSummary {
+            title: format!("Confidence vote: {}", artifact.decision.as_str()),
+            details: format!(
+                "Confidence score {}, residual risk score {}, hard gates {}, votes {}, calibration {}.",
+                artifact.confidence_score,
+                artifact.residual_risk_score,
+                artifact.hard_gates.len(),
+                artifact.votes.len(),
+                artifact.calibration.status
+            ),
+        },
+        limitations: artifact.limitations.clone(),
+        mitigated_risks: confidence_mitigated_risks(artifact),
+        residual_risks,
+        not_applicable_risks: Vec::new(),
+        agent_author: None,
+        reviewer_override: None,
+        multi_agent_provenance: Vec::new(),
+        plugin_identity: None,
+        plugin_permissions: None,
+        evidence_sensitivity: Some(EvidenceSensitivity::Internal),
+        redaction_manifest: None,
+        policy_decision: Some(PolicyDecision {
+            decision: artifact.decision.as_str().to_string(),
+            policy_id: "pramaan-confidence-v0.1".to_string(),
+            hard_failures: artifact
+                .hard_gates
+                .iter()
+                .map(|gate| gate.id.clone())
+                .collect(),
+            warnings: artifact.skipped_evidence.clone(),
+            waived: Vec::new(),
+        }),
+        stage_budget: None,
+        metadata: BTreeMap::from([
+            (
+                "algorithm_version".to_string(),
+                artifact.algorithm_version.clone(),
+            ),
+            (
+                "confidence_score".to_string(),
+                artifact.confidence_score.to_string(),
+            ),
+            (
+                "residual_risk_score".to_string(),
+                artifact.residual_risk_score.to_string(),
+            ),
+            (
+                "calibration_status".to_string(),
+                artifact.calibration.status.clone(),
+            ),
+        ]),
+    }
+}
+
+fn confidence_residual_risks(artifact: &pramaan_core::ConfidenceArtifact) -> Vec<String> {
+    let mut risks = artifact
+        .hard_gates
+        .iter()
+        .flat_map(|gate| gate.risk_ids.clone())
+        .chain(
+            artifact
+                .top_risk_drivers
+                .iter()
+                .flat_map(|driver| driver.risk_ids.clone()),
+        )
+        .collect::<Vec<_>>();
+    risks.sort();
+    risks.dedup();
+    risks
+}
+
+fn confidence_mitigated_risks(artifact: &pramaan_core::ConfidenceArtifact) -> Vec<String> {
+    let mut risks = artifact
+        .top_confidence_drivers
+        .iter()
+        .flat_map(|driver| driver.risk_ids.clone())
+        .collect::<Vec<_>>();
+    risks.sort();
+    risks.dedup();
+    risks
 }
 
 fn run_policy(args: PolicyArgs) -> Result<()> {

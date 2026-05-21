@@ -241,13 +241,84 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
         .any(|risk| risk == "R-001"));
 
     let manifest: serde_json::Value =
-        serde_json::from_slice(&fs::read(manifest_path).expect("read manifest"))
+        serde_json::from_slice(&fs::read(&manifest_path).expect("read manifest"))
             .expect("manifest json");
     assert_eq!(manifest["agent_attribution"][0]["product"], "Codex");
     assert_eq!(manifest["plugin_identities"][0]["name"], "pramaan-core");
     assert_eq!(manifest["redaction_manifest"]["profile"], "internal-full");
     assert_eq!(manifest["policy_decision"]["decision"], "informational");
     assert_eq!(manifest["stage_budgets"][0]["partial_evidence"], true);
+
+    let confidence_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "confidence",
+            "explain",
+            out.to_str().expect("utf-8 output path"),
+        ])
+        .output()
+        .expect("run pramaan confidence explain");
+
+    assert!(
+        confidence_output.status.success(),
+        "confidence explain failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&confidence_output.stdout),
+        String::from_utf8_lossy(&confidence_output.stderr)
+    );
+
+    let confidence_stdout = String::from_utf8_lossy(&confidence_output.stdout);
+    assert!(confidence_stdout.contains("Pramaan confidence explanation complete"));
+    assert!(confidence_stdout.contains("decision:"));
+
+    let confidence_json_path = out.join("confidence.json");
+    let confidence_md_path = out.join("confidence.md");
+    let confidence_receipt_path = out.join("receipts").join("confidence-vote.receipt.json");
+    assert!(confidence_json_path.exists(), "confidence JSON exists");
+    assert!(confidence_md_path.exists(), "confidence markdown exists");
+    assert!(
+        confidence_receipt_path.exists(),
+        "confidence receipt exists"
+    );
+
+    let confidence: serde_json::Value =
+        serde_json::from_slice(&fs::read(confidence_json_path).expect("read confidence JSON"))
+            .expect("confidence JSON");
+    assert_eq!(confidence["schema_version"], "pramaan.confidence.v1");
+    assert_eq!(
+        confidence["algorithm_version"],
+        "pramaan-confidence-v0.1-uncalibrated"
+    );
+    assert_eq!(confidence["calibration"]["status"], "uncalibrated");
+    assert!(confidence["votes"].as_array().unwrap().len() >= 2);
+    assert!(fs::read_to_string(confidence_md_path)
+        .expect("read confidence markdown")
+        .contains("not a proof"));
+
+    let updated_manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest_path).expect("read updated manifest"))
+            .expect("updated manifest json");
+    assert!(updated_manifest["artifacts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|artifact| artifact["path"] == "confidence.json"));
+    assert!(updated_manifest["receipts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|receipt| receipt["path"] == "receipts/confidence-vote.receipt.json"));
+
+    let updated_bundle_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args(["bundle", "verify", out.to_str().expect("utf-8 output path")])
+        .output()
+        .expect("run pramaan bundle verify after confidence");
+    assert!(
+        updated_bundle_output.status.success(),
+        "updated bundle verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&updated_bundle_output.stdout),
+        String::from_utf8_lossy(&updated_bundle_output.stderr)
+    );
 }
 
 #[test]

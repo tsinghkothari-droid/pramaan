@@ -40,6 +40,7 @@ Status labels:
 | Replay command for failing generated cases | Planned | Phase 25 or later | Not implemented yet |
 | GitHub Action wrapper | Partial | `action.yml`, `action/render-summary.mjs` | Node tests and example workflows |
 | Policy-as-code and `pramaan policy explain` | Partial | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `docs/github-action.md` | `cargo test --workspace` |
+| Auditable confidence vote | Partial | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/confidence.schema.json`, `docs/confidence.md` | `pramaan confidence explain <bundle>` |
 | Threat model for malicious PRs/verifier plugins | Implemented | `docs/threat-model.md` | Manual doc review |
 | Redaction helpers for shareable evidence | Partial | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` |
 | Adapter certification mode | Partial | `docs/adapter-certification.md`, schemas | Docs/schema only |
@@ -50,13 +51,15 @@ Status labels:
 Pramaan currently provides a receipt-first Rust CLI foundation with working
 bundle hash verification, sandbox/environment evidence, static-check adapters,
 structured oracle integrity checks, demo fixtures, a default policy explanation
-path, redaction helpers, threat-model documentation, a claim-audit ledger, and a
-GitHub Action wrapper.
+path, an uncalibrated auditable confidence vote, redaction helpers,
+threat-model documentation, a claim-audit ledger, and a GitHub Action wrapper.
 
 It does **not** yet provide production-grade signed attestations, enforced
 container isolation, real Hypothesis/fast-check property execution, full
 compiler-AST oracle parsing, or a complete end-to-end `verify` pipeline that
-runs every stage automatically.
+runs every stage automatically. The confidence vote is implemented as
+decomposed residual-risk evidence, not as a calibrated probability or merge
+authority.
 
 ## First Target User
 

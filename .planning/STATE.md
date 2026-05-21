@@ -7,9 +7,10 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
 **Current focus:** Research-driven continuation track. Phases 22.5 and 23-25
-are complete with explicit residual risk. The next responsible step is Phase
-26: three external pilot repositories and a live GitHub Action proof before
-public Alpha.
+are complete with explicit residual risk. Phase 28.5 now has a first
+implemented confidence-vote slice, while Phase 26 external pilots, Phase 27
+compiler/parser oracle hardening, and Phase 28 real Hypothesis/fast-check
+harnesses remain the main P1 blockers before public Alpha.
 
 ## Current Phase
 
@@ -35,8 +36,8 @@ gate.
 - Which model/provider boundary Phase 28.25 should use for AI probe generation
   without making a vendor-specific dependency part of the evidence contract.
 - Whether Phase 29 should use cosign subprocess first or a Rust Sigstore crate.
-- Initial deterministic reliability weights for Phase 28.5 before Phase 34 has
-  enough pilot data for calibration.
+- Whether the Phase 28.5 deterministic starter weights should be adjusted after
+  the first three external pilots, before Phase 34 formal calibration.
 - Whether Phase 31 isolation starts with subprocess/container boundaries or a WASM boundary.
 - Whether Phase 32 should implement OPA export first or policy parity tests first.
 - Whether Phase 32.5 policy packs should be pure built-ins first or support
@@ -87,3 +88,4 @@ gate.
 | 2026-05-21 | Added research-driven GSD continuation track for Phases 26-40. | Current benchmark, supply-chain, CI security, policy, SARIF, attestation, plugin-security, and AI-code-security research now maps every remaining `TASKS.md` family to an executable phase instead of more open-ended research. |
 | 2026-05-21 | Inserted Phase 28.5 for auditable confidence voting. | Pramaan needs a signed, decomposed evidence vote based on hard gates, weak-signal aggregation, Wilson intervals, fuzz residual-risk bounds, and later calibration rather than an opaque confidence percentage. |
 | 2026-05-21 | Added decimal GSD phases for the right product directions. | Agent harness, AI evidence-seeking probes, policy-pack profiles, and reviewer UX are now explicit executable phases instead of loose strategy notes. |
+| 2026-05-21 | Executed Phase 28.5 first slice. | Pramaan now emits `confidence.json`, `confidence.md`, and a `confidence_vote` receipt from bundle receipts using uncalibrated deterministic weights, hard gates, dependency discounts, Wilson/rule-of-three statistical notes, and manifest-linked artifact digests. |

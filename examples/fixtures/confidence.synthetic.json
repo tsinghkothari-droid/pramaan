@@ -1,0 +1,93 @@
+{
+  "schema_version": "pramaan.confidence.v1",
+  "algorithm_version": "pramaan-confidence-v0.1-uncalibrated",
+  "decision": "fail",
+  "confidence_score": 38,
+  "residual_risk_score": 62,
+  "calibration": {
+    "status": "uncalibrated",
+    "dataset": "none",
+    "method": "deterministic_starter_weights",
+    "notes": [
+      "Phase 34 must replace or validate these weights with labeled pilot outcomes.",
+      "Scores are review prioritization evidence, not merge authorization."
+    ]
+  },
+  "hard_gates": [
+    {
+      "id": "HG-ORACLE-001",
+      "stage": "oracle_integrity",
+      "reason": "Oracle integrity reported weakened, deleted, skipped, or sensitive test evidence.",
+      "risk_ids": ["R-014"]
+    }
+  ],
+  "votes": [
+    {
+      "stage": "oracle_integrity",
+      "status": "failed",
+      "vote": "risky",
+      "cluster": "test_quality",
+      "weight": 270,
+      "discounted_weight": 270,
+      "rationale": "oracle_integrity is failed and reports residual risks R-014."
+    },
+    {
+      "stage": "static_hallucination",
+      "status": "passed",
+      "vote": "safe",
+      "cluster": "static_semantic",
+      "weight": 140,
+      "discounted_weight": 140,
+      "rationale": "static_hallucination passed with 1 mitigated risks and no residual risks."
+    }
+  ],
+  "dependency_clusters": [
+    {
+      "id": "static_semantic",
+      "stages": ["static_hallucination"],
+      "dependency_discount_percent": 75,
+      "rationale": "Multiple receipts in the same evidence family are useful but not independent."
+    },
+    {
+      "id": "test_quality",
+      "stages": ["oracle_integrity"],
+      "dependency_discount_percent": 50,
+      "rationale": "Oracle, mutation, and property/fuzz evidence share fixtures and issue scope, so later votes are discounted."
+    }
+  ],
+  "statistical_intervals": [
+    {
+      "stage": "mutation_python_mutmut",
+      "kind": "mutation_kill_rate",
+      "successes": 2,
+      "trials": 2,
+      "estimate_per_million": 1000000,
+      "conservative_bound_per_million": 342372,
+      "method": "wilson_lower_bound_95_percent",
+      "interpretation": "Use the lower bound, not the raw kill rate, when mutation samples are small."
+    }
+  ],
+  "top_risk_drivers": [
+    {
+      "stage": "oracle_integrity",
+      "impact": 270,
+      "reason": "oracle_integrity reported status failed with residual risks R-014.",
+      "risk_ids": ["R-014"]
+    }
+  ],
+  "top_confidence_drivers": [
+    {
+      "stage": "static_hallucination",
+      "impact": 140,
+      "reason": "static_hallucination passed with 1 mitigated risk references.",
+      "risk_ids": ["R-038"]
+    }
+  ],
+  "skipped_evidence": [],
+  "residual_risk_explanation": "Hard gates dominate the decision. Non-gated receipts vote safe, risky, or abstain with dependency discounts so correlated stages do not multiply into false certainty.",
+  "limitations": [
+    "Confidence uses deterministic starter weights and is marked uncalibrated until Phase 34 supplies labeled outcomes.",
+    "The artifact aggregates receipt evidence; it is not a proof that the PR is correct."
+  ],
+  "receipt_count": 2
+}

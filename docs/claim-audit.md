@@ -45,6 +45,7 @@ risk before Alpha.
 | CLAIM-MUTATION-002 | `docs/plugins.md` | Missing mutation tools do not mitigate risk. | executable-test | `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
 | CLAIM-FUZZ-001 | `TASKS.md` | Differential replay records seed, corpus hash, counterexamples, and divergence classes. | executable-test | `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
 | CLAIM-FUZZ-002 | `TASKS.md` | Hypothesis/fast-check campaigns run today. | accepted-risk | `docs/plugins.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "tool_backed=false|Hypothesis" docs .planning/research` | narrowed | Keep as follow-up until safe harnesses execute. |
+| CLAIM-CONFIDENCE-001 | `docs/confidence.md` | Confidence vote is decomposed, uncalibrated, and explicitly not a correctness proof. | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/tests/smoke.rs`, `schemas/confidence.schema.json` | `cargo test --workspace` | pass | Keep calibration marked uncalibrated until Phase 34. |
 | CLAIM-BUNDLE-001 | `docs/bundle-verification.md` | Manifest references artifacts by digest and rejects tampering. | executable-test | `crates/pramaan-bundle/src/lib.rs` | `cargo test -p pramaan-bundle` | pass | None. |
 | CLAIM-REDACTION-001 | `docs/receipt-model.md` | Common secrets and private paths are redacted by helper. | executable-test | `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core redaction` | pass | Enterprise logs need broader fixtures. |
 | CLAIM-DEMO-001 | `docs/demo.md` | Public demos are inspectable in under 30 seconds. | manual-proof | `docs/demo.md`, `examples/proof-bundles/` | `cargo run -p pramaan-cli -- oracle --base-repo examples/fixtures/oracle/base --head-repo examples/fixtures/oracle/head --out target/pramaan-pilot/oracle` | pass-with-risk | Needs user study/external reviewer timing before marketing as measured. |
@@ -76,14 +77,15 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-024 | `STATUS.md` | STATUS: Redaction helpers for shareable evidence | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` | pass | Redaction profiles remain broader future work. |
 | CLAIM-STATUS-CAP-025 | `STATUS.md` | STATUS: Adapter certification mode | checked-fixture | `docs/adapter-certification.md`, `examples/fixtures/adapter_certification.synthetic.json` | Fixture/manual inspection | pass | Keep adjacent, not core v0.1 path. |
 | CLAIM-STATUS-CAP-026 | `STATUS.md` | STATUS: Public claim audit gate | executable-test | `docs/claim-audit.md`, `scripts/check-claim-audit.mjs` | `node scripts/check-claim-audit.mjs` | pass | Keep the ledger updated after every phase. |
+| CLAIM-STATUS-CAP-027 | `STATUS.md` | STATUS: Auditable confidence vote | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/confidence.schema.json`, `docs/confidence.md` | `cargo test --workspace` | pass | Keep status Partial until calibration and broader fixtures land. |
 
 ## Counts
 
 | Bucket | Count |
 | --- | ---: |
-| Total claims audited | 53 |
-| `STATUS.md` capability rows covered | 26 |
-| Executable-test claims | 33 |
+| Total claims audited | 55 |
+| `STATUS.md` capability rows covered | 27 |
+| Executable-test claims | 35 |
 | Checked-fixture/manual-proof claims | 8 |
 | Partial/planned/accepted-risk claims | 12 |
 | False-or-stale claims left in public copy | 0 |

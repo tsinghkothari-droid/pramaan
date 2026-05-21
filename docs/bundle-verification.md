@@ -57,6 +57,18 @@ Skipped and not-applicable non-required stages are warnings. Residual risk,
 not-applicable risk, and partial evidence are warnings unless a later policy
 profile elevates them.
 
+Emit an auditable confidence vote with:
+
+```powershell
+cargo run -p pramaan-cli -- confidence explain target/pramaan
+```
+
+When the command writes into the bundle directory, it adds `confidence.json`,
+`confidence.md`, and `receipts/confidence-vote.receipt.json`, then rebuilds the
+manifest so the new artifacts are digest-linked. The confidence vote is
+uncalibrated residual-risk evidence for reviewers; it is not a correctness
+proof or a merge authorization.
+
 ## Path Policy
 
 Bundle manifest paths must stay inside the bundle root. The verifier rejects
