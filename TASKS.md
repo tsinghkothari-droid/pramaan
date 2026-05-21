@@ -301,20 +301,45 @@ AI-authored PRs to prove theirs.
 
 ## P1/P2: Auditable Confidence Vote
 
+Phase owner: **Phase 28.5: Auditable Confidence Vote and Calibration Schema**.
+
+Purpose: turn Pramaan's many receipts into a signed, decomposed risk decision
+that reviewers can audit. This must never be marketed as "proof of
+correctness"; it is calibrated evidence about residual PR risk.
+
+Phase prerequisites:
+
+- [ ] Phase 26 external pilot report exists or Phase 28.5 uses only explicit
+  deterministic starter weights marked `uncalibrated`.
+- [ ] Phase 27 parser-backed oracle status is reflected as implemented,
+  partial, or residual risk in the confidence inputs.
+- [ ] Phase 28 property/fuzz receipts expose generated-case counts, failures,
+  skipped-tool status, and replay metadata needed for confidence evidence.
+
+Core implementation:
+
 - [ ] Add a `pramaan-confidence` module or equivalent core subsystem that
   emits a confidence artifact without claiming correctness proof.
 - [ ] Add `schemas/confidence.schema.json` with algorithm version,
   hard-gate outcomes, weak-signal votes, stage reliability inputs, dependency
   clusters, statistical intervals, top risk drivers, top confidence drivers,
   calibration metadata, and residual-risk explanation.
+- [ ] Add fixture validation for `confidence.schema.json`, including required
+  fields, enum values, unknown algorithm versions, and forward-compatible
+  optional fields.
 - [ ] Implement hard gates that cannot be averaged away: weakened/deleted
   tests, skipped-test additions, bundle tamper, invalid attestation,
   untrusted plugin, and unsupported critical evidence paths.
 - [ ] Implement weak-signal aggregation inspired by weak supervision:
   `risky`, `safe`, or `abstain` votes from oracle, mutation, fuzz/property,
   static, claim scope, sandbox, policy, and optional critic stages.
+- [ ] Define deterministic starter weights for each stage and document why
+  oracle, bundle tamper, and missing critical tools carry higher weight than
+  style/critic signals.
 - [ ] Add dependency discounts so correlated stages such as oracle, mutation,
   and property/fuzz do not get counted as independent proof.
+- [ ] Add skipped-stage uncertainty penalties so "tool not installed" lowers
+  confidence instead of silently becoming neutral.
 - [ ] Use Wilson lower bounds for mutation kill confidence instead of raw
   mutation score alone.
 - [ ] Use the rule-of-three upper bound for zero-failure fuzz/property
@@ -322,11 +347,53 @@ AI-authored PRs to prove theirs.
 - [ ] Penalize skipped or missing tools as uncertainty, never as pass evidence.
 - [ ] Emit `confidence.json` and `confidence.md` with decomposed risk drivers,
   not just a single percentage.
+- [ ] Add `pramaan confidence explain <bundle>` or equivalent CLI path that
+  renders the confidence artifact for reviewers.
+- [ ] Add bundle-manifest links and artifact digests for `confidence.json` and
+  `confidence.md` so Phase 29 can sign or attest them.
+- [ ] Add policy wiring so confidence can influence `fail`, `warn`, or `pass`
+  without overriding hard gates.
+
+Required confidence fixtures:
+
+- [ ] Hard fail: weakened assertion with otherwise clean static checks.
+- [ ] Hard fail: bundle tamper or invalid bundle integrity.
+- [ ] Warning: mutation survivors with clean oracle evidence.
+- [ ] Warning: fuzz/property stage skipped because the tool is missing.
+- [ ] Warning: contradictory signals where static passes but claim scope is
+  low-confidence and mutation evidence is weak.
+- [ ] Pass: clean receipts with sufficient executed evidence and no hard gates.
+- [ ] Small-sample mutation case proving Wilson lower bound is more cautious
+  than raw mutation score.
+- [ ] Zero-failure fuzz/property case proving rule-of-three residual-risk bound
+  is recorded.
+- [ ] Correlated evidence case proving oracle, mutation, and property/fuzz do
+  not triple-count the same test-quality signal.
+
+Audit and documentation:
+
+- [ ] Write `docs/confidence.md` explaining the algorithm, hard gates, weak
+  votes, dependency discounts, statistical intervals, skipped-stage penalties,
+  and calibration status in reviewer language.
+- [ ] Update `docs/claim-audit.md` so any public confidence-score wording is
+  backed by executable tests, checked fixtures, or a clear planned label.
+- [ ] Add an example `confidence.md` output to at least one demo bundle.
 - [ ] Keep initial weights deterministic and documented until Phase 34 has
   enough pilot data for calibration.
 - [ ] In Phase 34, evaluate calibration using Brier score, log loss, and
   reliability diagrams / expected calibration error where labeled outcomes
   exist.
+
+Phase 28.5 acceptance criteria:
+
+- [ ] `confidence.json` validates against `schemas/confidence.schema.json`.
+- [ ] `confidence.md` explains the same decision in reviewer-readable language.
+- [ ] Confidence artifacts are deterministic for the same receipt inputs.
+- [ ] Hard gates always dominate the final decision.
+- [ ] Missing/skipped evidence is visible as uncertainty.
+- [ ] Phase 29 has an explicit artifact digest to sign or attest.
+- [ ] The public docs state that confidence is residual-risk evidence, not
+  correctness proof.
 
 ## P2: Attestation and Signing
 
