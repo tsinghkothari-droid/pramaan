@@ -45,6 +45,55 @@ a schema field, risk ID, fixture, policy rule, plugin contract, demo, or
 benchmark. Broad "keep researching" work should pause until the alpha loop runs
 on real repositories.
 
+## How To Execute This File
+
+Use `TASKS.md` in this order:
+
+1. **Current execution order:** follow the phase queue below. This is the
+   source of truth for what to build next.
+2. **Current Alpha decision:** check whether the public Alpha blockers are
+   still open before making external claims.
+3. **Active task buckets:** work the detailed checklist for the owning phase.
+4. **Release gates:** after each phase, update Alpha, Real MVP, and Serious v1
+   gate status if the evidence changed.
+5. **Completed historical sections:** keep them for auditability, but do not
+   re-open completed P0/P1 work unless the claim audit or pilot evidence says
+   the implementation is stale.
+
+### Current Execution Order
+
+Build Pramaan in this order. Do not jump ahead unless the phase explicitly says
+it can run in parallel.
+
+| Order | Phase | What to make | Why now | Blocks |
+| --- | --- | --- | --- | --- |
+| 1 | Phase 26 | External pilot reports and live GitHub Action proof | Public Alpha is currently no-go without real-repo evidence. | Public Alpha claims |
+| 2 | Phase 27 | Parser-backed oracle extractors | Confidence and signing are weaker if oracle evidence is still parser-light. | Phase 28.5 confidence inputs |
+| 3 | Phase 28 | Real Hypothesis/fast-check harnesses and replay | Confidence needs real executed evidence, not only deterministic fallback. | Phase 28.5 confidence inputs |
+| 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
+| 5 | Phase 29 | Sigstore/cosign, GitHub attestations, in-toto/SLSA VSA, offline verify | Trust evidence must leave CI as a verifiable artifact. | Real MVP trust gate |
+| 6 | Phase 30 | Redaction profiles and public-safe bundle export | External pilots and demos need shareable bundles. | Public bundle sharing |
+| 7 | Phase 31 | Plugin protocol, identity, permissions, and isolation | Plugin expansion is dangerous before verifier supply-chain trust exists. | Third-party plugin work |
+| 8 | Phase 32 | SARIF export, OPA/policy parity, CI hardening, agentic workflow-injection checks | Findings should appear in existing security review surfaces. | Enterprise/security adoption |
+| 9 | Phase 33 | 25-scenario adversarial and secure-code corpus | Real MVP needs broader failure-mode proof before scale claims. | Phase 40 corpus 100 |
+| 10 | Phase 34 | Reviewer overrides, baselines, drift, and confidence calibration | Prevent alert fatigue and make confidence less hand-tuned. | Real MVP calibration gate |
+| 11 | Phase 35 | Operator docs, screenshots, troubleshooting, and release packaging | External maintainers need to install and inspect bundles unaided. | Real MVP adoption gate |
+| 12 | Phase 36 | Python/TypeScript/Rust plugin depth | Depth beats adding shallow Go/Java too early. | Language expansion |
+| 13 | Phase 37 | Provider-neutral forge design and GitLab support plan | Avoid hard-coding GitHub before enterprise pilots. | GitLab/Gitea/Bitbucket work |
+| 14 | Phase 38 | Multi-agent provenance and handoff tracking | Agent chains need attribution before trend analysis becomes serious. | Serious v1 provenance |
+| 15 | Phase 39 | Bounded adapter certification mode | Keep adjacent adapter work useful but out of Alpha scope. | Adapter product expansion |
+| 16 | Phase 40 | Corpus 100, benchmark-integrity, cross-platform CI, final claim audit, Serious v1 decision | Forces a release decision from evidence instead of enthusiasm. | Serious v1 |
+
+Execution guardrails:
+
+- [ ] Start with Phase 26 unless the user explicitly asks for a narrower phase.
+- [ ] Do not market public Alpha before Phase 26 has external pilot evidence.
+- [ ] Do not sign or attest confidence scores before Phase 28.5 exists.
+- [ ] Do not expand plugins before Phase 31 defines trust and isolation.
+- [ ] Do not publish public-demo bundles before Phase 30 redaction tests pass.
+- [ ] Do not call the project Serious v1 before Phase 40 closes or rejects the
+  release gate.
+
 ### P0 Product Direction Tasks
 
 - [x] Declare the narrow product thesis in `README.md`, `STATUS.md`, and
@@ -68,11 +117,11 @@ on real repositories.
 - [x] Review the phase plan every 4 build phases and remove or merge phases that
   do not directly improve evidence quality, reviewer trust, runtime, or adoption.
 
-### P0/P1 GSD Completion Track
+### Completed P0/P1 GSD Track
 
-The remaining P0/P1 work is now mapped to a focused GSD track. A phase should
-only be treated as done after it lands with tests/docs and verification
-evidence.
+This track is historical. It explains how P0/P1 became private-preview-ready
+and why public Alpha is still blocked. A phase should only be reopened if new
+pilot evidence or the claim audit shows the implementation is stale.
 
 | GSD phase | Priority | What it completes |
 | --- | --- | --- |
