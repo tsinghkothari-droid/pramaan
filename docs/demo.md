@@ -158,3 +158,17 @@ examples/proof-bundles/
 
 These are not claims that the demo code is correct. They are stable artifacts
 showing the evidence shape a reviewer should inspect.
+
+## External Pilot Evidence
+
+Phase 26 ran Pramaan locally against public Python, TypeScript, and Rust
+repositories and recorded runtime, skipped-tool, noisy-finding, and residual
+risk notes in:
+
+```text
+.planning/reports/phase-26-external-alpha-pilots.md
+```
+
+Those pilots are evidence that Pramaan can inspect real repositories, not proof
+that public Alpha is ready. The live GitHub Action proof remains a separate
+Phase 26.1 gate.

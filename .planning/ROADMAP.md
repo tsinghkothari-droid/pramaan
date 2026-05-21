@@ -406,6 +406,10 @@ remain public Alpha blockers.
 
 ## Phase 26: External Alpha Pilots and Live Action Proof
 
+**Status:** External local pilots completed 2026-05-21 as NO_GO_PUBLIC_ALPHA.
+Three public repositories were measured locally; live GitHub Action proof is
+split to Phase 26.1 and remains the public Alpha gate.
+
 **Goal:** Run Pramaan on three external real repositories and prove the GitHub Action on a live PR before public Alpha.
 
 **Priority:** Alpha gate
@@ -416,6 +420,21 @@ remain public Alpha blockers.
 2. Runtime, skipped-stage profile, false-positive/false-negative notes, reviewer time-to-understand, and residual risks are recorded.
 3. At least one live GitHub Action run uploads a bundle and renders a useful PR summary.
 4. Public Alpha decision is updated from evidence, not internal fixture confidence.
+
+## Phase 26.1: Live GitHub Action Proof
+
+**Goal:** Run Pramaan's composite GitHub Action on a real PR or PR-like branch
+and capture the uploaded proof bundle plus rendered job summary.
+
+**Priority:** Alpha gate
+
+**Success Criteria:**
+
+1. A live GitHub Actions run URL is recorded.
+2. The proof bundle artifact is downloadable from the run.
+3. The job summary shows failed/actionable stages and residual risk families.
+4. `TASKS.md`, `.planning/STATE.md`, and `.planning/ROADMAP.md` distinguish
+   live Action evidence from local action-summary tests.
 
 ## Phase 26.5: Agent Harness Interface for Coding Agents
 

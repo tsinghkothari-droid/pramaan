@@ -66,7 +66,7 @@ This table is the quick answer for whether P0, P1, and P2 are complete.
 
 | Priority | Status | Meaning | Still blocking |
 | --- | --- | --- | --- |
-| P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, and assertion truth audit are done. | Public Alpha still needs Phase 26 external pilots and live Action proof. |
+| P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, and three external local pilots are done. | Public Alpha still needs Phase 26.1 live Action proof. |
 | P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Phase 27 parser-backed oracle hardening and Phase 28 real Hypothesis/fast-check harnesses. |
 | P2 | Not complete | P2 is the trust/adoption layer after the core loop: signing, redaction, plugin trust, SARIF/policy integration, corpus, calibration, docs, and language depth. Phase 28.5 has started the trust bridge, but the rest remains open. | Phases 29-36. |
 | P3 | Not started as product scope | Multi-forge, multi-agent provenance, and adapter certification are later expansion tracks. | Phases 37-39. |
@@ -82,7 +82,8 @@ it can run in parallel.
 
 | Order | Phase | What to make | Why now | Blocks |
 | --- | --- | --- | --- | --- |
-| 1 | Phase 26 | External pilot reports and live GitHub Action proof | Public Alpha is currently no-go without real-repo evidence. | Public Alpha claims |
+| 1 | Phase 26 | External local pilot reports for Python, TypeScript, and Rust repositories | Public Alpha needed real-repo evidence beyond internal fixtures. | Public Alpha evidence |
+| 1.1 | Phase 26.1 | Live GitHub Action proof on a real PR or PR-like branch | Public Alpha is still no-go until CI artifact and summary evidence exist. | Public Alpha claims |
 | 1.5 | Phase 26.5 | Agent harness interface for Claude Code, Codex, Cursor-style agents, and custom harnesses | Agents should call Pramaan before claiming done. | Agent adoption |
 | 2 | Phase 27 | Parser-backed oracle extractors | Confidence and signing are weaker if oracle evidence is still parser-light. | Phase 28.5 confidence inputs |
 | 3 | Phase 28 | Real Hypothesis/fast-check harnesses and replay | Confidence needs real executed evidence, not only deterministic fallback. | Phase 28.5 confidence inputs |
@@ -106,7 +107,7 @@ it can run in parallel.
 Execution guardrails:
 
 - Start with Phase 26 unless the user explicitly asks for a narrower phase.
-- Do not market public Alpha before Phase 26 has external pilot evidence.
+- Do not market public Alpha before Phase 26.1 has live GitHub Action evidence.
 - Do not ask coding agents to self-certify completion before Phase 26.5 lands.
 - Do not count AI-generated probes as evidence before Phase 28.25 executes them
   in a sandbox.
@@ -177,7 +178,8 @@ unfinished task family below into an executable GSD phase.
 
 | GSD phase | Priority | What it completes |
 | --- | --- | --- |
-| Phase 26 | Alpha gate | Three external real-repository pilots, live GitHub Action proof, runtime/noise metrics, and a public-Alpha go/no-go update. |
+| Phase 26 | Alpha gate | Three external real-repository local pilots, runtime/noise metrics, and a public-Alpha no-go update. |
+| Phase 26.1 | Alpha gate | Live GitHub Action proof, uploaded bundle artifact, job summary evidence, and a public-Alpha go/no-go update. |
 | Phase 26.5 | Agent adoption | `pramaan agent done-gate`, agent decision schema, `AGENTS.md`, Claude Code hook/command templates, and blocked-agent fixtures. |
 | Phase 27 | P1 hardening | Full parser-backed oracle extractors for Python, TypeScript, and Rust with negative fixtures and dependency justifications. |
 | Phase 28 | P1 hardening | Safe real Hypothesis and fast-check generated-harness execution, replay CLI contracts, and budget/timeout evidence. |
@@ -198,13 +200,13 @@ unfinished task family below into an executable GSD phase.
 | Phase 39 | P3 adjacent | Keep adapter certification bounded, with proof-bundle examples and adapter risk taxonomy. |
 | Phase 40 | Serious v1 gate | 100-scenario corpus, benchmark-integrity checks, cross-platform CI, final claim audit, and Serious v1 go/no-go decision. |
 
-Execution rule: **Phase 26 comes next.** Do not market public Alpha until Phase
-26 has real external pilot evidence. Do not expand the plugin ecosystem until
-Phase 31 defines plugin trust and isolation. Do not claim public-safe bundle
-sharing until Phase 30 redaction tests pass. Do not claim Serious v1 until
-Phase 40 closes the 100-scenario corpus and final release gate. Phase 28.5 must
-land before Phase 29 so any confidence vote is signed and auditable instead of
-being an unsigned UI-only score.
+Execution rule: **Phase 26.1 remains the public Alpha gate.** Do not market
+public Alpha until Phase 26.1 has live GitHub Action evidence. Do not expand the
+plugin ecosystem until Phase 31 defines plugin trust and isolation. Do not claim
+public-safe bundle sharing until Phase 30 redaction tests pass. Do not claim
+Serious v1 until Phase 40 closes the 100-scenario corpus and final release gate.
+Phase 28.5 must land before Phase 29 so any confidence vote is signed and
+auditable instead of being an unsigned UI-only score.
 
 Unfinished task-family mapping:
 
@@ -238,16 +240,18 @@ Unfinished task-family mapping:
 Evidence already in the repo:
 
 - [x] P0/P1 phases 18-25 have landed with summaries, docs, and verification.
-- [x] Claim audit covers 53 claims and all 26 `STATUS.md` capability rows.
+- [x] Claim audit covers 55 claims and all 27 `STATUS.md` capability rows.
 - [x] Internal pilot runs cover oracle, mutation, Python fuzz, and TypeScript
   fuzz fixtures with runtimes recorded.
+- [x] Three external local pilots cover Python, TypeScript, and Rust
+  repositories with runtime, skipped-stage, noise, and residual-risk notes.
 - [x] Missing mutation/property tools are visible evidence, not hidden passes.
 - [x] Public copy is narrowed around signing, full AST parsing, and real
   Hypothesis/fast-check execution.
 
 Public Alpha blockers:
 
-- [ ] Run Pramaan on three external real repositories and record runtime,
+- [x] Run Pramaan on three external real repositories and record runtime,
   skipped stages, false positives, false negatives, and reviewer
   time-to-understand.
 - [ ] Add safe generated-harness execution for Hypothesis and fast-check, or

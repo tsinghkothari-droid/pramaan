@@ -6,15 +6,17 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** Research-driven continuation track. Phases 22.5 and 23-25
+**Current focus:** Research-driven continuation track. Phases 22.5 and 23-26
 are complete with explicit residual risk. Phase 28.5 now has a first
-implemented confidence-vote slice, while Phase 26 external pilots, Phase 27
-compiler/parser oracle hardening, and Phase 28 real Hypothesis/fast-check
-harnesses remain the main P1 blockers before public Alpha.
+implemented confidence-vote slice. Public Alpha remains blocked by Phase 26.1
+live GitHub Action proof, plus Phase 27 compiler/parser oracle hardening and
+Phase 28 real Hypothesis/fast-check harnesses.
 
 ## Current Phase
 
-Phase 26: External Alpha Pilots and Live Action Proof
+Phase 26.5: Agent Harness Interface for Coding Agents
+
+Public Alpha gate still open: Phase 26.1 Live GitHub Action Proof.
 
 ## Status
 
@@ -22,7 +24,7 @@ Phases 1-12 and the Phase 16a schema-impact subset are implemented and
 validated. Phases 13-17 remain the broader Serious v1 execution path. Phases
 18-25 completed the focused P0/P1 track and ended in a public-Alpha no-go until
 external pilots are measured. Phases 26-40 now map the remaining task families:
-external pilots, parser-backed oracles, real property/fuzz harnesses, an
+external pilots, live Action proof, parser-backed oracles, real property/fuzz harnesses, an
 auditable confidence vote, attestations, redaction, plugin trust, SARIF/policy
 integration, corpus growth, calibration, adoption docs, language depth, forge
 support, multi-agent provenance, adapter certification, and the Serious v1
@@ -30,7 +32,8 @@ gate.
 
 ## Open Questions
 
-- Exact external pilot repositories for Phase 26.
+- Whether Phase 26.1 should use this repository, a throwaway public fixture
+  repository, or a fork PR for the live Action proof.
 - Whether Phase 26.5 should ship MCP first, CLI JSON first, or both in the
   same slice.
 - Which model/provider boundary Phase 28.25 should use for AI probe generation
@@ -89,3 +92,4 @@ gate.
 | 2026-05-21 | Inserted Phase 28.5 for auditable confidence voting. | Pramaan needs a signed, decomposed evidence vote based on hard gates, weak-signal aggregation, Wilson intervals, fuzz residual-risk bounds, and later calibration rather than an opaque confidence percentage. |
 | 2026-05-21 | Added decimal GSD phases for the right product directions. | Agent harness, AI evidence-seeking probes, policy-pack profiles, and reviewer UX are now explicit executable phases instead of loose strategy notes. |
 | 2026-05-21 | Executed Phase 28.5 first slice. | Pramaan now emits `confidence.json`, `confidence.md`, and a `confidence_vote` receipt from bundle receipts using uncalibrated deterministic weights, hard gates, dependency discounts, Wilson/rule-of-three statistical notes, and manifest-linked artifact digests. |
+| 2026-05-21 | Executed Phase 26 external local pilots. | Pramaan ran against public Python, TypeScript, and Rust repositories with runtime/noise/residual-risk evidence recorded; live GitHub Action proof is split to Phase 26.1, so public Alpha remains no-go. |

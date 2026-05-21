@@ -3,6 +3,14 @@
 Pramaan ships a composite GitHub Action that runs the CLI against pull request
 base/head refs, uploads the proof bundle, and writes a risk-aware job summary.
 
+## Live Proof Status
+
+Local action-summary tests pass, and Phase 26 recorded three external local
+pilot runs. A live GitHub Actions run on a real pull request is still required
+before public Alpha. That remaining proof is tracked as Phase 26.1 and must
+record the run URL, uploaded artifact, manifest digest, and rendered job
+summary.
+
 ```yaml
 name: Pramaan
 
