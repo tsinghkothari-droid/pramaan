@@ -14,7 +14,7 @@ Phase 28 real Hypothesis/fast-check harnesses.
 
 ## Current Phase
 
-Phase 28.5: Auditable Confidence Vote and Calibration Schema
+Phase 29: Attestation, VSA, and Offline Verification
 
 Public Alpha gate still open: Phase 26.1 Live GitHub Action Proof.
 
@@ -101,3 +101,4 @@ gate.
 | 2026-05-21 | Executed Phase 27 parser-backed subset oracle hardening. | Oracle extractors now strip comments/strings, group multiline assertions, label parser-backed subset engines, add negative fixtures, and split full compiler AST integrations to Phase 27.1. |
 | 2026-05-21 | Executed Phase 28 recorded-case replay. | `pramaan replay` now reads differential fuzz evidence, prints deterministic case details, and keeps real Hypothesis/fast-check execution split to Phase 28.1. |
 | 2026-05-21 | Executed Phase 28.25 provider-neutral AI probe planning. | `pramaan probe plan` now writes `pramaan.probe.v1` plans and `ai_probe_generation` receipts while keeping every candidate pending until sandbox execution; generated-probe execution is split to Phase 28.26. |
+| 2026-05-21 | Completed Phase 28.5 uncalibrated confidence bridge. | Confidence artifacts now have schema/fixture contract tests plus critical-path and invalid-attestation hard gates; Phase 34 still owns real calibration. |

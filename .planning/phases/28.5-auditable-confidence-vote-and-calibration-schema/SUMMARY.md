@@ -19,23 +19,26 @@ Date: 2026-05-21
   zero-failure property/fuzz evidence.
 - Added `schemas/confidence.schema.json`, `docs/confidence.md`, checked
   confidence fixtures, smoke coverage, and claim-audit updates.
+- Added fixture/schema contract tests for required fields, enum values, current
+  algorithm version, unknown algorithm rejection, and missing required fields.
+- Added hard gates for unsupported critical evidence paths and explicit invalid
+  attestation/signature metadata.
 
 ## Deferred
 
-- Full JSON Schema validator coverage for unknown algorithm versions and
-  forward-compatible optional fields.
 - Dedicated bundle-tamper and invalid-attestation confidence fixtures.
-- Unsupported critical evidence path hard gates beyond the current budget and
-  failed-attestation signals.
 - Calibration using external pilot outcomes, Brier score, log loss, expected
   calibration error, and reliability diagrams. That remains Phase 34.
 
 ## Verification
 
-- `cargo test -p pramaan-core confidence -- --nocapture`
-- Full workspace fmt/test/clippy should be run before commit.
+- `cargo fmt --check`
+- `cargo test --workspace`
+- `cargo clippy --workspace -- -D warnings`
+- `node scripts/check-claim-audit.mjs`
+- `node --test action/render-summary.test.mjs`
 
 ## Status
 
-Phase 28.5 is partially executed and now has a working v0.1 confidence bridge.
-It should not be described as calibrated, signed, or production merge authority.
+Phase 28.5 is complete for the v0.1 uncalibrated confidence bridge. It should
+not be described as calibrated, signed, or production merge authority.

@@ -494,13 +494,13 @@ Core implementation:
   hard-gate outcomes, weak-signal votes, stage reliability inputs, dependency
   clusters, statistical intervals, top risk drivers, top confidence drivers,
   calibration metadata, and residual-risk explanation.
-- [ ] Add fixture validation for `confidence.schema.json`, including required
+- [x] Add fixture validation for `confidence.schema.json`, including required
   fields, enum values, unknown algorithm versions, and forward-compatible
   optional fields.
 - [x] Implement v0.1 hard gates that cannot be averaged away: failed oracle
   integrity evidence, failed bundle/attestation-style receipts, untrusted
   plugin provenance, and exhausted evidence budgets.
-- [ ] Add remaining hard gates for unsupported critical evidence paths and
+- [x] Add remaining hard gates for unsupported critical evidence paths and
   finer-grained invalid-attestation policy reasons.
 - [x] Implement weak-signal aggregation inspired by weak supervision:
   `risky`, `safe`, or `abstain` votes from oracle, mutation, fuzz/property,
@@ -558,7 +558,7 @@ Audit and documentation:
 
 Phase 28.5 acceptance criteria:
 
-- [ ] `confidence.json` validates against `schemas/confidence.schema.json`.
+- [x] `confidence.json` validates against `schemas/confidence.schema.json`.
 - [x] `confidence.md` explains the same decision in reviewer-readable language.
 - [x] Confidence artifacts are deterministic for the same receipt inputs.
 - [x] Hard gates always dominate the final decision.

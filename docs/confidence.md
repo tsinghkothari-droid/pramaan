@@ -42,6 +42,10 @@ detects:
 - failed oracle-integrity receipts, including weakened/deleted/skipped tests
   and sensitive fixture churn;
 - failed bundle-integrity or attestation-style receipts;
+- required attestation/signature metadata that is explicitly invalid, failed,
+  missing-required, or tied to an untrusted identity;
+- unsupported or unexecuted critical evidence paths such as required
+  property/fuzz execution for a high-risk diff;
 - explicitly untrusted plugin provenance;
 - stages that exhausted their maximum evidence budget.
 

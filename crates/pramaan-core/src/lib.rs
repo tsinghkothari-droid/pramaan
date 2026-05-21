@@ -3023,6 +3023,50 @@ fn hard_gates_for_receipt(receipt: &Receipt) -> Vec<ConfidenceHardGate> {
     }
 
     if receipt
+        .metadata
+        .get("critical_evidence_path")
+        .is_some_and(|value| {
+            matches!(
+                value.as_str(),
+                "unsupported" | "missing" | "unavailable" | "not_executed"
+            )
+        })
+    {
+        gates.push(ConfidenceHardGate {
+            id: "HG-CRITICAL-PATH-001".to_string(),
+            stage: receipt.stage.clone(),
+            reason: "A critical evidence path was unsupported or not executed.".to_string(),
+            risk_ids: receipt
+                .residual_risks
+                .iter()
+                .chain(receipt.not_applicable_risks.iter())
+                .cloned()
+                .collect(),
+        });
+    }
+
+    for key in ["attestation_status", "signature_status", "sigstore_status"] {
+        if receipt.metadata.get(key).is_some_and(|value| {
+            matches!(
+                value.as_str(),
+                "invalid" | "failed" | "untrusted_identity" | "missing_required"
+            )
+        }) {
+            gates.push(ConfidenceHardGate {
+                id: "HG-ATTESTATION-001".to_string(),
+                stage: receipt.stage.clone(),
+                reason: format!("{key} metadata is invalid for a required trust path."),
+                risk_ids: if receipt.residual_risks.is_empty() {
+                    vec!["R-090".to_string()]
+                } else {
+                    receipt.residual_risks.clone()
+                },
+            });
+            break;
+        }
+    }
+
+    if receipt
         .plugin_identity
         .as_ref()
         .is_some_and(|plugin| plugin.provenance.contains("untrusted"))
@@ -3855,6 +3899,40 @@ mod tests {
     }
 
     #[test]
+    fn confidence_hard_gates_critical_path_and_attestation_metadata() {
+        let unsupported_critical_path = confidence_stage(
+            "differential_fuzz",
+            StageStatus::Skipped,
+            vec![],
+            vec!["R-075"],
+            vec!["R-073"],
+            BTreeMap::from([(
+                "critical_evidence_path".to_string(),
+                "unsupported".to_string(),
+            )]),
+        );
+        let invalid_attestation = confidence_stage(
+            "bundle_attestation",
+            StageStatus::Passed,
+            vec![],
+            vec!["R-090"],
+            vec![],
+            BTreeMap::from([("attestation_status".to_string(), "invalid".to_string())]),
+        );
+
+        let artifact = build_confidence_artifact(&[unsupported_critical_path, invalid_attestation]);
+        let gate_ids = artifact
+            .hard_gates
+            .iter()
+            .map(|gate| gate.id.as_str())
+            .collect::<BTreeSet<_>>();
+
+        assert_eq!(artifact.decision, ConfidenceDecision::Fail);
+        assert!(gate_ids.contains("HG-CRITICAL-PATH-001"));
+        assert!(gate_ids.contains("HG-ATTESTATION-001"));
+    }
+
+    #[test]
     fn confidence_artifact_round_trips_without_hash_drift() {
         let receipt = confidence_stage(
             "sandbox_setup",
@@ -3889,6 +3967,57 @@ mod tests {
             .hard_gates
             .iter()
             .any(|gate| gate.id == "HG-ORACLE-001"));
+    }
+
+    #[test]
+    fn confidence_schema_fixture_validation_covers_required_fields_and_enums() {
+        let schema: serde_json::Value =
+            serde_json::from_str(include_str!("../../../schemas/confidence.schema.json"))
+                .expect("confidence schema parses");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../examples/fixtures/confidence.synthetic.json"
+        ))
+        .expect("confidence fixture parses");
+
+        for field in schema["required"]
+            .as_array()
+            .expect("schema required array")
+        {
+            let field = field.as_str().expect("required field name");
+            assert!(
+                fixture.get(field).is_some(),
+                "fixture is missing required field {field}"
+            );
+        }
+
+        assert_eq!(
+            schema["properties"]["schema_version"]["const"],
+            CONFIDENCE_SCHEMA_VERSION
+        );
+        assert_eq!(
+            schema["properties"]["algorithm_version"]["const"],
+            CONFIDENCE_ALGORITHM_VERSION
+        );
+
+        let decision_enum = schema["properties"]["decision"]["enum"]
+            .as_array()
+            .expect("decision enum");
+        assert!(decision_enum.contains(&fixture["decision"]));
+        assert!(!decision_enum.contains(&serde_json::json!("merge")));
+
+        let mut unknown_algorithm = fixture.clone();
+        unknown_algorithm["algorithm_version"] = serde_json::json!("future-confidence-v9");
+        assert_ne!(
+            unknown_algorithm["algorithm_version"],
+            schema["properties"]["algorithm_version"]["const"]
+        );
+
+        let mut missing_required = fixture.clone();
+        missing_required
+            .as_object_mut()
+            .expect("fixture object")
+            .remove("calibration");
+        assert!(missing_required.get("calibration").is_none());
     }
 
     #[test]

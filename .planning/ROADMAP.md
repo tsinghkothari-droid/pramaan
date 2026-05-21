@@ -563,11 +563,12 @@ aggregates receipts without pretending to prove correctness.
 
 **Priority:** P1/P2 trust insert
 
-**Status:** First executable slice landed: core artifact builder, CLI
-`pramaan confidence explain`, `schemas/confidence.schema.json`, reviewer
-Markdown output, confidence receipt, manifest-linked artifacts, and docs.
-Remaining work is broader fixture validation, unsupported-critical-path gates,
-bundle-tamper confidence fixtures, and Phase 34 calibration.
+**Status:** Completed 2026-05-21 for the v0.1 uncalibrated confidence bridge:
+core artifact builder, CLI `pramaan confidence explain`,
+`schemas/confidence.schema.json`, reviewer Markdown output, confidence receipt,
+manifest-linked artifacts, schema/fixture checks, critical-path hard gates,
+invalid-attestation metadata hard gates, and docs. Phase 34 owns real
+calibration.
 
 **Success Criteria:**
 
