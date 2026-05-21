@@ -6,8 +6,8 @@ use pramaan_core::risks::{
     STATIC_CHECK_RELAXED_CONFIG, STATIC_CHECK_SECURITY_SENSITIVE,
 };
 use pramaan_core::{
-    classify_static_hallucinations, timestamp, ArtifactRef, InputRef, OutputRef, Receipt,
-    ReceiptSummary, StageStatus, ToolIdentity, RECEIPT_SCHEMA_VERSION,
+    classify_static_hallucinations, timestamp, InputRef, OutputRef, Receipt, ReceiptSummary,
+    StageStatus, ToolIdentity, RECEIPT_SCHEMA_VERSION,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsStr;
@@ -451,12 +451,7 @@ fn receipt(
             path: format!("receipts/static/{}.receipt.json", plan.id),
             digest: None,
         }],
-        artifacts: vec![ArtifactRef {
-            name: "static_command".to_string(),
-            path: plan.command.join(" "),
-            media_type: Some("text/x-shellscript".to_string()),
-            digest: None,
-        }],
+        artifacts: Vec::new(),
         summary,
         limitations,
         mitigated_risks,
