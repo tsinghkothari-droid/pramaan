@@ -73,7 +73,7 @@ This table is the quick answer for whether P0, P1, and P2 are complete.
 | --- | --- | --- | --- |
 | P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, three external local pilots, and a live workflow-dispatch Action proof are done. | Public review still needs the final readiness report and explicit risk wording, not more hidden green claims. |
 | P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence with parser metadata, bounded Hypothesis/fast-check harness execution when tools are installed, bounded AI-probe sandbox execution, and the first auditable confidence artifact are usable with honest skipped-tool receipts. Phase 28.15 closes the review-found fuzz harness truthfulness gaps: tool-backed failures affect verdict evidence, timeouts are enforced, harness errors become receipts, dynamic JS evaluation is removed, and tool-generated counts are structured. | Full compiler AST extraction remains planned; production sandboxing for property tools and arbitrary generated code remains open. |
-| P2 | Phase track through 36 complete with risks, not Serious v1 complete | The P2 trust/adoption phase track now has local/offline VSA, redaction export, plugin trust, SARIF/Rego export, policy packs, anti-gaming checks, 25-scenario corpus, calibration exports, operator docs, reviewer reports, and language support matrices. | Production Sigstore/cosign identity, 75/100+ corpus scale, real-world replay cases, benchmark-integrity mutation, stronger sandboxing, and Rust property/fuzz parity. |
+| P2 | Phase track through 36 complete with risks, not Serious v1 complete | The P2 trust/adoption phase track now has local/offline VSA, cosign readiness planning, redaction export, plugin trust, SARIF/Rego export, policy packs, anti-gaming checks, 25-scenario corpus, calibration exports, operator docs, reviewer reports, runtime doctor/config loading, and language support matrices. | Production Sigstore/cosign identity, 75/100+ corpus scale, real-world replay cases, benchmark-integrity mutation, stronger sandboxing, runtime `verify-pr`, persistent forge updates, and Rust property/fuzz parity. |
 | P3 | Not started as product scope | Multi-forge, multi-agent provenance, and adapter certification are later expansion tracks. | Phases 37-39. |
 
 Do not call P2 Serious-v1-complete until production signing identity, stronger
@@ -104,6 +104,7 @@ it can run in parallel.
 | 3.26 | Phase 28.26 | Sandbox execution for generated probes | Safe-marker bounded probes now compile/run before they can be kept; rejected probes preserve failure reasons. | Public-review probe honesty |
 | 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
 | 5 | Phase 29 | Local/offline in-toto/SLSA VSA and offline verify landed; production Sigstore/cosign identity remains planned. | Trust evidence must leave CI as a verifiable artifact. | Real MVP trust gate |
+| 5.1 | Phase 29.1 | Cosign readiness plan | Bridge offline attestations to a future CI OIDC signing flow without claiming production identity proof. | Real MVP trust gate |
 | 6 | Phase 30 | Redaction profiles and public-safe bundle export landed; summary-only artifact minimization remains later hardening. | External pilots and demos need shareable bundles. | Public bundle sharing |
 | 7 | Phase 31 | Plugin protocol schema, trust validator, dangerous-permission rejection, and malicious-plugin fixture landed. | Plugin expansion is dangerous before verifier supply-chain trust exists. | Third-party plugin work |
 | 8 | Phase 32 | SARIF export, Rego policy export, and agentic workflow-injection checks landed. | Findings should appear in existing security review surfaces. | Enterprise/security adoption |
@@ -115,6 +116,7 @@ it can run in parallel.
 | 11.5 | Phase 35.5 | Reviewer UX and local HTML report | A bundle must be understood in 30 seconds without a hosted dashboard. | Real MVP adoption gate |
 | 11.6 | Phase 35.6 | License-safe reviewer interface patterns | Borrow mature pull-request tooling ergonomics without importing names, text, prompts, configuration, screenshots, or source code. | Real MVP adoption gate |
 | 11.7 | Phase 35.7 | Machine verification and human sign-off gate | Agents must produce evidence, but humans must approve meaning, risk, usefulness, public claims, and release readiness. | Real MVP governance gate |
+| 11.8 | Phase 35.8 | Runtime reviewer commands and config | `pramaan doctor` and `.pramaan.toml` loading turn the interface contract into a tested private-preview runtime slice. | Real MVP adoption gate |
 | 12 | Phase 36 | Python/TypeScript/Rust plugin depth | Depth beats adding shallow Go/Java too early. | Language expansion |
 | 13 | Phase 37 | Provider-neutral forge design and GitLab support plan | Avoid hard-coding GitHub before enterprise pilots. | GitLab/Gitea/Bitbucket work |
 | 14 | Phase 38 | Multi-agent provenance and handoff tracking | Agent chains need attribution before trend analysis becomes serious. | Serious v1 provenance |
@@ -474,9 +476,9 @@ AI coding agents and real reviewers. They are planned, not complete.
 - [x] Add a verification check that risky adjacent-project names do not appear
   in selected public-facing docs.
 
-Phase 35.6 is complete as a docs/interface-contract slice. Runtime `verify-pr`,
-`doctor`, `.pramaan.toml` loading, and forge-specific persistent PR summary
-updates remain future implementation work.
+Phase 35.6 is complete as a docs/interface-contract slice. Phase 35.8 implements
+runtime `doctor` and `.pramaan.toml` loading. Runtime `verify-pr` and
+forge-specific persistent PR summary updates remain future implementation work.
 
 #### Phase 35.7: Machine Verification and Human Sign-Off Gate
 
@@ -732,6 +734,9 @@ Phase 28.5 acceptance criteria:
 ## P2: Attestation and Signing
 
 - [ ] Add Sigstore keyless signing path for local and CI runs.
+- [x] Add a cosign signing-readiness plan that records manifest digest, cosign
+  availability, suggested command, and residual identity risks without claiming
+  production keyless signing.
 - [x] Add GitHub artifact attestation integration in the composite action and
   workflow permission docs, with `attest: "true"` gated by repository policy.
 - [x] Map bundle manifest fields to local/offline in-toto/SLSA-compatible
@@ -771,6 +776,8 @@ Phase 28.5 acceptance criteria:
 - [x] Add screenshots or rendered examples of PR summaries and bundle inspection.
 - [x] Document non-GitHub roadmap and minimum abstraction layer for GitLab, Gitea, and Bitbucket support.
 - [x] Document GitLab artifact, identity, and OIDC differences before implementing GitLab support.
+- [x] Add private-preview `.pramaan.toml` loading and `pramaan doctor` runtime
+  diagnostics for local reviewer onboarding.
 
 ## P2: Feedback, Calibration, and Drift
 

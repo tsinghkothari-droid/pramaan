@@ -22,6 +22,7 @@ Status labels:
 | Receipt model with risk IDs and artifact refs | Implemented | `crates/pramaan-core/src/lib.rs`, `schemas/receipt.schema.json` | `cargo test --workspace` |
 | Bundle manifest and hash-integrity verification | Implemented | `crates/pramaan-bundle/src/lib.rs` | `cargo test -p pramaan-bundle` |
 | Real Sigstore/cosign keyless signing | Planned | `docs/attestation.md`, roadmap Phase 14/Phase 20+ | Not implemented yet |
+| Cosign signing readiness plan | Partial | `crates/pramaan-cli/src/main.rs`, `docs/cosign-signing.md` | `pramaan bundle cosign-plan <bundle>` |
 | in-toto/SLSA-compatible statement output | Planned | `docs/attestation.md`, roadmap Phase 14 | Not implemented yet |
 | Sandbox base/head git worktrees | Implemented | `crates/pramaan-sandbox/src/lib.rs` | `cargo test -p pramaan-sandbox` |
 | Container/OCI sandbox enforcement | Planned | `TASKS.md`, Phase 21 | Not implemented yet |
@@ -47,6 +48,7 @@ Status labels:
 | Threat model for malicious PRs/verifier plugins | Implemented | `docs/threat-model.md` | Manual doc review |
 | Verifier-abuse surface detection | Partial | `crates/pramaan-core/src/lib.rs`, `corpus/verifier-abuse-fixtures.v0.1.json`, `scripts/check-verifier-abuse-fixtures.mjs` | `cargo test -p pramaan-core verifier_abuse && node scripts/check-verifier-abuse-fixtures.mjs` |
 | Local reviewer reports | Partial | `crates/pramaan-cli/src/main.rs`, `docs/reviewer-ux.md`, `examples/reports/` | `pramaan report markdown --bundle <bundle>` and `pramaan report html --bundle <bundle> --out <report.html>` |
+| Runtime doctor and config loading | Partial | `crates/pramaan-cli/src/main.rs`, `docs/configuration.md` | `pramaan doctor --config .pramaan.toml` and `pramaan verify --config .pramaan.toml` |
 | Redaction helpers for shareable evidence | Partial | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` |
 | Adapter certification mode | Partial | `docs/adapter-certification.md`, schemas | Docs/schema only |
 | Public claim audit gate | Implemented | `docs/claim-audit.md` | Manual ledger plus `cargo test --workspace` and Node action tests |
@@ -60,6 +62,7 @@ integrity checks, demo fixtures, a default policy explanation path,
 recorded-case replay for differential fuzz evidence, an AI evidence-seeking
 probe plan with bounded sandbox execution and rejected-probe preservation, an
 uncalibrated auditable confidence vote, a deterministic agent completion gate,
+cosign signing readiness planning, `.pramaan.toml` loading, `pramaan doctor`,
 redaction helpers, verifier-abuse surface detection, threat-model
 documentation, local reviewer reports, a claim-audit ledger, and a GitHub
 Action wrapper. Operator, security, enterprise, troubleshooting,
@@ -83,7 +86,8 @@ container isolation, arbitrary generated-code execution, full compiler-AST
 oracle parsing, or calibrated confidence. Hypothesis/fast-check and AI-probe
 execution are bounded private-preview paths that run only when tools/markers
 permit; harness failures, timeouts, missing tools, and rejected probes preserve
-residual risk. The confidence vote is implemented as decomposed residual-risk
+residual risk. The cosign plan is readiness evidence only, not production
+identity proof. The confidence vote is implemented as decomposed residual-risk
 evidence, not as a calibrated probability or merge authority.
 
 ## Public Review Readiness

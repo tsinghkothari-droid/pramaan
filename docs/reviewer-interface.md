@@ -13,6 +13,7 @@ pramaan verify --base <base-ref> --head <head-ref> --out target/pramaan
 pramaan report markdown --bundle target/pramaan
 pramaan report html --bundle target/pramaan --out target/pramaan/report.html
 pramaan policy explain target/pramaan --profile private-preview
+pramaan doctor --config .pramaan.toml --out target/pramaan/doctor.json
 ```
 
 Planned pull-request URL entry point:
@@ -40,29 +41,33 @@ LLM to decide whether a pull request is safe to merge.
 
 ## Configuration Contract
 
-A future `.pramaan.toml` should keep project policy in one place:
+`.pramaan.toml` now has a narrow private-preview runtime slice for local
+defaults:
 
 ```toml
 [policy]
 profile = "private-preview"
 
-[stages]
-mutation = "opt-in"
-fuzz_timeout_ms = 10000
-mutation_timeout_ms = 60000
-
 [redaction]
 profile = "reviewer-redacted"
 
-[reports]
-format = ["markdown", "html"]
-persistent_summary = true
+[mutation]
+enabled = false
 
-[artifacts]
-out_dir = "target/pramaan"
+[fuzz]
+seed = 12345
+
+[stages]
+skip = ["static_checks"]
+
+[reports]
+markdown = "target/pramaan/reviewer-report.md"
+html = "target/pramaan/reviewer-report.html"
 ```
 
-This file is documented as a contract only. Runtime loading remains future work.
+Runtime loading supports the fields documented in `docs/configuration.md`.
+External policy files, custom risk weights, stage budgets, forge credentials,
+and persistent PR summary updates remain future work.
 
 ## Summary Behavior
 

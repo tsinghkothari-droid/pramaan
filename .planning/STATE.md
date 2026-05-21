@@ -24,7 +24,7 @@ wording, not on any claim of production readiness.
 
 ## Current Phase
 
-Phase 35.6: License-Safe Reviewer Interface Patterns
+Phase 35.8: Runtime Reviewer Commands and Config
 
 Phase 35.7's machine-verification/human-signoff governance gate is adopted and
 complete for docs/templates. Future phase closeouts should now prepare both
@@ -36,9 +36,10 @@ residual risk: Phase 26.3 competitor-gap fixtures and Phase 26.4 minimum
 lovable verifier loop.
 
 Phase 26.1 live Action proof, Phase 28.15 fuzz harness truthfulness repairs,
-Phase 28.26 sandboxed probes, Phase 32.75 anti-gaming hardening, and Phase
-35.5 local reports are complete. Public review may proceed only as
-READY_FOR_PUBLIC_REVIEW_WITH_RISKS if the final dated readiness report and
+Phase 28.26 sandboxed probes, Phase 29.1 cosign readiness, Phase 32.75
+anti-gaming hardening, Phase 35.5 local reports, and Phase 35.8 runtime
+doctor/config loading are complete with risks. Public review may proceed only
+as READY_FOR_PUBLIC_REVIEW_WITH_RISKS if the final dated readiness report and
 verification commands pass.
 
 ## Status
@@ -84,8 +85,9 @@ have deeper production-grade coverage.
 - Phase 28.15 removed dynamic generated JavaScript `Function(...)` evaluation
   and kept a small safe arithmetic evaluator before any broader TypeScript
   property claim.
-- Which production identity path should follow Phase 29's local/offline VSA:
-  cosign subprocess, Rust Sigstore crate, or GitHub artifact attestations first.
+- Which production identity path should follow Phase 29.1's cosign readiness:
+  live GitHub OIDC signing/verification, Rust Sigstore crate integration, or
+  forge-neutral artifact attestations first.
 - Whether the Phase 28.5 deterministic starter weights should be adjusted after
   the first three external pilots, before Phase 34 formal calibration.
 - Whether Phase 31 isolation starts with subprocess/container boundaries or a WASM boundary.
@@ -178,3 +180,5 @@ have deeper production-grade coverage.
 | 2026-05-21 | Completed Phase 28.15 fuzz harness truthfulness gate. | Tool-backed Hypothesis/fast-check failures now affect canonical fuzz evidence, harness timeouts are enforced, harness nonzero exits become receipts, unsafe dynamic JavaScript evaluation is removed, and tool/deterministic case counts are separated. |
 | 2026-05-21 | Added Phase 35.6 license-safe reviewer interface patterns. | Pramaan can learn from category-level pull-request tooling ergonomics while keeping all names, copy, command design, configuration, screenshots, and implementation original to this MIT-licensed repo. |
 | 2026-05-21 | Added Phase 35.7 machine verification and human sign-off gate. | Future agent-written phases must produce machine evidence, but humans approve meaning, severity, usefulness, public claims, release readiness, and accepted residual risk. |
+| 2026-05-21 | Completed Phase 29.1 cosign readiness slice. | `pramaan bundle cosign-plan` now records manifest digest, cosign availability/version evidence, a suggested signing command, and residual OIDC/transparency-log risks without claiming production identity proof. |
+| 2026-05-21 | Completed Phase 35.8 runtime reviewer command/config slice. | `pramaan doctor` and `pramaan verify --config .pramaan.toml` now provide tested private-preview onboarding diagnostics, config-driven stage skips, fuzz seed, mutation enablement, and configured local reports; `verify-pr` and persistent forge updates remain future work. |

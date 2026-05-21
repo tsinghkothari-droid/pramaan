@@ -796,6 +796,26 @@ GitHub attestation evidence remain later hardening, not current guarantees.
 5. Production Sigstore/cosign signer identity remains explicitly planned until
    certificate and transparency-log verification are implemented.
 
+## Phase 29.1: Production Cosign Signing Slice
+
+**Goal:** Add a concrete cosign readiness artifact while keeping production
+identity proof out of scope until CI OIDC verification exists.
+
+**Priority:** P2 trust hardening split
+
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. `pramaan bundle
+cosign-plan` verifies bundle hash integrity, records manifest digest, detects
+local cosign availability/version evidence, writes a suggested signing command,
+and preserves residual risks for OIDC identity and transparency-log checks.
+
+**Success Criteria:**
+
+1. The command writes `attestations/cosign-plan.json` by default.
+2. The plan includes manifest digest and cosign availability evidence.
+3. Public docs say this is readiness evidence, not production identity proof.
+4. Smoke tests and a phase validator cover the runtime command.
+5. Production Sigstore/cosign identity remains an explicit future task.
+
 ## Phase 30: Redaction Profiles and Public Bundle Export
 
 **Goal:** Make shared bundles safe for reviewers, customers, and public demos.
@@ -988,8 +1008,9 @@ source code from adjacent projects.
 **Status:** Completed 2026-05-21 as PASS_WITH_RISKS for docs and interface
 contracts. Public docs now use category-level prior-art language and
 `docs/reviewer-interface.md` stages original commands, `.pramaan.toml`, and PR
-URL workflow expectations. Runtime `verify-pr`, `doctor`, config loading, and
-forge-specific persistent PR summary updates remain future implementation work.
+URL workflow expectations. Phase 35.8 implements runtime `doctor` and config
+loading. Runtime `verify-pr` and forge-specific persistent PR summary updates
+remain future implementation work.
 
 **Success Criteria:**
 
@@ -1029,6 +1050,28 @@ phase-level `HUMAN_SIGNOFF.md`.
    artifacts without self-approving human-only decisions.
 5. Public claims, releases, Marketplace publishing, and Serious v1 gates are
    blocked until human sign-off exists.
+
+## Phase 35.8: Runtime Reviewer Commands and Config
+
+**Goal:** Convert the reviewer-interface contract into a small tested runtime
+slice for private-preview adoption.
+
+**Priority:** P2 adoption hardening split
+
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. `pramaan doctor` records
+config parsing evidence, tool availability, and onboarding warnings.
+`pramaan verify --config .pramaan.toml` loads private-preview defaults for stage
+skips, mutation enablement, fuzz seed, and local Markdown/HTML report paths.
+
+**Success Criteria:**
+
+1. `doctor` emits `pramaan.doctor.v1` JSON to stdout or `--out`.
+2. `.pramaan.toml` can configure skipped stages, mutation enablement, fuzz
+   seed, and local reports for `verify`.
+3. Config docs state the parser is intentionally narrow and private-preview.
+4. Smoke tests cover doctor output and configured verify reports.
+5. Runtime `verify-pr`, external policy files, and persistent forge updates
+   remain explicit future work.
 
 ## Phase 36: Language Plugin Depth for Python, TypeScript, and Rust
 

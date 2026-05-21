@@ -12,6 +12,12 @@ Create local/offline attestation material for an existing bundle:
 cargo run -p pramaan-cli -- bundle attest target/pramaan
 ```
 
+Create a cosign readiness plan for the same bundle:
+
+```powershell
+cargo run -p pramaan-cli -- bundle cosign-plan target/pramaan
+```
+
 This writes:
 
 - `attestations/bundle.vsa.json`
@@ -30,6 +36,11 @@ reported VSA result matches Pramaan's deterministic local policy mapping, and
 that the referenced `confidence.json` digest matches the manifest when a
 confidence artifact is present.
 
+`bundle cosign-plan` also runs normal bundle hash verification first. It writes
+`attestations/cosign-plan.json` with the manifest digest, local cosign
+availability/version evidence when present, a suggested signing command, and
+explicit residual risks. It is readiness evidence only.
+
 ## Trust Model
 
 Local/offline attestation provides tamper evidence for downloaded bundle
@@ -41,6 +52,10 @@ rewrite both the bundle and the local attestation can still create a new
 self-consistent local bundle. GitHub artifact attestations, Sigstore keyless
 signing, certificate identity checks, and transparency-log verification remain
 future production trust anchors.
+
+The cosign readiness plan does not change that trust model. It helps operators
+prepare the next CI signing step, but it is not a Fulcio/Rekor-backed identity
+claim and must not be used as a merge gate by itself.
 
 ## VSA Result Mapping
 

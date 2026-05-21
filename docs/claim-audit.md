@@ -59,6 +59,7 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-002 | `STATUS.md` | STATUS: Receipt model with risk IDs and artifact refs | executable-test | `crates/pramaan-core/src/lib.rs`, `schemas/receipt.schema.json` | `cargo test -p pramaan-core` | pass | Keep schema/runtime fixture tests aligned. |
 | CLAIM-STATUS-CAP-003 | `STATUS.md` | STATUS: Bundle manifest and hash-integrity verification | executable-test | `crates/pramaan-bundle/src/lib.rs` | `cargo test -p pramaan-bundle` | pass | Do not market as external signing. |
 | CLAIM-STATUS-CAP-004 | `STATUS.md` | STATUS: Real Sigstore/cosign keyless signing | planned | `docs/attestation.md`, `TASKS.md` | Not implemented yet | pass | Keep roadmap-only. |
+| CLAIM-STATUS-CAP-004A | `STATUS.md` | STATUS: Cosign signing readiness plan | executable-test | `crates/pramaan-cli/src/main.rs`, `docs/cosign-signing.md` | `cargo test -p pramaan-cli --test smoke bundle_cosign_plan_records_readiness_without_claiming_identity_proof` | pass-with-risk | Readiness planning is not production identity proof. |
 | CLAIM-STATUS-CAP-005 | `STATUS.md` | STATUS: in-toto/SLSA-compatible statement output | planned | `docs/attestation.md`, `TASKS.md` | Not implemented yet | pass | Keep roadmap-only. |
 | CLAIM-STATUS-CAP-006 | `STATUS.md` | STATUS: Sandbox base/head git worktrees | executable-test | `crates/pramaan-sandbox/src/lib.rs` | `cargo test -p pramaan-sandbox` | pass | Container enforcement remains separate. |
 | CLAIM-STATUS-CAP-007 | `STATUS.md` | STATUS: Container/OCI sandbox enforcement | planned | `docs/threat-model.md`, `TASKS.md` | Not implemented yet | pass | Keep distinct from OCI identity evidence. |
@@ -84,6 +85,7 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-025 | `STATUS.md` | STATUS: Threat model for malicious PRs/verifier plugins | manual-proof | `docs/threat-model.md` | `Get-Content docs/threat-model.md` | pass | Documentation is not enforcement. |
 | CLAIM-STATUS-CAP-026 | `STATUS.md` | STATUS: Verifier-abuse surface detection | executable-test | `crates/pramaan-core/src/lib.rs`, `corpus/verifier-abuse-fixtures.v0.1.json`, `scripts/check-verifier-abuse-fixtures.mjs` | `cargo test -p pramaan-core verifier_abuse && node scripts/check-verifier-abuse-fixtures.mjs` | pass-with-risk | Detects verifier-surface path changes; deeper exploit fixtures remain Phase 40 work. |
 | CLAIM-STATUS-CAP-027 | `STATUS.md` | STATUS: Local reviewer reports | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs`, `docs/reviewer-ux.md`, `examples/reports/` | `cargo test -p pramaan-cli --test smoke report_commands_render_reviewer_sections` | pass-with-risk | Static local reports exist; hosted dashboards remain future work. |
+| CLAIM-STATUS-CAP-027A | `STATUS.md` | STATUS: Runtime doctor and config loading | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs`, `docs/configuration.md` | `cargo test -p pramaan-cli --test smoke doctor_reports_config_and_tool_availability verify_loads_config_for_skips_seed_and_reports` | pass-with-risk | Config loading is private-preview scope; verify-pr and persistent forge updates remain future work. |
 | CLAIM-STATUS-CAP-028 | `STATUS.md` | STATUS: Redaction helpers for shareable evidence | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` | pass | Redaction profiles remain broader future work. |
 | CLAIM-STATUS-CAP-029 | `STATUS.md` | STATUS: Adapter certification mode | checked-fixture | `docs/adapter-certification.md`, `examples/fixtures/adapter_certification.synthetic.json` | Fixture/manual inspection | pass | Keep adjacent, not core v0.1 path. |
 | CLAIM-STATUS-CAP-030 | `STATUS.md` | STATUS: Public claim audit gate | executable-test | `docs/claim-audit.md`, `scripts/check-claim-audit.mjs` | `node scripts/check-claim-audit.mjs` | pass | Keep the ledger updated after every phase. |
@@ -92,9 +94,9 @@ risk before Alpha.
 
 | Bucket | Count |
 | --- | ---: |
-| Total claims audited | 64 |
-| `STATUS.md` capability rows covered | 32 |
-| Executable-test claims | 44 |
+| Total claims audited | 66 |
+| `STATUS.md` capability rows covered | 34 |
+| Executable-test claims | 46 |
 | Checked-fixture/manual-proof claims | 12 |
 | Partial/planned/accepted-risk claims | 8 |
 | False-or-stale claims left in public copy | 0 |

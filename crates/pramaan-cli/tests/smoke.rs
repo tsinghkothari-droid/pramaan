@@ -2161,3 +2161,240 @@ fn report_commands_render_reviewer_sections() {
     assert!(html.contains("Pramaan Reviewer Report"));
     assert!(html.contains("## Blockers"));
 }
+
+#[test]
+fn doctor_reports_config_and_tool_availability() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-doctor-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean doctor output");
+    }
+    fs::create_dir_all(&out).expect("create doctor output");
+
+    let config_path = out.join(".pramaan.toml");
+    fs::write(
+        &config_path,
+        r#"
+[policy]
+profile = "private-preview"
+
+[redaction]
+profile = "reviewer-redacted"
+
+[mutation]
+enabled = true
+
+[fuzz]
+seed = 4242
+
+[stages]
+skip = ["oracle"]
+"#,
+    )
+    .expect("write config");
+
+    let report_path = out.join("doctor.json");
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "doctor",
+            "--repo",
+            workspace.to_str().expect("utf-8 workspace path"),
+            "--config",
+            config_path.to_str().expect("utf-8 config path"),
+            "--out",
+            report_path.to_str().expect("utf-8 report path"),
+        ])
+        .output()
+        .expect("run pramaan doctor");
+
+    assert!(
+        output.status.success(),
+        "doctor failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(String::from_utf8_lossy(&output.stdout).contains("Pramaan doctor report written"));
+
+    let report: serde_json::Value =
+        serde_json::from_slice(&fs::read(report_path).expect("read doctor report"))
+            .expect("doctor report json");
+    assert_eq!(report["schema_version"], "pramaan.doctor.v1");
+    assert_eq!(report["config_present"], true);
+    assert_eq!(report["config"]["policy_profile"], "private-preview");
+    assert_eq!(report["config"]["redaction_profile"], "reviewer-redacted");
+    assert_eq!(report["config"]["mutation_enabled"], true);
+    assert_eq!(report["config"]["fuzz_seed"], 4242);
+    assert!(report["tools"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|tool| { tool["name"] == "git" && tool["available"].as_bool().unwrap_or(false) }));
+}
+
+#[test]
+fn verify_loads_config_for_skips_seed_and_reports() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-config-verify-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean config verify output");
+    }
+    fs::create_dir_all(&out).expect("create config verify output");
+
+    let markdown_path = out.join("configured-report.md");
+    let html_path = out.join("configured-report.html");
+    let config_path = out.join(".pramaan.toml");
+    fs::write(
+        &config_path,
+        format!(
+            r#"
+[mutation]
+enabled = false
+
+[fuzz]
+seed = 4242
+
+[stages]
+skip = ["static_checks", "oracle", "fuzz"]
+
+[reports]
+markdown = "{}"
+html = "{}"
+"#,
+            markdown_path.display().to_string().replace('\\', "\\\\"),
+            html_path.display().to_string().replace('\\', "\\\\")
+        ),
+    )
+    .expect("write verify config");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "verify",
+            "--base",
+            "HEAD",
+            "--head",
+            "HEAD",
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+            "--config",
+            config_path.to_str().expect("utf-8 config path"),
+        ])
+        .output()
+        .expect("run pramaan verify with config");
+
+    assert!(
+        output.status.success(),
+        "verify with config failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("stages_skipped: static_checks, oracle, fuzz"),
+        "stdout was {stdout}"
+    );
+    assert!(
+        stdout.contains("config_report_markdown:"),
+        "stdout was {stdout}"
+    );
+    assert!(markdown_path.exists(), "configured markdown report exists");
+    assert!(html_path.exists(), "configured HTML report exists");
+}
+
+#[test]
+fn bundle_cosign_plan_records_readiness_without_claiming_identity_proof() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-cosign-plan-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean cosign plan output");
+    }
+
+    let verify_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "verify",
+            "--base",
+            "HEAD",
+            "--head",
+            "HEAD",
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+            "--skip-stage",
+            "static_checks",
+            "--skip-stage",
+            "oracle",
+            "--skip-stage",
+            "fuzz",
+        ])
+        .output()
+        .expect("run pramaan verify for cosign plan");
+    assert!(
+        verify_output.status.success(),
+        "verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&verify_output.stdout),
+        String::from_utf8_lossy(&verify_output.stderr)
+    );
+
+    let plan_path = out.join("attestations").join("cosign-plan.json");
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "bundle",
+            "cosign-plan",
+            out.to_str().expect("utf-8 output path"),
+            "--out",
+            plan_path.to_str().expect("utf-8 plan path"),
+        ])
+        .output()
+        .expect("run pramaan bundle cosign-plan");
+
+    assert!(
+        output.status.success(),
+        "cosign plan failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Pramaan cosign signing plan emitted"));
+    assert!(stdout.contains("not production identity proof"));
+
+    let plan: serde_json::Value =
+        serde_json::from_slice(&fs::read(plan_path).expect("read cosign plan"))
+            .expect("cosign plan json");
+    assert_eq!(plan["schema_version"], "pramaan.cosign_plan.v1");
+    assert!(plan["manifest_digest"]
+        .as_str()
+        .expect("manifest digest")
+        .starts_with("sha256:"));
+    assert!(plan["cosign_available"].is_boolean());
+    assert!(plan["residual_risks"]
+        .as_array()
+        .expect("residual risks")
+        .iter()
+        .any(|risk| risk.as_str().unwrap_or_default().contains("OIDC identity")));
+}

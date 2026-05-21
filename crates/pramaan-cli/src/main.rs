@@ -26,6 +26,7 @@ use pramaan_core::{
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
+use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -61,6 +62,7 @@ enum Commands {
     Export(ExportArgs),
     Feedback(FeedbackArgs),
     Report(ReportArgs),
+    Doctor(DoctorArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -71,6 +73,8 @@ struct VerifyArgs {
     head: String,
     #[arg(long, default_value = "target/pramaan")]
     out: PathBuf,
+    #[arg(long, default_value = ".pramaan.toml")]
+    config: PathBuf,
     /// Skip a stage by id. May be passed multiple times. Known ids:
     /// static_checks, oracle, fuzz, mutation.
     #[arg(long = "skip-stage")]
@@ -96,6 +100,7 @@ enum BundleCommands {
     Attest(BundleAttestArgs),
     VerifyOffline(BundleVerifyOfflineArgs),
     ExportRedacted(BundleExportRedactedArgs),
+    CosignPlan(BundleCosignPlanArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -120,6 +125,23 @@ struct BundleExportRedactedArgs {
     profile: String,
     #[arg(long)]
     out: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct BundleCosignPlanArgs {
+    path: PathBuf,
+    #[arg(long)]
+    out: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
+struct DoctorArgs {
+    #[arg(long, default_value = ".")]
+    repo: PathBuf,
+    #[arg(long, default_value = ".pramaan.toml")]
+    config: PathBuf,
+    #[arg(long)]
+    out: Option<PathBuf>,
 }
 
 #[derive(Debug, Parser)]
@@ -403,6 +425,7 @@ fn main() -> Result<()> {
         Commands::Export(args) => run_export(args),
         Commands::Feedback(args) => run_feedback(args),
         Commands::Report(args) => run_report(args),
+        Commands::Doctor(args) => run_doctor(args),
     }
 }
 
@@ -1254,6 +1277,7 @@ fn run_agent_done_gate(args: AgentDoneGateArgs) -> Result<()> {
         base: args.base,
         head: args.head,
         out: out.clone(),
+        config: PathBuf::from(".pramaan.toml"),
         skip_stages: Vec::new(),
         with_mutation: false,
         fuzz_seed: 1337,
@@ -2232,10 +2256,162 @@ fn run_bundle(args: BundleArgs) -> Result<()> {
             println!("redacted_files: {}", report.redacted_files.len());
             Ok(())
         }
+        BundleCommands::CosignPlan(args) => run_bundle_cosign_plan(args),
     }
 }
 
+#[derive(Debug, Default, Serialize)]
+struct PramaanConfig {
+    policy_profile: Option<String>,
+    redaction_profile: Option<String>,
+    mutation_enabled: Option<bool>,
+    fuzz_seed: Option<u64>,
+    skip_stages: Vec<String>,
+    report_markdown: Option<PathBuf>,
+    report_html: Option<PathBuf>,
+}
+
+impl PramaanConfig {
+    fn load(path: &Path) -> Result<Self> {
+        if !path.exists() {
+            return Ok(Self::default());
+        }
+        parse_pramaan_config(
+            &fs::read_to_string(path)
+                .with_context(|| format!("reading Pramaan config {}", path.display()))?,
+        )
+        .with_context(|| format!("parsing Pramaan config {}", path.display()))
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct DoctorReport {
+    schema_version: String,
+    repo: String,
+    config_path: String,
+    config_present: bool,
+    config: PramaanConfig,
+    tools: Vec<DoctorTool>,
+    warnings: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct DoctorTool {
+    name: String,
+    available: bool,
+    version: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct CosignPlan {
+    schema_version: String,
+    bundle: String,
+    manifest: String,
+    manifest_digest: String,
+    cosign_available: bool,
+    cosign_version: Option<String>,
+    suggested_command: String,
+    status: String,
+    residual_risks: Vec<String>,
+}
+
+fn run_bundle_cosign_plan(args: BundleCosignPlanArgs) -> Result<()> {
+    let report = verify_bundle(&args.path).context("verifying bundle before cosign plan")?;
+    let manifest_digest = digest_file(&report.manifest_path)?;
+    let cosign_version = command_version("cosign", &["version", "--json"])
+        .or_else(|| command_version("cosign", &["version"]));
+    let plan = CosignPlan {
+        schema_version: "pramaan.cosign_plan.v1".to_string(),
+        bundle: portable_path(&args.path),
+        manifest: portable_path(&report.manifest_path),
+        manifest_digest,
+        cosign_available: cosign_version.is_some(),
+        cosign_version,
+        suggested_command: format!(
+            "cosign sign-blob --yes --bundle {}.cosign.bundle {}",
+            portable_path(&report.manifest_path),
+            portable_path(&report.manifest_path)
+        ),
+        status: "ready_for_ci_identity_proof".to_string(),
+        residual_risks: vec![
+            "Local cosign planning does not prove OIDC identity.".to_string(),
+            "A live CI run must verify certificate identity and transparency-log material."
+                .to_string(),
+        ],
+    };
+    let out = args
+        .out
+        .unwrap_or_else(|| args.path.join("attestations").join("cosign-plan.json"));
+    write_json(&out, &plan)?;
+    println!("Pramaan cosign signing plan emitted");
+    println!("plan: {}", out.display());
+    println!("cosign_available: {}", plan.cosign_available);
+    println!("manifest_digest: {}", plan.manifest_digest);
+    println!("note: this is signing readiness evidence, not production identity proof");
+    Ok(())
+}
+
+fn run_doctor(args: DoctorArgs) -> Result<()> {
+    let config = PramaanConfig::load(&args.config)?;
+    let mut warnings = Vec::new();
+    if !args.config.exists() {
+        warnings.push("No .pramaan.toml config was found; CLI defaults will be used.".to_string());
+    }
+    if config.redaction_profile.as_deref() == Some("internal-full") {
+        warnings.push("internal-full redaction is not safe for public bundle sharing.".to_string());
+    }
+    if config.mutation_enabled != Some(true) {
+        warnings.push(
+            "Mutation remains opt-in; missing mutation evidence is residual risk.".to_string(),
+        );
+    }
+    let tools = [
+        ("git", &["--version"][..]),
+        ("cargo", &["--version"][..]),
+        ("python", &["--version"][..]),
+        ("node", &["--version"][..]),
+        ("cosign", &["version"][..]),
+        ("mutmut", &["--version"][..]),
+        ("stryker", &["--version"][..]),
+        ("cargo-mutants", &["--version"][..]),
+    ]
+    .into_iter()
+    .map(|(name, args)| {
+        let version = command_version(name, args);
+        DoctorTool {
+            name: name.to_string(),
+            available: version.is_some(),
+            version,
+        }
+    })
+    .collect::<Vec<_>>();
+    let report = DoctorReport {
+        schema_version: "pramaan.doctor.v1".to_string(),
+        repo: portable_path(&args.repo),
+        config_path: portable_path(&args.config),
+        config_present: args.config.exists(),
+        config,
+        tools,
+        warnings,
+    };
+    if let Some(out) = args.out {
+        write_json(&out, &report)?;
+        println!("Pramaan doctor report written");
+        println!("report: {}", out.display());
+    } else {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&report).context("serializing doctor report")?
+        );
+    }
+    Ok(())
+}
+
 fn run_verify(args: VerifyArgs) -> Result<()> {
+    let config = PramaanConfig::load(&args.config)?;
+    let skip_stages = merged_skip_stages(&args.skip_stages, &config);
+    let with_mutation = args.with_mutation || config.mutation_enabled.unwrap_or(false);
+    let fuzz_seed = config.fuzz_seed.unwrap_or(args.fuzz_seed);
     let receipt_dir = args.out.join("receipts");
     fs::create_dir_all(&receipt_dir)
         .with_context(|| format!("creating output directory {}", receipt_dir.display()))?;
@@ -2286,20 +2462,20 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
 
     let sandbox_dir = args.out.join("sandbox");
     let mut sandbox_runner = SandboxRunner::new(
-        std::env::current_dir().context("resolving current repository directory")?,
+        env::current_dir().context("resolving current repository directory")?,
         &sandbox_dir,
     );
-    if let Ok(image_name) = std::env::var("PRAMAAN_IMAGE_NAME") {
+    if let Ok(image_name) = env::var("PRAMAAN_IMAGE_NAME") {
         if !image_name.trim().is_empty() {
             sandbox_runner = sandbox_runner.with_image_name(image_name);
         }
     }
-    if let Ok(image_digest) = std::env::var("PRAMAAN_IMAGE_DIGEST") {
+    if let Ok(image_digest) = env::var("PRAMAAN_IMAGE_DIGEST") {
         if !image_digest.trim().is_empty() {
             sandbox_runner = sandbox_runner.with_image_digest(image_digest);
         }
     }
-    if let Ok(network_policy) = std::env::var("PRAMAAN_NETWORK_POLICY") {
+    if let Ok(network_policy) = env::var("PRAMAAN_NETWORK_POLICY") {
         if !network_policy.trim().is_empty() {
             sandbox_runner = sandbox_runner.with_network_policy(network_policy);
         }
@@ -2386,7 +2562,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     let base_worktree = base_worktree.to_path_buf();
     let head_worktree = head_worktree.to_path_buf();
 
-    let skip: BTreeSet<String> = args.skip_stages.iter().map(|s| s.to_lowercase()).collect();
+    let skip: BTreeSet<String> = skip_stages.iter().map(|s| s.to_lowercase()).collect();
     let mut stages_run: Vec<&'static str> = Vec::new();
 
     if !skip.contains("static_checks") {
@@ -2411,13 +2587,13 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
             head_worktree.clone(),
             Some(claim_scope_path.clone()),
             args.out.clone(),
-            args.fuzz_seed,
+            fuzz_seed,
         )
         .context("running fuzz stage")?;
         stages_run.push("fuzz");
     }
 
-    if args.with_mutation && !skip.contains("mutation") {
+    if with_mutation && !skip.contains("mutation") {
         mutation::run_mutation(
             head_worktree.clone(),
             args.out.clone(),
@@ -2451,7 +2627,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
                 title: "Synthetic verifier fallback".to_string(),
                 details: format!(
                     "All real stages were skipped (--skip-stage: {}). Bundle reflects partial evidence only.",
-                    args.skip_stages.join(",")
+                    skip_stages.join(",")
                 ),
             },
             RiskRefs::sample(),
@@ -2466,7 +2642,8 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     .context("building bundle manifest")?;
     let manifest_path = write_manifest(&args.out, &manifest).context("writing bundle manifest")?;
 
-    render_summary(&args, &manifest, &manifest_path, &stages_run);
+    render_summary(&args, &skip_stages, &manifest, &manifest_path, &stages_run);
+    write_configured_reports(&args.out, &config)?;
 
     Ok(())
 }
@@ -2534,7 +2711,7 @@ fn agent_attribution_from_env() -> Option<AgentAttribution> {
 }
 
 fn read_non_empty_env(name: &str) -> Option<String> {
-    std::env::var(name)
+    env::var(name)
         .ok()
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
@@ -2548,7 +2725,7 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
     let mut risk_refs = Vec::new();
     let mut untrusted_agent_text = Vec::<(String, String)>::new();
 
-    if let Ok(event_path) = std::env::var("GITHUB_EVENT_PATH") {
+    if let Ok(event_path) = env::var("GITHUB_EVENT_PATH") {
         if !event_path.trim().is_empty() {
             let path = PathBuf::from(&event_path);
             if path.exists() {
@@ -2588,13 +2765,13 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
         }
     }
 
-    if let Ok(title) = std::env::var("PRAMAAN_PR_TITLE") {
+    if let Ok(title) = env::var("PRAMAAN_PR_TITLE") {
         if !title.trim().is_empty() {
             expected_behavior.push(format!("PR title: {}", title.trim()));
             untrusted_agent_text.push(("PRAMAAN_PR_TITLE".to_string(), title));
         }
     }
-    if let Ok(body) = std::env::var("PRAMAAN_PR_BODY") {
+    if let Ok(body) = env::var("PRAMAAN_PR_BODY") {
         if !body.trim().is_empty() {
             expected_behavior.push(format!("PR body: {}", body.trim()));
             untrusted_agent_text.push(("PRAMAAN_PR_BODY".to_string(), body.clone()));
@@ -2695,12 +2872,12 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
 }
 
 fn read_optional_text_env(value_var: &str, path_var: &str) -> Result<Option<String>> {
-    if let Ok(value) = std::env::var(value_var) {
+    if let Ok(value) = env::var(value_var) {
         if !value.trim().is_empty() {
             return Ok(Some(value));
         }
     }
-    if let Ok(path) = std::env::var(path_var) {
+    if let Ok(path) = env::var(path_var) {
         if !path.trim().is_empty() {
             return Ok(Some(
                 fs::read_to_string(&path).with_context(|| format!("reading {path_var} {path}"))?,
@@ -2853,6 +3030,7 @@ fn public_symbols_in_file(relative: &str, path: &Path) -> Vec<String> {
 
 fn render_summary(
     args: &VerifyArgs,
+    skip_stages: &[String],
     manifest: &BundleManifest,
     manifest_path: &Path,
     stages_run: &[&'static str],
@@ -2864,8 +3042,8 @@ fn render_summary(
     println!("manifest: {}", manifest_path.display());
     println!("final_status: {}", manifest.final_status);
     println!("stages_run: {}", stages_run.join(", "));
-    if !args.skip_stages.is_empty() {
-        println!("stages_skipped: {}", args.skip_stages.join(", "));
+    if !skip_stages.is_empty() {
+        println!("stages_skipped: {}", skip_stages.join(", "));
     }
     println!();
     println!("Stages");
@@ -2944,6 +3122,115 @@ fn format_family_counts(counts: &BTreeMap<&'static str, usize>) -> String {
         .map(|(family, count)| format!("{family}({count})"))
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+fn write_configured_reports(bundle: &Path, config: &PramaanConfig) -> Result<()> {
+    if let Some(path) = &config.report_markdown {
+        let markdown = build_reviewer_markdown(bundle)?;
+        fs::write(path, markdown).with_context(|| format!("writing {}", path.display()))?;
+        println!("config_report_markdown: {}", path.display());
+    }
+    if let Some(path) = &config.report_html {
+        let markdown = build_reviewer_markdown(bundle)?;
+        fs::write(path, render_reviewer_html(&markdown))
+            .with_context(|| format!("writing {}", path.display()))?;
+        println!("config_report_html: {}", path.display());
+    }
+    if let Some(profile) = &config.policy_profile {
+        println!("config_policy_profile: {profile}");
+    }
+    if let Some(profile) = &config.redaction_profile {
+        println!("config_redaction_profile: {profile}");
+    }
+    Ok(())
+}
+
+fn merged_skip_stages(cli: &[String], config: &PramaanConfig) -> Vec<String> {
+    let mut stages = cli.to_vec();
+    for stage in &config.skip_stages {
+        if !stages.iter().any(|item| item.eq_ignore_ascii_case(stage)) {
+            stages.push(stage.clone());
+        }
+    }
+    stages
+}
+
+fn parse_pramaan_config(text: &str) -> Result<PramaanConfig> {
+    let mut config = PramaanConfig::default();
+    let mut section = String::new();
+    for raw_line in text.lines() {
+        let line = raw_line.split('#').next().unwrap_or("").trim();
+        if line.is_empty() {
+            continue;
+        }
+        if line.starts_with('[') && line.ends_with(']') {
+            section = line[1..line.len() - 1].trim().to_string();
+            continue;
+        }
+        let Some((key, value)) = line.split_once('=') else {
+            anyhow::bail!("unsupported config line: {raw_line}");
+        };
+        let key = key.trim();
+        let value = value.trim();
+        match (section.as_str(), key) {
+            ("policy", "profile") => config.policy_profile = Some(parse_string(value)?),
+            ("redaction", "profile") => config.redaction_profile = Some(parse_string(value)?),
+            ("mutation", "enabled") => config.mutation_enabled = Some(parse_bool(value)?),
+            ("fuzz", "seed") => {
+                config.fuzz_seed = Some(value.parse().context("parsing fuzz.seed")?)
+            }
+            ("stages", "skip") => config.skip_stages = parse_string_array(value)?,
+            ("reports", "markdown") => {
+                config.report_markdown = Some(PathBuf::from(parse_string(value)?))
+            }
+            ("reports", "html") => config.report_html = Some(PathBuf::from(parse_string(value)?)),
+            _ => anyhow::bail!("unsupported config key [{section}].{key}"),
+        }
+    }
+    Ok(config)
+}
+
+fn parse_string(value: &str) -> Result<String> {
+    let trimmed = value.trim();
+    if trimmed.starts_with('"') && trimmed.ends_with('"') && trimmed.len() >= 2 {
+        Ok(trimmed[1..trimmed.len() - 1].to_string())
+    } else {
+        Ok(trimmed.to_string())
+    }
+}
+
+fn parse_bool(value: &str) -> Result<bool> {
+    match value.trim() {
+        "true" => Ok(true),
+        "false" => Ok(false),
+        other => anyhow::bail!("expected boolean, found {other}"),
+    }
+}
+
+fn parse_string_array(value: &str) -> Result<Vec<String>> {
+    let value = value.trim();
+    if !(value.starts_with('[') && value.ends_with(']')) {
+        anyhow::bail!("expected string array, found {value}");
+    }
+    let inner = value[1..value.len() - 1].trim();
+    if inner.is_empty() {
+        return Ok(Vec::new());
+    }
+    inner
+        .split(',')
+        .map(|item| parse_string(item.trim()))
+        .collect()
+}
+
+fn command_version(command: &str, args: &[&str]) -> Option<String> {
+    let output = Command::new(command).args(args).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    let text = if stdout.is_empty() { stderr } else { stdout };
+    (!text.is_empty()).then(|| text.lines().next().unwrap_or("").to_string())
 }
 
 fn write_json<T: serde::Serialize>(path: &Path, value: &T) -> Result<()> {
