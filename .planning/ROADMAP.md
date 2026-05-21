@@ -499,6 +499,12 @@ report, one proof bundle, one killer demo, and a 30-second reviewer answer.
 
 **Priority:** Real MVP wedge
 
+**Status:** Completed 2026-05-21 for the local oracle-focused quickstart loop.
+`scripts/run-minimum-lovable-loop.ps1` runs the weakened-test demo, emits a
+verifiable bundle manifest, adds confidence/policy evidence, and writes
+`minimum-lovable-report.md`. Phase 35.5 still owns Rust-native HTML/Markdown
+report commands.
+
 **Success Criteria:**
 
 1. A fresh reviewer can run one command and get a bundle plus report.

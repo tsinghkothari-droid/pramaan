@@ -3,6 +3,13 @@
 Pramaan ships a composite GitHub Action that runs the CLI against pull request
 base/head refs, uploads the proof bundle, and writes a risk-aware job summary.
 
+For a local first-run proof before wiring CI, use the quickstart loop in
+`docs/quickstart.md`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run-minimum-lovable-loop.ps1
+```
+
 ## Live Proof Status
 
 Local action-summary tests pass, Phase 26 recorded three external local pilot

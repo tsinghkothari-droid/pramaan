@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use chrono::Utc;
-use pramaan_bundle::sha256_hex;
+use pramaan_bundle::{build_manifest, sha256_hex, write_manifest, BundleBuildOptions};
 use pramaan_core::{
     diff_oracle_snapshots, discover_oracle_snapshot, oracle_mitigated_risks, timestamp,
     ArtifactRef, InputRef, OracleDiff, OutputRef, Receipt, ReceiptSummary, StageStatus,
@@ -33,8 +33,24 @@ pub fn run_oracle(base_repo: PathBuf, head_repo: PathBuf, out: PathBuf) -> Resul
     let receipt_path = out.join("receipts").join("oracle-integrity.receipt.json");
     let receipt = oracle_receipt(&base_repo, &head_repo, &diff_path, &diff_digest, &diff);
     write_json(&receipt_path, &receipt)?;
+    let manifest = build_manifest(
+        &out,
+        BundleBuildOptions::synthetic(
+            base_repo.display().to_string(),
+            head_repo.display().to_string(),
+        ),
+    )
+    .context("building oracle proof bundle manifest")?;
+    let manifest_path = write_manifest(&out, &manifest).context("writing oracle manifest")?;
 
-    render_oracle_summary(&base_repo, &head_repo, &out, &receipt_path, &diff);
+    render_oracle_summary(
+        &base_repo,
+        &head_repo,
+        &out,
+        &receipt_path,
+        &manifest_path,
+        &diff,
+    );
     Ok(())
 }
 
@@ -173,6 +189,7 @@ fn render_oracle_summary(
     head_repo: &Path,
     out: &Path,
     receipt_path: &Path,
+    manifest_path: &Path,
     diff: &OracleDiff,
 ) {
     println!("Pramaan oracle integrity complete");
@@ -180,6 +197,7 @@ fn render_oracle_summary(
     println!("head_repo: {}", head_repo.display());
     println!("bundle: {}", out.display());
     println!("receipt: {}", receipt_path.display());
+    println!("manifest: {}", manifest_path.display());
     println!();
     println!(
         "Tests: base={} head={}",

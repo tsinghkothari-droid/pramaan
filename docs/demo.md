@@ -4,6 +4,15 @@ Pramaan's public demo set is deliberately small and brutal. Each scenario shows
 ordinary review or CI looking acceptable while Pramaan emits concrete evidence
 that the result is not trustworthy.
 
+For the shortest end-to-end path, use the quickstart loop:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run-minimum-lovable-loop.ps1
+```
+
+It writes a bundle plus `minimum-lovable-report.md` under
+`target/pramaan-minimum-lovable/`.
+
 ## Demo 1: Weakened Test Assertion
 
 The checkout function should apply a 10 percent discount:

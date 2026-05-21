@@ -1307,8 +1307,13 @@ fn oracle_emits_failed_receipt_for_weakened_fixture_pair() {
 
     let diff_path = out.join("oracle-diff.json");
     let receipt_path = out.join("receipts").join("oracle-integrity.receipt.json");
+    let manifest_path = out.join("bundle.manifest.json");
     assert!(diff_path.exists(), "oracle diff exists");
     assert!(receipt_path.exists(), "oracle receipt exists");
+    assert!(
+        manifest_path.exists(),
+        "oracle command should write a verifiable bundle manifest"
+    );
 
     let receipt: serde_json::Value =
         serde_json::from_slice(&fs::read(receipt_path).expect("read oracle receipt"))
@@ -1326,6 +1331,18 @@ fn oracle_emits_failed_receipt_for_weakened_fixture_pair() {
         .expect("residual risks")
         .iter()
         .any(|risk| risk == "R-087"));
+
+    let bundle_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args(["bundle", "verify", out.to_str().expect("utf-8 output path")])
+        .output()
+        .expect("verify oracle bundle");
+    assert!(
+        bundle_output.status.success(),
+        "oracle bundle verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&bundle_output.stdout),
+        String::from_utf8_lossy(&bundle_output.stderr)
+    );
 }
 
 #[test]

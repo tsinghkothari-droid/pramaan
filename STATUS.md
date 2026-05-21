@@ -68,6 +68,11 @@ each producing real receipts under the bundle. Mutation testing is opt-in via
 flags. The synthetic-verification placeholder is now a fallback only, emitted
 exclusively when every real stage was skipped.
 
+For the first local reviewer loop, `scripts/run-minimum-lovable-loop.ps1` runs
+the weakened-test demo, writes a verifiable oracle bundle manifest, adds
+confidence and policy evidence, and emits a blockers-first Markdown report. This
+is a quickstart demo path, not production v1 readiness.
+
 It does **not** yet provide production-grade signed attestations, enforced
 container isolation, real Hypothesis/fast-check property execution, full
 compiler-AST oracle parsing, or sandbox execution of AI-generated probes. The

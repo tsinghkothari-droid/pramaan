@@ -10,9 +10,10 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 are complete with explicit residual risk. Phase 28.5 now has a first
 implemented confidence-vote slice. Phase 26.1 live Action proof, Phase 26.2
 competitive benchmarking, and Phase 26.3 competitor-gap fixtures are complete.
-Public review still depends on a minimum lovable verifier loop,
-compiler/parser oracle hardening, real Hypothesis/fast-check harnesses,
-sandboxed generated probes, anti-gaming hardening, and reviewer reports.
+Phase 26.4 now provides the local minimum lovable verifier loop. Public review
+still depends on compiler/parser oracle hardening, real Hypothesis/fast-check
+harnesses, sandboxed generated probes, anti-gaming hardening, and reviewer
+reports.
 
 ## Current Phase
 
@@ -23,9 +24,9 @@ residual risk: Phase 26.3 competitor-gap fixtures and Phase 26.4 minimum
 lovable verifier loop.
 
 Phase 26.1 live Action proof is complete. Public review still depends on the
-remaining pre-36 readiness phases: minimum lovable verifier loop, full
-parser/AST oracle hardening, real Hypothesis/fast-check execution, sandboxed
-generated probes, anti-gaming hardening, and local reviewer reports.
+remaining pre-36 readiness phases: full parser/AST oracle hardening, real
+Hypothesis/fast-check execution, sandboxed generated probes, anti-gaming
+hardening, and local reviewer reports.
 
 ## Status
 
@@ -136,3 +137,4 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Completed Phase 26.1 live GitHub Action proof. | Live run `26229890652` built Pramaan, ran verification, rendered the job summary, and uploaded `pramaan-proof-bundle`; several Action and artifact-path bugs were fixed on the way. |
 | 2026-05-21 | Completed Phase 26.2 competitive benchmark. | `docs/competitive-benchmark.md` now narrows Pramaan's differentiation against AI PR reviewers, quality aggregators, test-generation systems, mutation/property tools, and supply-chain attestation primitives without claiming superiority before executable gap fixtures. |
 | 2026-05-21 | Completed Phase 26.3 competitor-gap fixtures. | `corpus/competitor-gap-fixtures.v0.1.json` and `scripts/check-competitor-gap-fixtures.mjs` now validate seven category-level scenarios for weakened/skipped oracles, fixture drift, hallucinated code, false-green CI, unsigned reports, and hidden skipped stages. |
+| 2026-05-21 | Completed Phase 26.4 minimum lovable verifier loop. | `scripts/run-minimum-lovable-loop.ps1` now runs the weakened-test demo, emits an oracle bundle manifest, adds confidence and policy evidence, verifies the bundle, and writes a blockers-first Markdown report for 30-second reviewer inspection. |

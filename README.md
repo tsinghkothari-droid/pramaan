@@ -63,6 +63,8 @@ See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
 
 ## Operator Docs
 
+- [Quickstart](docs/quickstart.md): one command for the minimum lovable
+  verifier loop.
 - [Operator Guide](docs/operator-guide.md): install, run, inspect, and rollout.
 - [GitHub Action](docs/github-action.md): CI wrapper inputs, permissions, and
   summary behavior.

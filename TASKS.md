@@ -330,22 +330,23 @@ AI coding agents and real reviewers. They are planned, not complete.
 - [x] Add validation that stale or duplicate gap fixtures fail through
   `node scripts/check-competitor-gap-fixtures.mjs`; CI wiring remains a Phase
   26.4/35.5 packaging follow-up.
-- [ ] Keep competitor names out of brittle test names where possible; test the
+- [x] Keep competitor names out of brittle test names where possible; test the
   failure mode, not another project's implementation detail.
 
 #### Phase 26.4: Minimum Lovable Verifier Loop
 
-- [ ] Define the one-command path from checkout to proof bundle.
-- [ ] Define the one-report path for a reviewer to understand blockers in under
+- [x] Define the one-command path from checkout to proof bundle:
+  `powershell -ExecutionPolicy Bypass -File scripts/run-minimum-lovable-loop.ps1`.
+- [x] Define the one-report path for a reviewer to understand blockers in under
   30 seconds.
-- [ ] Pick one killer demo as the canonical first-run example and keep all
+- [x] Pick one killer demo as the canonical first-run example and keep all
   public quickstart docs pointed at it.
-- [ ] Ensure the generated bundle contains receipts, manifest, policy summary,
+- [x] Ensure the generated bundle contains receipts, manifest, policy summary,
   confidence explanation when available, and clear skipped-stage evidence.
-- [ ] Add a manual UAT script where a fresh reviewer runs the command, opens
+- [x] Add a manual UAT script where a fresh reviewer runs the command, opens
   the report, and explains the blocker without reading source code first.
-- [ ] Treat any skipped stage that looks like a pass as a release blocker.
-- [ ] Defer broad language expansion until this loop feels complete.
+- [x] Treat any skipped stage that looks like a pass as a release blocker.
+- [x] Defer broad language expansion until this loop feels complete.
 
 #### Phase 26.5: Agent Harness Interface
 

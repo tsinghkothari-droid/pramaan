@@ -52,6 +52,7 @@ risk before Alpha.
 | CLAIM-PILOT-001 | `.planning/ROADMAP.md` | Three external real repositories were validated. | manual-proof | `.planning/reports/phase-26-external-alpha-pilots.md` | `powershell -ExecutionPolicy Bypass -File scripts/run-phase26-pilots.ps1 -SkipClone` | pass | Live GitHub Action proof remains separate. |
 | CLAIM-POSITIONING-001 | `README.md` | Pramaan is complementary to AI PR reviewers, quality aggregators, test generators, and attestation primitives. | manual-proof | `docs/competitive-benchmark.md`, `README.md` | `rg -n "competitive benchmark|complement|not a replacement" README.md docs/competitive-benchmark.md` | pass | Refresh before public Alpha and Serious v1. |
 | CLAIM-GAP-001 | `docs/competitive-benchmark.md` | Category-level competitor-gap fixtures exist for evidence gaps Pramaan targets. | manual-proof | `corpus/competitor-gap-fixtures.v0.1.json`, `scripts/check-competitor-gap-fixtures.mjs` | `node scripts/check-competitor-gap-fixtures.mjs` | pass-with-risk | Metadata fixtures are not named-tool benchmark results. |
+| CLAIM-QUICKSTART-001 | `docs/quickstart.md`, `STATUS.md` | One-command local quickstart produces a bundle, confidence evidence, policy explanation, and blockers-first report. | manual-proof | `scripts/run-minimum-lovable-loop.ps1`, `.planning/reports/phase-26.4-minimum-lovable-loop-uat.md` | `powershell -ExecutionPolicy Bypass -File scripts/run-minimum-lovable-loop.ps1` | pass-with-risk | This is an oracle-focused demo loop; Phase 35.5 owns Rust-native report commands. |
 | CLAIM-RELEASE-001 | `TASKS.md` | Alpha MVP gates are satisfied. | accepted-risk | `TASKS.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "Alpha MVP|not yet|NO_GO" TASKS.md .planning` | blocked | Private preview only until external repository pilots close. |
 | CLAIM-STATUS-CAP-001 | `STATUS.md` | STATUS: Rust workspace and CLI skeleton | executable-test | `Cargo.toml`, `crates/pramaan-cli/src/main.rs` | `cargo build --workspace` | pass | Keep smoke tests green. |
 | CLAIM-STATUS-CAP-002 | `STATUS.md` | STATUS: Receipt model with risk IDs and artifact refs | executable-test | `crates/pramaan-core/src/lib.rs`, `schemas/receipt.schema.json` | `cargo test -p pramaan-core` | pass | Keep schema/runtime fixture tests aligned. |
@@ -87,19 +88,17 @@ risk before Alpha.
 
 | Bucket | Count |
 | --- | ---: |
-| Total claims audited | 59 |
+| Total claims audited | 60 |
 | `STATUS.md` capability rows covered | 29 |
 | Executable-test claims | 38 |
-| Checked-fixture/manual-proof claims | 11 |
+| Checked-fixture/manual-proof claims | 12 |
 | Partial/planned/accepted-risk claims | 10 |
 | False-or-stale claims left in public copy | 0 |
-| Public Alpha blockers | 3 |
+| Public Alpha blockers | 2 |
 
 ## Public Alpha Blockers
 
-1. Add the minimum lovable verifier loop before claiming public-review
-   readiness.
-2. Add safe generated harness execution for Hypothesis and fast-check, or keep
+1. Add safe generated harness execution for Hypothesis and fast-check, or keep
    those claims explicitly planned.
-3. Keep every full-AST or production-signing statement narrowed until parser and
+2. Keep every full-AST or production-signing statement narrowed until parser and
    Sigstore/in-toto integrations are executable and fixture-backed.
