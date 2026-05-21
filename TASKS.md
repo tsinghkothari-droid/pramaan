@@ -88,7 +88,38 @@ evidence.
 
 Execution rule: do not start P2 signing/attestation expansion or dashboard work
 until the Phase 25 P0/P1 gate says the core PR-verification loop is trustworthy
-enough for external users.
+enough for external users. Current Phase 25 decision: **private technical
+preview is reasonable; public Alpha remains blocked** until three external
+repository pilots are measured and the remaining public-claim gaps stay
+narrowed in `docs/claim-audit.md`.
+
+### Current Alpha Decision Snapshot
+
+**Decision:** private technical preview yes, public Alpha no-go.
+
+Evidence already in the repo:
+
+- [x] P0/P1 phases 18-25 have landed with summaries, docs, and verification.
+- [x] Claim audit covers 53 claims and all 26 `STATUS.md` capability rows.
+- [x] Internal pilot runs cover oracle, mutation, Python fuzz, and TypeScript
+  fuzz fixtures with runtimes recorded.
+- [x] Missing mutation/property tools are visible evidence, not hidden passes.
+- [x] Public copy is narrowed around signing, full AST parsing, and real
+  Hypothesis/fast-check execution.
+
+Public Alpha blockers:
+
+- [ ] Run Pramaan on three external real repositories and record runtime,
+  skipped stages, false positives, false negatives, and reviewer
+  time-to-understand.
+- [ ] Add safe generated-harness execution for Hypothesis and fast-check, or
+  keep those claims explicitly planned.
+- [ ] Add full compiler/parser AST integrations for Python, TypeScript, and
+  Rust, or keep those claims explicitly planned.
+- [ ] Add production signing/attestation path, or keep Sigstore/in-toto claims
+  explicitly planned.
+- [ ] Prove the GitHub Action on a live PR, not only through local Action
+  summary tests.
 
 ### P0: Assertion Truth Audit Gate
 
@@ -241,7 +272,7 @@ AI-authored PRs to prove theirs.
 - [ ] Write an operator guide for running Pramaan in CI.
 - [ ] Write a plugin-author guide.
 - [ ] Write a security model.
-- [ ] Write a threat model for malicious PR authors and compromised tools.
+- [x] Write a threat model for malicious PR authors and compromised tools.
 - [ ] Write an enterprise deployment guide.
 - [ ] Add troubleshooting docs for slow mutation, missing tools, flaky tests, and forked PR permissions.
 - [ ] Add screenshots or rendered examples of PR summaries and bundle inspection.
@@ -295,26 +326,29 @@ AI-authored PRs to prove theirs.
 
 ### Alpha MVP
 
-- [ ] The weakened-test demo is undeniable.
+- [x] The weakened-test demo is undeniable.
 - [ ] Pramaan runs successfully on at least three selected real repositories.
 - [x] Pramaan runs successfully on internal oracle, mutation, Python fuzz, and TypeScript fuzz pilot fixtures with runtimes recorded.
 - [ ] GitHub Action posts a useful PR summary.
-- [ ] Bundle verification catches tampering.
-- [ ] Missing tools and skipped checks are visible.
-- [ ] Receipt schema includes agent attribution and reviewer override fields before v0.1 freeze.
-- [ ] PR runtime SLA is documented and enforced through stage budgets.
-- [ ] Default policy profile can explain hard-fail vs warning-only decisions.
+- [x] Bundle verification catches tampering.
+- [x] Missing tools and skipped checks are visible.
+- [x] Receipt schema includes agent attribution and reviewer override fields before v0.1 freeze.
+- [x] PR runtime SLA is documented and enforced through stage budgets.
+- [x] Default policy profile can explain hard-fail vs warning-only decisions.
+
+Alpha remains blocked by the unchecked items above. Do not describe the repo as
+public-Alpha-ready until those are complete.
 
 ### Real MVP
 
 - [ ] Python, TypeScript, and Rust paths have real tool integrations.
-- [ ] Oracle integrity catches weakened assertions, skipped tests, and snapshot/fixture drift.
+- [x] Oracle integrity catches weakened assertions, skipped tests, and snapshot/fixture drift.
 - [ ] Mutation and property/fuzz stages run within practical CI budgets.
 - [ ] At least 75 adversarial scenarios exist.
 - [ ] Documentation is good enough for an external maintainer to install and inspect a bundle.
 - [ ] Repo-level calibration prevents obvious alert fatigue.
 - [ ] Plugin trust model prevents untrusted plugins from poisoning receipts.
-- [ ] CI hardening checks catch unsafe workflow patterns for untrusted PR code.
+- [x] CI hardening checks catch unsafe workflow patterns for untrusted PR code.
 - [ ] Redaction profiles are tested before any bundle is safe to export.
 
 ### Serious v1
