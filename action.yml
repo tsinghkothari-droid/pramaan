@@ -1,4 +1,4 @@
-name: Pramaan
+name: Pramaan Evidence Bundle Verifier
 description: Run Pramaan on pull requests and publish a risk-aware proof bundle summary.
 author: Pramaan
 
