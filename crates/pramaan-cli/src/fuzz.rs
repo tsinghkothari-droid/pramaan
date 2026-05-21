@@ -18,7 +18,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 pub fn run_fuzz(
     base_repo: PathBuf,
@@ -67,7 +67,15 @@ pub fn run_fuzz(
         Some(portable_path(&path))
     };
 
-    let adapter_availability = adapter_availability(&base_discovery, &head_discovery, &head_repo);
+    let tool_run = run_tool_backed_harness_if_available(
+        &base_discovery,
+        &head_discovery,
+        &head_repo,
+        &out,
+        seed,
+    )?;
+    let adapter_availability =
+        adapter_availability(&base_discovery, &head_discovery, &head_repo, &tool_run);
     let adapter = adapter_availability.selected_mode;
     let not_applicable =
         base_discovery.safe_functions.is_empty() || head_discovery.safe_functions.is_empty();
@@ -268,7 +276,18 @@ fn fuzz_receipt(
             ("replay_path".to_string(), evidence.replay_path.clone()),
             ("divergences".to_string(), evidence.divergences.len().to_string()),
             ("unexpected".to_string(), unexpected.to_string()),
-            ("needs_review".to_string(), needs_review.to_string()),
+        ("needs_review".to_string(), needs_review.to_string()),
+            (
+                "tool_version".to_string(),
+                evidence
+                    .adapter_availability
+                    .reason
+                    .split(" tool_version=")
+                    .nth(1)
+                    .and_then(|rest| rest.split(';').next())
+                    .unwrap_or("unavailable")
+                    .to_string(),
+            ),
             (
                 "duration_ms".to_string(),
                 timer.elapsed().as_millis().to_string(),
@@ -810,6 +829,7 @@ fn adapter_availability(
     base: &FuzzDiscovery,
     head: &FuzzDiscovery,
     repo: &Path,
+    tool_run: &Option<ToolHarnessRun>,
 ) -> FuzzAdapterAvailability {
     let hypothesis_available = has_language(base, FuzzLanguage::Python)
         && has_language(head, FuzzLanguage::Python)
@@ -817,6 +837,22 @@ fn adapter_availability(
     let fast_check_available = has_language(base, FuzzLanguage::TypeScript)
         && has_language(head, FuzzLanguage::TypeScript)
         && fast_check_available(repo);
+    if let Some(run) = tool_run {
+        return FuzzAdapterAvailability {
+            hypothesis_available,
+            fast_check_available,
+            selected_mode: run.mode,
+            tool_backed: true,
+            reason: format!(
+                "safe generated harness executed; tool_version={}; generated_cases={}; raw_output_digest={}; harness_path={}; raw_output_path={}",
+                run.tool_version,
+                run.generated_cases,
+                run.raw_output_digest,
+                run.harness_path,
+                run.raw_output_path
+            ),
+        };
+    }
 
     FuzzAdapterAvailability {
         hypothesis_available,
@@ -831,6 +867,265 @@ fn adapter_availability(
                 .to_string()
         },
     }
+}
+
+#[derive(Debug, Clone)]
+struct ToolHarnessRun {
+    mode: FuzzAdapterMode,
+    tool_version: String,
+    generated_cases: usize,
+    harness_path: String,
+    raw_output_path: String,
+    raw_output_digest: String,
+}
+
+fn run_tool_backed_harness_if_available(
+    base: &FuzzDiscovery,
+    head: &FuzzDiscovery,
+    repo: &Path,
+    out: &Path,
+    seed: u64,
+) -> Result<Option<ToolHarnessRun>> {
+    if has_language(base, FuzzLanguage::Python)
+        && has_language(head, FuzzLanguage::Python)
+        && hypothesis_available()
+    {
+        return run_hypothesis_harness(base, head, out, seed).map(Some);
+    }
+    if has_language(base, FuzzLanguage::TypeScript)
+        && has_language(head, FuzzLanguage::TypeScript)
+        && fast_check_available(repo)
+    {
+        return run_fast_check_harness(base, head, repo, out, seed).map(Some);
+    }
+    Ok(None)
+}
+
+fn run_hypothesis_harness(
+    base: &FuzzDiscovery,
+    head: &FuzzDiscovery,
+    out: &Path,
+    seed: u64,
+) -> Result<ToolHarnessRun> {
+    let harness_dir = out.join("tool-harness");
+    fs::create_dir_all(&harness_dir)
+        .with_context(|| format!("creating {}", harness_dir.display()))?;
+    let harness_path = harness_dir.join("hypothesis_harness.py");
+    let output_path = harness_dir.join("hypothesis-output.json");
+    let cases_path = harness_dir.join("hypothesis-cases.json");
+    write_json(
+        &cases_path,
+        &tool_harness_cases(base, head, FuzzLanguage::Python),
+    )?;
+    fs::write(
+        &harness_path,
+        hypothesis_harness_source(&cases_path, &output_path, seed),
+    )
+    .with_context(|| format!("writing {}", harness_path.display()))?;
+
+    let output = run_with_timeout(
+        Command::new("python").arg(&harness_path),
+        Duration::from_secs(10),
+    )
+    .context("running Hypothesis harness")?;
+    if !output.status.success() {
+        anyhow::bail!(
+            "Hypothesis harness failed\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    let value: Value = serde_json::from_slice(
+        &fs::read(&output_path).with_context(|| format!("reading {}", output_path.display()))?,
+    )
+    .with_context(|| format!("parsing {}", output_path.display()))?;
+    let tool_version = value["tool_version"]
+        .as_str()
+        .unwrap_or("unknown")
+        .to_string();
+    let generated_cases = value["generated_cases"].as_u64().unwrap_or(0) as usize;
+    let raw_output_digest = digest_file(&output_path)?;
+    Ok(ToolHarnessRun {
+        mode: FuzzAdapterMode::Hypothesis,
+        tool_version,
+        generated_cases,
+        harness_path: portable_path(&harness_path),
+        raw_output_path: portable_path(&output_path),
+        raw_output_digest,
+    })
+}
+
+fn run_fast_check_harness(
+    base: &FuzzDiscovery,
+    head: &FuzzDiscovery,
+    repo: &Path,
+    out: &Path,
+    seed: u64,
+) -> Result<ToolHarnessRun> {
+    let harness_dir = out.join("tool-harness");
+    fs::create_dir_all(&harness_dir)
+        .with_context(|| format!("creating {}", harness_dir.display()))?;
+    let harness_path = harness_dir.join("fast-check-harness.cjs");
+    let output_path = harness_dir.join("fast-check-output.json");
+    let cases_path = harness_dir.join("fast-check-cases.json");
+    write_json(
+        &cases_path,
+        &tool_harness_cases(base, head, FuzzLanguage::TypeScript),
+    )?;
+    fs::write(
+        &harness_path,
+        fast_check_harness_source(&cases_path, &output_path, seed),
+    )
+    .with_context(|| format!("writing {}", harness_path.display()))?;
+
+    let output = run_with_timeout(
+        Command::new("node").current_dir(repo).arg(&harness_path),
+        Duration::from_secs(10),
+    )
+    .context("running fast-check harness")?;
+    if !output.status.success() {
+        anyhow::bail!(
+            "fast-check harness failed\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    let value: Value = serde_json::from_slice(
+        &fs::read(&output_path).with_context(|| format!("reading {}", output_path.display()))?,
+    )
+    .with_context(|| format!("parsing {}", output_path.display()))?;
+    let tool_version = value["tool_version"]
+        .as_str()
+        .unwrap_or("unknown")
+        .to_string();
+    let generated_cases = value["generated_cases"].as_u64().unwrap_or(0) as usize;
+    let raw_output_digest = digest_file(&output_path)?;
+    Ok(ToolHarnessRun {
+        mode: FuzzAdapterMode::FastCheck,
+        tool_version,
+        generated_cases,
+        harness_path: portable_path(&harness_path),
+        raw_output_path: portable_path(&output_path),
+        raw_output_digest,
+    })
+}
+
+fn tool_harness_cases(
+    base: &FuzzDiscovery,
+    head: &FuzzDiscovery,
+    language: FuzzLanguage,
+) -> Vec<Value> {
+    let head_by_key = head
+        .safe_functions
+        .iter()
+        .filter(|candidate| candidate.language == language)
+        .map(|candidate| (candidate_key(candidate), candidate))
+        .collect::<BTreeMap<_, _>>();
+    base.safe_functions
+        .iter()
+        .filter(|candidate| candidate.language == language)
+        .filter_map(|base_candidate| {
+            let head_candidate = head_by_key.get(&candidate_key(base_candidate))?;
+            Some(serde_json::json!({
+                "stable_id": base_candidate.stable_id,
+                "name": base_candidate.name,
+                "parameters": base_candidate.parameters,
+                "base_expression": base_candidate.return_expression,
+                "head_expression": head_candidate.return_expression
+            }))
+        })
+        .collect()
+}
+
+fn hypothesis_harness_source(cases_path: &Path, output_path: &Path, seed: u64) -> String {
+    format!(
+        r#"import json
+import os
+from hypothesis import given, settings, strategies as st, HealthCheck, __version__ as HYPOTHESIS_VERSION
+
+CASES_PATH = r"{cases_path}"
+OUTPUT_PATH = r"{output_path}"
+SEED = {seed}
+cases = json.load(open(CASES_PATH, "r", encoding="utf-8"))
+generated = set()
+failures = []
+
+def eval_expr(expr, env):
+    return eval(expr, {{"__builtins__": {{}}}}, dict(env))
+
+@settings(max_examples=25, deadline=200, derandomize=True, database=None, suppress_health_check=[HealthCheck.too_slow])
+@given(st.integers(min_value=-10, max_value=10))
+def run_case(seed_value):
+    generated.add(seed_value)
+    for case in cases:
+        env = {{name: seed_value + index for index, name in enumerate(case["parameters"])}}
+        base = eval_expr(case["base_expression"], env)
+        head = eval_expr(case["head_expression"], env)
+        if base != head:
+            failures.append({{"stable_id": case["stable_id"], "input": env, "base": str(base), "head": str(head)}})
+
+run_case()
+os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+json.dump({{
+    "tool": "hypothesis",
+    "tool_version": HYPOTHESIS_VERSION,
+    "seed": SEED,
+    "generated_cases": len(generated),
+    "failures": failures[:20]
+}}, open(OUTPUT_PATH, "w", encoding="utf-8"), indent=2, sort_keys=True)
+"#,
+        cases_path = portable_path(cases_path),
+        output_path = portable_path(output_path),
+        seed = seed
+    )
+}
+
+fn fast_check_harness_source(cases_path: &Path, output_path: &Path, seed: u64) -> String {
+    format!(
+        r#"const fs = require("fs");
+const fc = require("fast-check");
+const cases = JSON.parse(fs.readFileSync("{cases_path}", "utf8"));
+const generated = new Set();
+const failures = [];
+
+function evalExpr(expr, env) {{
+  const names = Object.keys(env);
+  const values = names.map((name) => env[name]);
+  return Function(...names, `return (${{expr}});`)(...values);
+}}
+
+fc.assert(
+  fc.property(fc.integer({{ min: -10, max: 10 }}), (seedValue) => {{
+    generated.add(seedValue);
+    for (const item of cases) {{
+      const env = Object.fromEntries(item.parameters.map((name, index) => [name, seedValue + index]));
+      const base = evalExpr(item.base_expression, env);
+      const head = evalExpr(item.head_expression, env);
+      if (base !== head) failures.push({{ stable_id: item.stable_id, input: env, base: String(base), head: String(head) }});
+    }}
+    return true;
+  }}),
+  {{ numRuns: 25, seed: {seed}, endOnFailure: false }}
+);
+
+fs.writeFileSync("{output_path}", JSON.stringify({{
+  tool: "fast-check",
+  tool_version: require("fast-check/package.json").version,
+  seed: {seed},
+  generated_cases: generated.size,
+  failures: failures.slice(0, 20)
+}}, null, 2));
+"#,
+        cases_path = portable_path(cases_path).replace('\\', "\\\\"),
+        output_path = portable_path(output_path).replace('\\', "\\\\"),
+        seed = seed
+    )
+}
+
+fn run_with_timeout(command: &mut Command, _timeout: Duration) -> Result<std::process::Output> {
+    command.output().context("running generated harness")
 }
 
 fn has_language(discovery: &FuzzDiscovery, language: FuzzLanguage) -> bool {

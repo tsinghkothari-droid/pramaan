@@ -45,7 +45,7 @@ risk before Alpha.
 | CLAIM-MUTATION-001 | `TASKS.md` | Mutation adapters run real tools when installed. | manual-proof | `crates/pramaan-cli/src/mutation.rs` | `cargo run -p pramaan-cli -- mutation --repo examples/fixtures/mutation --changed-file python/checkout.py --timeout-ms 1000 --out target/pramaan-pilot/mutation` | pass-with-risk | Needs CI image with tools installed for positive execution proof. |
 | CLAIM-MUTATION-002 | `docs/plugins.md` | Missing mutation tools do not mitigate risk. | executable-test | `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
 | CLAIM-FUZZ-001 | `TASKS.md` | Differential replay records seed, corpus hash, counterexamples, and divergence classes. | executable-test | `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
-| CLAIM-FUZZ-002 | `TASKS.md` | Hypothesis/fast-check campaigns run today. | accepted-risk | `docs/plugins.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "tool_backed=false|Hypothesis" docs .planning/research` | narrowed | Keep as follow-up until safe harnesses execute. |
+| CLAIM-FUZZ-002 | `TASKS.md` | Hypothesis/fast-check campaigns run today. | executable-test | `crates/pramaan-cli/src/fuzz.rs`, `scripts/check-fuzz-harness-evidence.mjs`, `docs/plugins.md` | `cargo test -p pramaan-cli --test smoke fuzz && node scripts/check-fuzz-harness-evidence.mjs <differential-fuzz.json>` | pass-with-risk | Tool-backed mode runs only when tools are installed; missing tools remain deterministic fallback evidence. |
 | CLAIM-CONFIDENCE-001 | `docs/confidence.md` | Confidence vote is decomposed, uncalibrated, and explicitly not a correctness proof. | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/tests/smoke.rs`, `schemas/confidence.schema.json` | `cargo test --workspace` | pass | Keep calibration marked uncalibrated until Phase 34. |
 | CLAIM-BUNDLE-001 | `docs/bundle-verification.md` | Manifest references artifacts by digest and rejects tampering. | executable-test | `crates/pramaan-bundle/src/lib.rs` | `cargo test -p pramaan-bundle` | pass | None. |
 | CLAIM-REDACTION-001 | `docs/receipt-model.md` | Common secrets and private paths are redacted by helper. | executable-test | `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core redaction` | pass | Enterprise logs need broader fixtures. |
@@ -74,7 +74,7 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-016 | `STATUS.md` | STATUS: Diff-scoped mutation wrappers | executable-test | `crates/pramaan-cli/src/mutation.rs` | `cargo test -p pramaan-cli --test smoke` | pass-with-risk | Positive tool-backed CI image still needed. |
 | CLAIM-STATUS-CAP-017 | `STATUS.md` | STATUS: Production-grade mutmut/StrykerJS/cargo-mutants integration | accepted-risk | `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "mutation" .planning/research docs` | narrowed | Keep as private-preview residual risk. |
 | CLAIM-STATUS-CAP-018 | `STATUS.md` | STATUS: Differential fuzz/property simulated mode | executable-test | `crates/pramaan-cli/src/fuzz.rs`, `examples/fixtures/fuzz/` | `cargo test -p pramaan-cli --test smoke` | pass | Keep `tool_backed=false` visible where simulated. |
-| CLAIM-STATUS-CAP-019 | `STATUS.md` | STATUS: Real Hypothesis/fast-check adapters | accepted-risk | `docs/plugins.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "Hypothesis|fast-check|tool_backed=false" docs .planning/research` | narrowed | Keep as follow-up until safe harnesses execute. |
+| CLAIM-STATUS-CAP-019 | `STATUS.md` | STATUS: Real Hypothesis/fast-check adapters | executable-test | `crates/pramaan-cli/src/fuzz.rs`, `scripts/check-fuzz-harness-evidence.mjs` | `cargo test -p pramaan-cli --test smoke fuzz` | pass-with-risk | Tool-backed mode depends on installed Hypothesis/fast-check; missing tools must remain visible. |
 | CLAIM-STATUS-CAP-020 | `STATUS.md` | STATUS: Replay command for recorded generated cases | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs`, `docs/replay.md` | `cargo test --workspace` | pass | Keep status Partial until replay can re-execute generated harnesses. |
 | CLAIM-STATUS-CAP-020A | `STATUS.md` | STATUS: AI evidence-seeking probe plan | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs`, `schemas/probe.schema.json`, `docs/ai-probe-generator.md` | `cargo test --workspace` | pass | Keep status Partial until generated probes execute in a sandbox and rejected probes preserve real failure reasons. |
 | CLAIM-STATUS-CAP-021 | `STATUS.md` | STATUS: GitHub Action wrapper | executable-test | `action.yml`, `action/render-summary.test.mjs`, `.planning/reports/phase-26.1-live-action-proof.md` | `node --test action/render-summary.test.mjs` | pass | PR-event demo remains useful, but workflow-dispatch proof exists. |
@@ -92,15 +92,13 @@ risk before Alpha.
 | --- | ---: |
 | Total claims audited | 62 |
 | `STATUS.md` capability rows covered | 30 |
-| Executable-test claims | 40 |
+| Executable-test claims | 42 |
 | Checked-fixture/manual-proof claims | 12 |
-| Partial/planned/accepted-risk claims | 10 |
+| Partial/planned/accepted-risk claims | 8 |
 | False-or-stale claims left in public copy | 0 |
-| Public Alpha blockers | 2 |
+| Public Alpha blockers | 1 |
 
 ## Public Alpha Blockers
 
-1. Add safe generated harness execution for Hypothesis and fast-check, or keep
-   those claims explicitly planned.
-2. Keep every full-AST or production-signing statement narrowed until parser and
+1. Keep every full-AST or production-signing statement narrowed until parser and
    Sigstore/in-toto integrations are executable and fixture-backed.

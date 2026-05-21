@@ -596,6 +596,13 @@ harnesses where eligible pure functions and project dependencies make that safe.
 
 **Priority:** Property/fuzz hardening split
 
+**Status:** Completed 2026-05-21 for bounded generated-harness execution when
+tools are installed. Python Hypothesis and TypeScript fast-check harnesses now
+run only for conservative pure-function candidates and record tool version,
+generated-case count, harness path, raw-output path, and raw-output digest in
+adapter availability metadata. Missing tools still select deterministic replay
+evidence with residual risk.
+
 **Success Criteria:**
 
 1. Generated harnesses are limited to safe pure-function candidates.

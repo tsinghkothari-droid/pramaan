@@ -72,7 +72,7 @@ This table is the quick answer for whether P0, P1, and P2 are complete.
 | Priority | Status | Meaning | Still blocking |
 | --- | --- | --- | --- |
 | P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, three external local pilots, and a live workflow-dispatch Action proof are done. | Public review still needs the remaining pre-36 readiness phases. |
-| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence with parser metadata, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Full compiler AST extraction remains split to a heavier Phase 27.2/36 path; Phase 28.1 real Hypothesis/fast-check harnesses remain open. |
+| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence with parser metadata, bounded Hypothesis/fast-check harness execution when tools are installed, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Full compiler AST extraction remains split to a heavier Phase 27.2/36 path; production sandboxing for property tools remains open. |
 | P2 | Not complete | P2 is the trust/adoption layer after the core loop: signing, redaction, plugin trust, SARIF/policy integration, corpus, calibration, docs, and language depth. Phase 28.5 has started the trust bridge, but the rest remains open. | Phases 29-36. |
 | P3 | Not started as product scope | Multi-forge, multi-agent provenance, and adapter certification are later expansion tracks. | Phases 37-39. |
 
@@ -282,8 +282,8 @@ Public Alpha blockers:
 - [x] Run Pramaan on three external real repositories and record runtime,
   skipped stages, false positives, false negatives, and reviewer
   time-to-understand.
-- [ ] Add safe generated-harness execution for Hypothesis and fast-check, or
-  keep those claims explicitly planned under Phase 28.1.
+- [x] Add safe generated-harness execution for Hypothesis and fast-check when
+  tools are installed; keep missing-tool fallback visible as residual evidence.
 - [x] Add parser-version evidence, unsupported-syntax metadata, disagreement
   reporting fields, and dependency decision docs for Python, TypeScript, and
   Rust.
@@ -560,8 +560,11 @@ AI-authored PRs to prove theirs.
 
 - [x] Python: auto-discover eligible pure functions and run deterministic differential replay checks.
 - [x] TypeScript: auto-discover eligible pure functions and run deterministic differential replay checks.
-- [ ] Python: execute real Hypothesis campaigns through a safe generated harness.
-- [ ] TypeScript: execute real fast-check campaigns through a safe generated harness.
+- [x] Python: execute real Hypothesis campaigns through a safe generated harness
+  when Hypothesis is installed and eligible pure-function candidates exist.
+- [x] TypeScript: execute real fast-check campaigns through a safe generated
+  harness when fast-check is installed and eligible pure-function candidates
+  exist.
 - [x] Record seeds, replay data, counterexamples, corpus hashes, generated input counts, and adapter availability.
 - [x] Compare base/head outputs on identical generated inputs.
 - [x] Classify divergences as expected, unexpected, or needs-review.

@@ -35,14 +35,32 @@ The receipt also records adapter availability:
 real Hypothesis or fast-check campaign. That distinction is part of the product
 surface: absence of a tool is evidence the reviewer needs, not a pass.
 
+Phase 28.1 adds safe generated-harness execution when the tool is actually
+available and a conservative pure-function candidate exists:
+
+- Python uses a generated Hypothesis harness with bounded examples, deadline,
+  deterministic settings, and a recorded raw-output digest.
+- TypeScript uses a generated fast-check harness with bounded runs, seed, and
+  a recorded raw-output digest.
+- If either tool is missing, the receipt remains deterministic replay evidence
+  and `adapter_availability.reason` explains why.
+
+Validate a generated fuzz evidence file with:
+
+```powershell
+node scripts/check-fuzz-harness-evidence.mjs target/pramaan-fuzz/differential-fuzz.json
+```
+
 Recorded divergences can be inspected with:
 
 ```powershell
 pramaan replay target/pramaan/fuzz --case "<stable-id>#<input-index>"
 ```
 
-This is metadata replay of the recorded case. Real Hypothesis/fast-check
-re-execution remains split to the safe generated-harness phase.
+This is metadata replay of the recorded case. When Hypothesis or fast-check ran,
+the bundle also records harness and raw-output paths in adapter availability
+metadata so the execution can be audited without treating the generated harness
+as a proof of correctness.
 
 ## Trust Rules
 

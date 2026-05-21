@@ -56,8 +56,10 @@ testing is opt-in via `--with-mutation`. Individual stages can be skipped with
 `--skip-stage <name>` for fast iteration.
 
 It does **not** yet ship production-grade Sigstore signing, enforced container
-isolation, real Hypothesis/fast-check execution, full compiler-AST oracle
-parsing, or calibrated confidence.
+isolation, production-sandboxed Hypothesis/fast-check execution, full
+compiler-AST oracle parsing, or calibrated confidence. Bounded generated
+Hypothesis/fast-check harnesses can run when those tools are installed; missing
+tools remain visible residual risk.
 
 See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
 

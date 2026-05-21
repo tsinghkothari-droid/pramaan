@@ -37,7 +37,7 @@ Status labels:
 | Diff-scoped mutation wrappers | Partial | `crates/pramaan-cli/src/mutation.rs` | Mutation tests and skipped receipts |
 | Production-grade mutmut/StrykerJS/cargo-mutants integration | Partial | `crates/pramaan-cli/src/mutation.rs`, `docs/plugins.md` | Runs when tools are installed; missing tools emit skipped receipts |
 | Differential fuzz/property simulated mode | Experimental | `crates/pramaan-cli/src/fuzz.rs` | Fuzz tests and replay fixtures |
-| Real Hypothesis/fast-check adapters | Planned | Phase 24 | Not implemented yet |
+| Real Hypothesis/fast-check adapters | Partial | `crates/pramaan-cli/src/fuzz.rs`, `scripts/check-fuzz-harness-evidence.mjs` | Runs bounded generated harnesses when tools are installed; missing tools fall back visibly |
 | Replay command for recorded generated cases | Partial | `crates/pramaan-cli/src/main.rs`, `docs/replay.md` | `pramaan replay <bundle> --case <id>` |
 | AI evidence-seeking probe plan | Partial | `crates/pramaan-cli/src/main.rs`, `schemas/probe.schema.json`, `docs/ai-probe-generator.md` | `pramaan probe plan --bundle <bundle>` |
 | GitHub Action wrapper | Partial | `action.yml`, `action/render-summary.mjs` | Node tests and example workflows |
