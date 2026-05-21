@@ -792,7 +792,7 @@ Phase 28.5 acceptance criteria:
 
 ## P3: Multi-Agent and Multi-Forge Support
 
-- [ ] Model multi-agent provenance chains: code author agent, review agent, test-writing agent, and final human reviewer.
+- [x] Model multi-agent provenance chains: code author agent, review agent, test-writing agent, and final human reviewer.
 - [ ] Record intermediate commit attribution and handoff metadata where available.
 - [ ] Add provider-neutral VCS interfaces before adding GitLab support.
 - [ ] Add GitLab CI support after GitHub Action readiness stabilizes.

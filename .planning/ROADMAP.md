@@ -243,6 +243,12 @@ remain later phases.
 
 ## Phase 16: Attribution, Feedback, Calibration, and Verifier Security
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Schema hooks,
+fixtures, local feedback/calibration exports, plugin trust validation,
+redaction policy, and docs are present. Automatic multi-agent extraction,
+hosted analytics, stronger sandboxing, and non-GitHub CI support remain future
+work.
+
 **Goal:** Add the missing production trust layer around Pramaan itself: who authored the code, who overrode the evidence, what baseline is normal for this repo, whether agent quality is drifting, whether plugins can be trusted, and whether bundles safely redact sensitive data.
 
 **Requirements:** ATTR-01, FBCK-01, PERF-01, CAL-01, DRFT-01, PLGN-01, SCRB-01, VCS-01

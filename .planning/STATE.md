@@ -43,8 +43,8 @@ verification commands pass.
 
 ## Status
 
-Phases 1-15 and the Phase 16a schema-impact subset are implemented and
-validated. Phases 16-17 remain the broader Serious v1 execution path. Phases
+Phases 1-16 are implemented and validated as the broad Serious v1 execution
+path so far. Phase 17 remains open in that sequence. Phases
 18-25 completed the focused P0/P1 track and ended in a public-Alpha no-go until
 external pilots are measured. Phases 26-40 now map the remaining task families:
 external pilots, live Action proof, competitive benchmarking, competitor-gap
@@ -126,6 +126,7 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Completed Phase 13 mutation and differential fuzz adapters. | Historical Phase 13 is now closed as PASS_WITH_RISKS against the current mutation/fuzz adapters, with skipped-tool evidence, replay metadata, and `scripts/check-phase13-adapter-evidence.mjs`. |
 | 2026-05-21 | Completed Phase 14 attestation, corpus, and eval evidence. | Local/offline VSA and in-toto consistency checks, Action attestation wiring, offline verification tests, and a 25-scenario adversarial corpus are verified; production Sigstore identity and 100+ corpus scale remain future work. |
 | 2026-05-21 | Completed Phase 15 documentation, language gates, and bounded adapter evidence. | Adoption docs, rendered examples, Python/TypeScript/Rust readiness gates, and bounded adapter-certification schema/fixture checks are present; full language depth and adapter product work remain later phases. |
+| 2026-05-21 | Completed Phase 16 attribution, feedback, calibration, and verifier-security trust layer. | Receipt and bundle schemas carry attribution, reviewer overrides, multi-agent hooks, plugin identity, redaction, and budgets; local feedback/calibration and plugin-trust checks exist, while hosted analytics and non-GitHub CI remain future work. |
 | 2026-05-21 | Added P0/P1 GSD completion track for Phases 18-25. | Remaining P0/P1 tasks are now mapped to execution phases, with a Phase 25 pilot gate before P2/P3 expansion. |
 | 2026-05-21 | Completed Phase 18 product honesty and direction. | `STATUS.md`, README status language, non-goals, ICP, killer workflow, research sufficiency, and pivot criteria now keep the public surface ambitious but honest. |
 | 2026-05-21 | Completed Phase 19 receipt golden tests and canonical evidence. | Generated claim-scope receipts now have a normalized golden contract test, bundle manifest digests use canonical JSON bytes, and receipt docs explain fixture update discipline. |
