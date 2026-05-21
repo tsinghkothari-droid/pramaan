@@ -169,6 +169,22 @@ default policy profile uses:
 Skipped, missing-tool, not-applicable, and timed-out stages must remain visible;
 they are never rewritten as successful mitigation.
 
+To publish findings into GitHub code scanning, export SARIF after the action run
+and upload it with `github/codeql-action/upload-sarif`:
+
+```yaml
+  - uses: pramaan/pramaan@v0
+    with:
+      out-dir: target/pramaan
+  - run: cargo run -p pramaan-cli -- export sarif target/pramaan --out target/pramaan/pramaan.sarif.json
+  - uses: github/codeql-action/upload-sarif@v3
+    with:
+      sarif_file: target/pramaan/pramaan.sarif.json
+```
+
+SARIF is a review surface for residual Pramaan risks. It should not replace the
+proof bundle or reviewer inspection of skipped stages.
+
 ## Minimal Workflow Examples
 
 Python repositories can run their normal tests before Pramaan:

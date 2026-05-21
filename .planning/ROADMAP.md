@@ -653,6 +653,11 @@ hardening.
 
 **Priority:** P2 security
 
+**Status:** Completed 2026-05-21 for SARIF export, starter Rego export,
+claim-scope workflow-injection detection, GitHub code-scanning guidance, and
+the minimal SARIF export schema contract. CodeQL/security scanner ingestion
+remains warning-only future correlation.
+
 **Success Criteria:**
 
 1. Pramaan findings can export as SARIF and import into GitHub code scanning.

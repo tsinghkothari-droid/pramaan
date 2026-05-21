@@ -417,6 +417,54 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     assert!(String::from_utf8_lossy(&offline_output.stdout)
         .contains("Pramaan offline attestation verification complete"));
 
+    let sarif_path = out.join("pramaan.sarif.json");
+    let sarif_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "export",
+            "sarif",
+            out.to_str().expect("utf-8 output path"),
+            "--out",
+            sarif_path.to_str().expect("utf-8 sarif path"),
+        ])
+        .output()
+        .expect("run pramaan export sarif");
+    assert!(
+        sarif_output.status.success(),
+        "SARIF export failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&sarif_output.stdout),
+        String::from_utf8_lossy(&sarif_output.stderr)
+    );
+    let sarif: serde_json::Value =
+        serde_json::from_slice(&fs::read(&sarif_path).expect("read SARIF")).expect("SARIF JSON");
+    assert_eq!(sarif["version"], "2.1.0");
+    assert!(sarif["runs"][0]["results"]
+        .as_array()
+        .expect("sarif results")
+        .iter()
+        .any(|result| result["ruleId"] == "R-090"));
+
+    let rego_path = out.join("pramaan-default.rego");
+    let rego_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "export",
+            "rego",
+            "--out",
+            rego_path.to_str().expect("utf-8 rego path"),
+        ])
+        .output()
+        .expect("run pramaan export rego");
+    assert!(
+        rego_output.status.success(),
+        "Rego export failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&rego_output.stdout),
+        String::from_utf8_lossy(&rego_output.stderr)
+    );
+    assert!(fs::read_to_string(&rego_path)
+        .expect("read rego")
+        .contains("package pramaan.default"));
+
     let mut tampered_vsa = vsa;
     tampered_vsa["verification_result"] = json!("PASSED");
     fs::write(

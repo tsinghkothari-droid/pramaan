@@ -69,6 +69,13 @@ targets may be hostile. Risky tools should run with:
 - cache isolation;
 - future container or VM isolation for high-risk stages.
 
+Untrusted PR text is also part of the attack surface for coding agents. Phase
+32 scans PR title/body and issue text for agentic workflow injection signals
+such as "ignore previous instructions", shell pipelines, CI token references,
+GitHub environment mutation, and privileged workflow names. These map to
+`R-093` claim-scope risk so reviewers see the prompt/tooling hazard before an
+agent or workflow copies the text into a privileged sink.
+
 ## Plugin Boundary
 
 Plugins must not be allowed to edit prior receipts or bundle manifests directly.

@@ -12,13 +12,13 @@ use pramaan_core::risks::{
 };
 use pramaan_core::{
     build_agent_decision, build_confidence_artifact, canonical_json_bytes, default_policy_profile,
-    evaluate_default_policy, render_confidence_markdown, risk_family, timestamp, AgentAttribution,
-    ArtifactRef, AttributionConfidence, ClaimScope, ConfidenceDecision, EvidenceSensitivity,
-    FuzzDivergence, FuzzRunEvidence, OutputRef, PluginIdentity, PluginPermissions, PolicyDecision,
-    PolicyStageEvidence, ProbeCandidate, ProbeDecision, ProbeKind, ProbeLanguage,
-    ProbePlanArtifact, ProbeProvider, ProbeSandboxStatus, Receipt, ReceiptSummary,
-    RedactionManifest, RiskRefs, StageBudget, StageStatus, ToolIdentity, PROBE_SCHEMA_VERSION,
-    RECEIPT_SCHEMA_VERSION,
+    detect_agentic_workflow_injection, evaluate_default_policy, render_confidence_markdown,
+    risk_family, timestamp, AgentAttribution, ArtifactRef, AttributionConfidence, ClaimScope,
+    ConfidenceDecision, EvidenceSensitivity, FuzzDivergence, FuzzRunEvidence, OutputRef,
+    PluginIdentity, PluginPermissions, PolicyDecision, PolicyStageEvidence, ProbeCandidate,
+    ProbeDecision, ProbeKind, ProbeLanguage, ProbePlanArtifact, ProbeProvider, ProbeSandboxStatus,
+    Receipt, ReceiptSummary, RedactionManifest, RiskRefs, StageBudget, StageStatus, ToolIdentity,
+    PROBE_SCHEMA_VERSION, RECEIPT_SCHEMA_VERSION,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use std::collections::{BTreeMap, BTreeSet};
@@ -52,6 +52,7 @@ enum Commands {
     Agent(AgentArgs),
     Probe(ProbeArgs),
     Replay(ReplayArgs),
+    Export(ExportArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -109,6 +110,31 @@ struct BundleExportRedactedArgs {
     path: PathBuf,
     #[arg(long)]
     profile: String,
+    #[arg(long)]
+    out: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct ExportArgs {
+    #[command(subcommand)]
+    command: ExportCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum ExportCommands {
+    Sarif(ExportSarifArgs),
+    Rego(ExportRegoArgs),
+}
+
+#[derive(Debug, Parser)]
+struct ExportSarifArgs {
+    bundle: PathBuf,
+    #[arg(long)]
+    out: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct ExportRegoArgs {
     #[arg(long)]
     out: PathBuf,
 }
@@ -276,6 +302,7 @@ fn main() -> Result<()> {
         Commands::Agent(args) => run_agent(args),
         Commands::Probe(args) => run_probe(args),
         Commands::Replay(args) => run_replay(args),
+        Commands::Export(args) => run_export(args),
     }
 }
 
@@ -1030,6 +1057,138 @@ fn print_policy_items(label: &str, items: &[String]) {
     }
 }
 
+fn run_export(args: ExportArgs) -> Result<()> {
+    match args.command {
+        ExportCommands::Sarif(args) => run_export_sarif(args.bundle, args.out),
+        ExportCommands::Rego(args) => run_export_rego(args.out),
+    }
+}
+
+fn run_export_sarif(bundle: PathBuf, out: PathBuf) -> Result<()> {
+    let manifest_path = if bundle.is_dir() {
+        bundle.join(MANIFEST_FILE_NAME)
+    } else {
+        bundle
+    };
+    let manifest = read_manifest(&manifest_path).context("reading bundle manifest for SARIF")?;
+    let sarif = sarif_for_manifest(&manifest);
+    write_json(&out, &sarif)?;
+    println!("Pramaan SARIF export complete");
+    println!("sarif: {}", out.display());
+    Ok(())
+}
+
+fn run_export_rego(out: PathBuf) -> Result<()> {
+    if let Some(parent) = out.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("creating parent directory {}", parent.display()))?;
+    }
+    fs::write(&out, DEFAULT_POLICY_REGO)
+        .with_context(|| format!("writing Rego policy {}", out.display()))?;
+    println!("Pramaan Rego policy export complete");
+    println!("rego: {}", out.display());
+    Ok(())
+}
+
+fn sarif_for_manifest(manifest: &BundleManifest) -> serde_json::Value {
+    let mut rules = BTreeMap::<String, serde_json::Value>::new();
+    let mut results = Vec::new();
+    for stage in &manifest.stages {
+        let risk_ids = stage
+            .residual_risks
+            .iter()
+            .chain(stage.not_applicable_risks.iter())
+            .cloned()
+            .collect::<BTreeSet<_>>();
+        for risk_id in risk_ids {
+            rules.entry(risk_id.clone()).or_insert_with(|| {
+                serde_json::json!({
+                    "id": risk_id,
+                    "name": format!("Pramaan risk {}", risk_id),
+                    "shortDescription": {
+                        "text": format!("{} risk family", risk_family(&risk_id))
+                    },
+                    "help": {
+                        "text": "Pramaan emits evidence and residual risk; it does not prove code correctness."
+                    }
+                })
+            });
+            results.push(serde_json::json!({
+                "ruleId": risk_id,
+                "level": sarif_level_for_status(&stage.status),
+                "message": {
+                    "text": format!("Stage `{}` reported {} risk `{}`.", stage.id, stage.status, risk_id)
+                },
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {
+                                "uri": &stage.receipt_path
+                            }
+                        }
+                    }
+                ],
+                "properties": {
+                    "stage": &stage.id,
+                    "status": &stage.status,
+                    "tool": &stage.tool.name
+                }
+            }));
+        }
+    }
+    serde_json::json!({
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "Pramaan",
+                        "informationUri": "https://github.com/tsinghkothari-droid/pramaan",
+                        "rules": rules.into_values().collect::<Vec<_>>()
+                    }
+                },
+                "results": results
+            }
+        ]
+    })
+}
+
+fn sarif_level_for_status(status: &str) -> &'static str {
+    match status {
+        "failed" | "error" | "timed_out" => "error",
+        "skipped" | "not_applicable" => "warning",
+        _ => "note",
+    }
+}
+
+const DEFAULT_POLICY_REGO: &str = r#"package pramaan.default
+
+default decision := "pass"
+
+hard_statuses := {"failed", "error", "timed_out"}
+
+decision := "fail" if {
+  some stage in input.stages
+  hard_statuses[stage.status]
+}
+
+decision := "fail" if {
+  some required in {"claim_scope", "sandbox_setup"}
+  not stage_ids[required]
+}
+
+decision := "warning" if {
+  decision != "fail"
+  count(input.risk_summary.residual) > 0
+}
+
+stage_ids[id] if {
+  some stage in input.stages
+  id := stage.id
+}
+"#;
+
 fn run_bundle(args: BundleArgs) -> Result<()> {
     match args.command {
         BundleCommands::Verify(args) => {
@@ -1385,6 +1544,7 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
     let mut expected_behavior = Vec::new();
     let mut limitations = Vec::new();
     let mut risk_refs = Vec::new();
+    let mut untrusted_agent_text = Vec::<(String, String)>::new();
 
     if let Ok(event_path) = std::env::var("GITHUB_EVENT_PATH") {
         if !event_path.trim().is_empty() {
@@ -1400,6 +1560,8 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
                     .and_then(serde_json::Value::as_str)
                 {
                     expected_behavior.push(format!("PR title: {title}"));
+                    untrusted_agent_text
+                        .push(("github.pull_request.title".to_string(), title.to_string()));
                 }
                 if let Some(body) = event
                     .pointer("/pull_request/body")
@@ -1407,6 +1569,8 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
                     .filter(|value| !value.trim().is_empty())
                 {
                     expected_behavior.push(format!("PR body: {}", body.trim()));
+                    untrusted_agent_text
+                        .push(("github.pull_request.body".to_string(), body.to_string()));
                     for issue in linked_issue_refs(body) {
                         source_refs.push(pramaan_core::SourceRef {
                             kind: "linked_issue".to_string(),
@@ -1425,11 +1589,13 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
     if let Ok(title) = std::env::var("PRAMAAN_PR_TITLE") {
         if !title.trim().is_empty() {
             expected_behavior.push(format!("PR title: {}", title.trim()));
+            untrusted_agent_text.push(("PRAMAAN_PR_TITLE".to_string(), title));
         }
     }
     if let Ok(body) = std::env::var("PRAMAAN_PR_BODY") {
         if !body.trim().is_empty() {
             expected_behavior.push(format!("PR body: {}", body.trim()));
+            untrusted_agent_text.push(("PRAMAAN_PR_BODY".to_string(), body.clone()));
             for issue in linked_issue_refs(&body) {
                 source_refs.push(pramaan_core::SourceRef {
                     kind: "linked_issue".to_string(),
@@ -1447,6 +1613,7 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
             kind: "issue_text".to_string(),
             reference: "PRAMAAN_ISSUE_TEXT_OR_PATH".to_string(),
         });
+        untrusted_agent_text.push(("PRAMAAN_ISSUE_TEXT_OR_PATH".to_string(), issue_text));
     }
     if let Some(scope_note) = read_optional_scope_note()? {
         expected_behavior.push(format!(
@@ -1464,6 +1631,16 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
         risk_refs.push(CLAIM_SCOPE_PUBLIC_API_DETECTION_FAILED.to_string());
         Vec::new()
     });
+
+    for (source, text) in &untrusted_agent_text {
+        for finding in detect_agentic_workflow_injection(source.clone(), text) {
+            limitations.push(format!(
+                "Agentic workflow injection signal {} from {}: {}",
+                finding.id, finding.source, finding.message
+            ));
+            risk_refs.push(finding.risk_id);
+        }
+    }
 
     if !expected_behavior.is_empty() {
         scope.expected_behavior = expected_behavior;

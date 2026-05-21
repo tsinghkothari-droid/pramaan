@@ -60,6 +60,11 @@ pub const FUZZ_UNEXPECTED_DIVERGENCE: &str = "R-075";
 pub const FUZZ_NO_TOOL_BACKED_ADAPTER: &str = "R-077";
 pub const FUZZ_DIVERGENCE_NEEDS_REVIEW: &str = "R-080";
 
+// ---------------------------------------------------------------------------
+// CI / agentic workflow supply chain (R-091..R-095)
+// ---------------------------------------------------------------------------
+pub const AGENTIC_WORKFLOW_INJECTION: &str = "R-093";
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -105,6 +110,7 @@ mod tests {
             FUZZ_UNEXPECTED_DIVERGENCE,
             FUZZ_NO_TOOL_BACKED_ADAPTER,
             FUZZ_DIVERGENCE_NEEDS_REVIEW,
+            AGENTIC_WORKFLOW_INJECTION,
         ] {
             assert!(
                 is_known_risk_id(id),

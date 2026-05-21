@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/sarif_export.schema.json",
+  "title": "Pramaan SARIF Export Contract",
+  "description": "Minimal contract for Pramaan-generated SARIF 2.1.0 output. The full SARIF schema remains the normative format.",
+  "type": "object",
+  "required": ["version", "runs"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "const": "2.1.0"
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["tool", "results"],
+        "properties": {
+          "tool": {
+            "type": "object"
+          },
+          "results": {
+            "type": "array"
+          }
+        }
+      }
+    }
+  }
+}
