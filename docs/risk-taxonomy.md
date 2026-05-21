@@ -61,15 +61,16 @@ skips/todos/xfails/ignores, parametrized case reductions, weakened assertion
 signals, removed error paths, removed boundary cases, and changed or deleted
 fixture/snapshot artifacts.
 
-Phase 23 records structured extractor evidence in `oracle-diff.json`:
+Phase 23 records structured extractor evidence in `oracle-diff.json`; Phase 27
+hardens those extractors into parser-backed subsets. The evidence includes
 extractor engine, evidence label, assertion-signal kinds, strength scores, and
 skip markers. This makes weakening findings easier to audit and reduces the
 opaque "regex found something" problem.
 
-Current oracle extraction is deterministic and structured, but not yet a
-complete compiler AST proof. Receipts should therefore keep parser limitations
-visible and may list the same family as both mitigated and residual when a
-specific finding remains open for reviewer judgment.
+Current oracle extraction is deterministic and parser-backed for a supported
+subset, but not yet a complete compiler AST proof. Receipts should therefore
+keep parser limitations visible and may list the same family as both mitigated
+and residual when a specific finding remains open for reviewer judgment.
 
 ## Mutation And Fuzz Notes
 

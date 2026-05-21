@@ -457,6 +457,10 @@ custom harnesses as a completion gate before an agent claims done.
 
 ## Phase 27: Parser-Backed Oracle Extractors
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Parser-backed subset
+extractors, negative fixtures, and docs landed; full compiler AST integrations
+are split to Phase 27.1.
+
 **Goal:** Close the current structured-extractor risk with parser-backed Python, TypeScript, and Rust oracle evidence.
 
 **Priority:** P1 hardening
@@ -467,6 +471,23 @@ custom harnesses as a completion gate before an agent claims done.
 2. Golden negative fixtures cover comments, strings, macros, multiline assertions, generated tests, and renamed test bodies.
 3. Receipts preserve stable risk IDs and make unsupported syntax explicit.
 
+## Phase 27.1: Full Compiler AST Oracle Extractors
+
+**Goal:** Add full compiler/parser AST integrations with pinned dependency or
+subprocess choices, parser-version evidence, and disagreement reporting.
+
+**Priority:** Parser hardening split
+
+**Success Criteria:**
+
+1. Python, TypeScript, and Rust parser choices have dependency/runtime
+   justifications.
+2. Golden fixtures cover comments, strings, generated tests, multiline
+   assertions, macros, renamed bodies, decorators/attributes, and skipped tests.
+3. Oracle evidence records parser version, fallback reason, unsupported syntax,
+   and disagreement counts.
+4. Claim audit stops marking full compiler AST extraction as planned only after
+   executable fixtures pass.
 ## Phase 28: Tool-Backed Property, Fuzz, and Replay
 
 **Goal:** Execute real Hypothesis and fast-check campaigns safely where eligible code exists, with replayable evidence.

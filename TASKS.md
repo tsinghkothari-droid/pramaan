@@ -67,7 +67,7 @@ This table is the quick answer for whether P0, P1, and P2 are complete.
 | Priority | Status | Meaning | Still blocking |
 | --- | --- | --- | --- |
 | P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, and three external local pilots are done. | Public Alpha still needs Phase 26.1 live Action proof. |
-| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Phase 27 parser-backed oracle hardening and Phase 28 real Hypothesis/fast-check harnesses. |
+| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Phase 27.1 full compiler AST hardening and Phase 28 real Hypothesis/fast-check harnesses. |
 | P2 | Not complete | P2 is the trust/adoption layer after the core loop: signing, redaction, plugin trust, SARIF/policy integration, corpus, calibration, docs, and language depth. Phase 28.5 has started the trust bridge, but the rest remains open. | Phases 29-36. |
 | P3 | Not started as product scope | Multi-forge, multi-agent provenance, and adapter certification are later expansion tracks. | Phases 37-39. |
 
@@ -85,7 +85,8 @@ it can run in parallel.
 | 1 | Phase 26 | External local pilot reports for Python, TypeScript, and Rust repositories | Public Alpha needed real-repo evidence beyond internal fixtures. | Public Alpha evidence |
 | 1.1 | Phase 26.1 | Live GitHub Action proof on a real PR or PR-like branch | Public Alpha is still no-go until CI artifact and summary evidence exist. | Public Alpha claims |
 | 1.5 | Phase 26.5 | Agent harness interface for Claude Code, Codex, Cursor-style agents, and custom harnesses | Agents should call Pramaan before claiming done. | Agent adoption |
-| 2 | Phase 27 | Parser-backed oracle extractors | Confidence and signing are weaker if oracle evidence is still parser-light. | Phase 28.5 confidence inputs |
+| 2 | Phase 27 | Parser-backed subset oracle extractors | Confidence and signing are weaker if oracle evidence is still parser-light. | Phase 28.5 confidence inputs |
+| 2.1 | Phase 27.1 | Full compiler AST oracle extractors | Full AST parser support needs dependency and runtime justification. | Public full-AST claims |
 | 3 | Phase 28 | Real Hypothesis/fast-check harnesses and replay | Confidence needs real executed evidence, not only deterministic fallback. | Phase 28.5 confidence inputs |
 | 3.25 | Phase 28.25 | AI evidence-seeking probe generator | AI should generate better probes, but only executed probes count. | Phase 28.5 confidence inputs |
 | 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
@@ -181,7 +182,8 @@ unfinished task family below into an executable GSD phase.
 | Phase 26 | Alpha gate | Three external real-repository local pilots, runtime/noise metrics, and a public-Alpha no-go update. |
 | Phase 26.1 | Alpha gate | Live GitHub Action proof, uploaded bundle artifact, job summary evidence, and a public-Alpha go/no-go update. |
 | Phase 26.5 | Agent adoption | `pramaan agent done-gate`, agent decision schema, `AGENTS.md`, Claude Code hook/command templates, and blocked-agent fixtures. |
-| Phase 27 | P1 hardening | Full parser-backed oracle extractors for Python, TypeScript, and Rust with negative fixtures and dependency justifications. |
+| Phase 27 | P1 hardening | Parser-backed subset oracle extractors for Python, TypeScript, and Rust with negative fixtures and honest residual full-AST split. |
+| Phase 27.1 | P1 hardening split | Full compiler AST oracle extractors with dependency justifications, parser-version evidence, and disagreement reporting. |
 | Phase 28 | P1 hardening | Safe real Hypothesis and fast-check generated-harness execution, replay CLI contracts, and budget/timeout evidence. |
 | Phase 28.25 | 10x evidence depth | AI-generated probes for tests, properties, differential inputs, and security checks; only sandbox-executed probes count. |
 | Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
@@ -214,7 +216,7 @@ Unfinished task-family mapping:
 | --- | --- |
 | Public Alpha blockers | 26, 27, 28, 29 |
 | Agent harness for coding agents | 26.5 |
-| Full AST/parser oracle integrations | 27 |
+| Full AST/parser oracle integrations | 27.1 |
 | Real Hypothesis/fast-check campaigns | 28 |
 | AI evidence-seeking probe generation | 28.25 |
 | Auditable confidence vote and scoring schema | 28.5, 34 |
@@ -436,7 +438,7 @@ AI-authored PRs to prove theirs.
 - [x] Classify fixture and snapshot diffs as oracle-sensitive.
 - [x] Detect removed boundary cases, error cases, and parameter values.
 - [x] Add reviewer-facing summaries that explain exactly which assertion or oracle artifact changed.
-- [x] Replace opaque heuristic oracle scanning with structured extractor evidence for Python, TypeScript, and Rust: extractor labels, assertion-signal kinds, strength scores, signal hashes, and skip markers.
+- [x] Replace opaque heuristic oracle scanning with parser-backed subset extractor evidence for Python, TypeScript, and Rust: extractor labels, assertion-signal kinds, strength scores, signal hashes, skip markers, comment/string filtering, and multiline assertion grouping.
 - [ ] Add full compiler/parser AST integrations for Python, TypeScript, and Rust with dependency justifications and golden negative fixtures.
 
 ## P1: Mutation Adapters
@@ -473,7 +475,7 @@ Phase prerequisites:
 
 - [x] Phase 26 external pilot report exists or Phase 28.5 uses only explicit
   deterministic starter weights marked `uncalibrated`.
-- [ ] Phase 27 parser-backed oracle status is reflected as implemented,
+- [x] Phase 27 parser-backed oracle status is reflected as implemented,
   partial, or residual risk in the confidence inputs.
 - [x] Phase 28 property/fuzz receipts expose generated-case counts, failures,
   skipped-tool status, and replay metadata needed for confidence evidence.

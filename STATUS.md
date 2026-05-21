@@ -30,7 +30,7 @@ Status labels:
 | Linked issue ingestion and maintainer scope notes | Partial | `crates/pramaan-cli/src/main.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-cli --test smoke` |
 | Static checks for Python, TypeScript, and Rust | Partial | `crates/pramaan-cli/src/static_checks.rs` | `pramaan static-checks --base <ref> --head <ref>` |
 | Hallucination classification | Partial | `crates/pramaan-cli/src/static_checks.rs`, `docs/risk-taxonomy.md` | Static-check fixture tests |
-| Oracle integrity structured extractors | Partial | `crates/pramaan-cli/src/oracle.rs`, `crates/pramaan-core/src/lib.rs` | `pramaan oracle --base-repo <base> --head-repo <head>` |
+| Oracle integrity parser-backed subset extractors | Partial | `crates/pramaan-cli/src/oracle.rs`, `crates/pramaan-core/src/lib.rs`, `docs/oracle-integrity.md` | `pramaan oracle --base-repo <base> --head-repo <head>` |
 | Full compiler AST-backed oracle extractors | Planned | `docs/claim-audit.md`, Phase 23 residual risk | Not implemented yet |
 | Demo weakened-test / fixture / hallucination scenarios | Implemented | `examples/`, `docs/demo.md` | Demo commands in docs |
 | Diff-scoped mutation wrappers | Partial | `crates/pramaan-cli/src/mutation.rs` | Mutation tests and skipped receipts |
@@ -51,10 +51,10 @@ Status labels:
 
 Pramaan currently provides a receipt-first Rust CLI foundation with working
 bundle hash verification, sandbox/environment evidence, static-check adapters,
-structured oracle integrity checks, demo fixtures, a default policy explanation
-path, an uncalibrated auditable confidence vote, a deterministic agent
-completion gate, redaction helpers, threat-model documentation, a claim-audit
-ledger, and a GitHub Action wrapper.
+parser-backed subset oracle integrity checks, demo fixtures, a default policy
+explanation path, an uncalibrated auditable confidence vote, a deterministic
+agent completion gate, redaction helpers, threat-model documentation, a
+claim-audit ledger, and a GitHub Action wrapper.
 
 It does **not** yet provide production-grade signed attestations, enforced
 container isolation, real Hypothesis/fast-check property execution, full

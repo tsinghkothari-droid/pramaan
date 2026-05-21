@@ -110,7 +110,7 @@ fn oracle_receipt(
             ),
         },
         limitations: vec![
-            "Oracle weakening detection uses deterministic structured extractors for Python, TypeScript, and Rust; current extractors are not full compiler ASTs and are labeled in oracle-diff evidence.".to_string(),
+            "Oracle weakening detection uses deterministic parser-backed subset extractors for Python, TypeScript, and Rust; current extractors are not full compiler ASTs and are labeled in oracle-diff evidence.".to_string(),
             "Claim-vs-oracle scope mismatch risks are covered by risk IDs but require claim-scope evidence from adjacent stages for final judgment.".to_string(),
         ],
         mitigated_risks: oracle_mitigated_risks(),

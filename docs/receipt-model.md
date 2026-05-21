@@ -135,7 +135,9 @@ inform review; it is not a sole merge gate.
 
 ## Oracle Extractor Evidence
 
-Phase 23 adds structured oracle extractor evidence to `oracle-diff.json`.
+Phase 23 adds structured oracle extractor evidence to `oracle-diff.json`; Phase
+27 hardens that into parser-backed subset evidence for the supported test-file
+patterns.
 Each discovered test now carries:
 
 - `extractor.engine`: the deterministic extractor used for that language;
@@ -147,10 +149,10 @@ Each discovered test now carries:
   test block.
 
 This improves the reviewer story without overclaiming full compiler AST
-coverage. Current extractors are structured block parsers for Python,
-TypeScript, and Rust. Full compiler-backed parser integrations remain a
-hardening target and should be added only with fixtures and dependency
-justification.
+coverage. Current extractors are parser-backed subsets for Python, TypeScript,
+and Rust, with comment/string filtering and multiline assertion grouping. Full
+compiler-backed parser integrations remain a hardening target and should be
+added only with fixtures and dependency justification.
 
 ## Mutation And Fuzz Evidence
 

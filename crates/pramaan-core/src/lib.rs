@@ -335,6 +335,51 @@ pub fn diff_oracle_snapshots(base: OracleSnapshot, head: OracleSnapshot) -> Orac
                     "R-087".to_string(),
                 ],
             });
+            let removed_error_tokens = matching_tokens(base_test, &["raises", "throws"]);
+            if !removed_error_tokens.is_empty() {
+                findings.push(OracleFinding {
+                    kind: OracleFindingKind::RemovedErrorPath,
+                    path: base_test.path.clone(),
+                    test_name: Some(base_test.name.clone()),
+                    details: format!(
+                        "Deleted test removed error-path oracle signal: {}.",
+                        removed_error_tokens.join(",")
+                    ),
+                    risk_ids: vec![
+                        "R-013".to_string(),
+                        "R-018".to_string(),
+                        "R-020".to_string(),
+                        "R-087".to_string(),
+                    ],
+                });
+            }
+            let removed_boundary_tokens = matching_tokens(
+                base_test,
+                &[
+                    "boundary_negative",
+                    "boundary_zero",
+                    "boundary_empty",
+                    "boundary_null",
+                    "boundary_extreme",
+                ],
+            );
+            if !removed_boundary_tokens.is_empty() {
+                findings.push(OracleFinding {
+                    kind: OracleFindingKind::RemovedBoundaryCase,
+                    path: base_test.path.clone(),
+                    test_name: Some(base_test.name.clone()),
+                    details: format!(
+                        "Deleted test removed boundary-case oracle signal: {}.",
+                        removed_boundary_tokens.join(",")
+                    ),
+                    risk_ids: vec![
+                        "R-018".to_string(),
+                        "R-019".to_string(),
+                        "R-020".to_string(),
+                        "R-087".to_string(),
+                    ],
+                });
+            }
             continue;
         };
 
@@ -907,6 +952,15 @@ fn removed_tokens(
         .collect()
 }
 
+fn matching_tokens(test: &OracleTestCase, token_names: &[&str]) -> Vec<String> {
+    let test_tokens = test.signal_tokens.iter().cloned().collect::<BTreeSet<_>>();
+    token_names
+        .iter()
+        .filter(|token| test_tokens.contains(**token))
+        .map(|token| (*token).to_string())
+        .collect()
+}
+
 fn discover_python_tests(path: &str, text: &str) -> Vec<OracleTestCase> {
     let lines = text.lines().collect::<Vec<_>>();
     let mut tests = Vec::new();
@@ -1053,16 +1107,16 @@ fn build_test_case(
 fn extractor_profile(language: OracleLanguage) -> OracleExtractorProfile {
     let (engine, evidence_label) = match language {
         OracleLanguage::Python => (
-            "python_structured_def_block_parser",
-            "structured_test_block_not_full_python_ast",
+            "python_indent_parser_v2",
+            "parser_backed_subset_not_full_python_ast",
         ),
         OracleLanguage::TypeScript => (
-            "typescript_balanced_test_block_parser",
-            "structured_test_block_not_full_typescript_ast",
+            "typescript_balanced_call_parser_v2",
+            "parser_backed_subset_not_full_typescript_ast",
         ),
         OracleLanguage::Rust => (
-            "rust_attribute_block_parser",
-            "structured_test_block_not_full_rust_ast",
+            "rust_attribute_brace_parser_v2",
+            "parser_backed_subset_not_full_rust_ast",
         ),
     };
 
@@ -1156,47 +1210,97 @@ fn assertion_signals(language: OracleLanguage, block: &str) -> Vec<OracleAsserti
     assertion_statements(language, block)
         .into_iter()
         .map(|statement| {
-            let kind = assertion_kind(language, statement);
+            let kind = assertion_kind(language, &statement);
             OracleAssertionSignal {
                 strength: assertion_strength(&kind),
-                text_hash: stable_hash_text(&normalize_assertion_text(statement)),
+                text_hash: stable_hash_text(&normalize_assertion_text(&statement)),
                 kind,
             }
         })
         .collect()
 }
 
-fn assertion_statements(language: OracleLanguage, block: &str) -> Vec<&str> {
-    match language {
-        OracleLanguage::Python => block
-            .lines()
-            .filter(|line| {
-                let trimmed = line.trim_start();
-                trimmed.starts_with("assert ")
-                    || trimmed.contains("pytest.raises(")
-                    || trimmed.contains(".assert")
-            })
-            .collect(),
-        OracleLanguage::TypeScript => block
-            .lines()
-            .filter(|line| {
-                let lower = line.to_lowercase();
-                lower.contains("expect(") || lower.contains("assert.")
-            })
-            .collect(),
-        OracleLanguage::Rust => block
-            .lines()
-            .filter(|line| {
-                let lower = line.to_lowercase();
-                lower.contains("assert!(")
-                    || lower.contains("assert_eq!(")
-                    || lower.contains("assert_ne!(")
-                    || lower.contains("matches!(")
-                    || lower.contains("panic!(")
-                    || lower.contains("should_panic")
-            })
-            .collect(),
+fn assertion_statements(language: OracleLanguage, block: &str) -> Vec<String> {
+    let sanitized = strip_comments_and_strings(language, block);
+    let raw_lines = block.lines().collect::<Vec<_>>();
+    let sanitized_lines = sanitized.lines().collect::<Vec<_>>();
+    let mut statements = Vec::new();
+    let mut index = 0;
+
+    while index < raw_lines.len() {
+        let sanitized_line = sanitized_lines.get(index).copied().unwrap_or("");
+        if starts_assertion(language, sanitized_line) {
+            let (statement, next_index) =
+                collect_assertion_statement(&raw_lines, &sanitized_lines, index);
+            statements.push(statement);
+            index = next_index;
+        } else {
+            index += 1;
+        }
     }
+
+    statements
+}
+
+fn starts_assertion(language: OracleLanguage, sanitized_line: &str) -> bool {
+    let trimmed = sanitized_line.trim_start();
+    let lower = trimmed.to_lowercase();
+    match language {
+        OracleLanguage::Python => {
+            trimmed.starts_with("assert ")
+                || lower.contains("pytest.raises(")
+                || lower.contains(".assert")
+        }
+        OracleLanguage::TypeScript => lower.contains("expect(") || lower.contains("assert."),
+        OracleLanguage::Rust => {
+            lower.contains("assert!(")
+                || lower.contains("assert_eq!(")
+                || lower.contains("assert_ne!(")
+                || lower.contains("matches!(")
+                || lower.contains("panic!(")
+                || lower.contains("should_panic")
+        }
+    }
+}
+
+fn collect_assertion_statement(
+    raw_lines: &[&str],
+    sanitized_lines: &[&str],
+    start: usize,
+) -> (String, usize) {
+    let mut end = start + 1;
+    let mut balance = bracket_delta(sanitized_lines.get(start).copied().unwrap_or(""));
+    while end < raw_lines.len() && end < start + 8 {
+        let next = sanitized_lines.get(end).copied().unwrap_or("").trim_start();
+        if balance <= 0 && !next.starts_with('.') {
+            break;
+        }
+        balance += bracket_delta(sanitized_lines.get(end).copied().unwrap_or(""));
+        end += 1;
+        if balance <= 0
+            && !sanitized_lines
+                .get(end)
+                .copied()
+                .unwrap_or("")
+                .trim_start()
+                .starts_with('.')
+        {
+            break;
+        }
+    }
+    (raw_lines[start..end].join("\n"), end)
+}
+
+fn bracket_delta(line: &str) -> i32 {
+    let opens = line
+        .chars()
+        .filter(|character| matches!(character, '(' | '[' | '{'))
+        .count() as i32;
+    let closes = line
+        .chars()
+        .filter(|character| matches!(character, ')' | ']' | '}'))
+        .count() as i32;
+    opens - closes
 }
 
 fn assertion_kind(language: OracleLanguage, statement: &str) -> String {
@@ -1285,20 +1389,21 @@ fn normalize_assertion_text(statement: &str) -> String {
 }
 
 fn parametrized_case_count(language: OracleLanguage, block: &str) -> usize {
+    let sanitized = strip_comments_and_strings(language, block);
     match language {
         OracleLanguage::Python => {
-            if !block.contains("parametrize") {
+            if !sanitized.contains("parametrize") {
                 return 1;
             }
-            block
+            sanitized
                 .matches("),")
                 .count()
-                .max(block.matches("],").count())
+                .max(sanitized.matches("],").count())
                 .max(1)
         }
         OracleLanguage::TypeScript => {
-            if block.contains("test.each") || block.contains("it.each") {
-                block.matches("],").count().max(1)
+            if sanitized.contains("test.each") || sanitized.contains("it.each") {
+                sanitized.matches("],").count().max(1)
             } else {
                 1
             }
@@ -1308,33 +1413,35 @@ fn parametrized_case_count(language: OracleLanguage, block: &str) -> usize {
 }
 
 fn skipped_test(language: OracleLanguage, block: &str) -> bool {
+    let sanitized = strip_comments_and_strings(language, block);
     match language {
         OracleLanguage::Python => {
-            block.contains("@pytest.mark.skip")
-                || block.contains("@pytest.mark.xfail")
-                || block.contains("pytest.skip(")
+            sanitized.contains("@pytest.mark.skip")
+                || sanitized.contains("@pytest.mark.xfail")
+                || sanitized.contains("pytest.skip(")
         }
         OracleLanguage::TypeScript => {
-            block.contains("test.skip(")
-                || block.contains("it.skip(")
-                || block.contains("test.todo(")
-                || block.contains("it.todo(")
+            sanitized.contains("test.skip(")
+                || sanitized.contains("it.skip(")
+                || sanitized.contains("test.todo(")
+                || sanitized.contains("it.todo(")
         }
-        OracleLanguage::Rust => block.contains("#[ignore]"),
+        OracleLanguage::Rust => sanitized.contains("#[ignore]"),
     }
 }
 
 fn skip_reason(language: OracleLanguage, block: &str) -> String {
+    let sanitized = strip_comments_and_strings(language, block);
     match language {
         OracleLanguage::Python => {
-            if block.contains("xfail") {
+            if sanitized.contains("xfail") {
                 "pytest xfail marker added".to_string()
             } else {
                 "pytest skip marker or runtime skip added".to_string()
             }
         }
         OracleLanguage::TypeScript => {
-            if block.contains(".todo(") {
+            if sanitized.contains(".todo(") {
                 "JS/TS todo test marker added".to_string()
             } else {
                 "JS/TS skip test marker added".to_string()
@@ -1345,31 +1452,32 @@ fn skip_reason(language: OracleLanguage, block: &str) -> String {
 }
 
 fn skip_markers(language: OracleLanguage, block: &str) -> Vec<String> {
+    let sanitized = strip_comments_and_strings(language, block);
     let mut markers = BTreeSet::new();
     match language {
         OracleLanguage::Python => {
-            if block.contains("@pytest.mark.skip") {
+            if sanitized.contains("@pytest.mark.skip") {
                 markers.insert("pytest.mark.skip".to_string());
             }
-            if block.contains("@pytest.mark.xfail") {
+            if sanitized.contains("@pytest.mark.xfail") {
                 markers.insert("pytest.mark.xfail".to_string());
             }
-            if block.contains("pytest.skip(") {
+            if sanitized.contains("pytest.skip(") {
                 markers.insert("pytest.skip".to_string());
             }
         }
         OracleLanguage::TypeScript => {
             for marker in ["test.skip", "it.skip", "test.todo", "it.todo"] {
-                if block.contains(marker) {
+                if sanitized.contains(marker) {
                     markers.insert(marker.to_string());
                 }
             }
         }
         OracleLanguage::Rust => {
-            if block.contains("#[ignore]") {
+            if sanitized.contains("#[ignore]") {
                 markers.insert("#[ignore]".to_string());
             }
-            if block.contains("#[should_panic]") {
+            if sanitized.contains("#[should_panic]") {
                 markers.insert("#[should_panic]".to_string());
             }
         }
@@ -1379,20 +1487,7 @@ fn skip_markers(language: OracleLanguage, block: &str) -> Vec<String> {
 
 fn signal_tokens(language: OracleLanguage, block: &str) -> Vec<String> {
     let mut tokens = BTreeSet::new();
-    let signal_text = match language {
-        OracleLanguage::Python => block
-            .lines()
-            .map(str::trim_start)
-            .filter(|line| {
-                line.starts_with("assert ")
-                    || line.contains("pytest.raises(")
-                    || line.contains(".assert")
-            })
-            .collect::<Vec<_>>()
-            .join("\n"),
-        OracleLanguage::TypeScript => block.to_string(),
-        OracleLanguage::Rust => block.to_string(),
-    };
+    let signal_text = strip_comments_and_strings(language, block);
     let lower = signal_text.to_lowercase();
 
     if lower.contains("assert true")
@@ -1488,6 +1583,91 @@ fn signal_tokens(language: OracleLanguage, block: &str) -> Vec<String> {
     }
 
     tokens.into_iter().collect()
+}
+
+fn strip_comments_and_strings(language: OracleLanguage, text: &str) -> String {
+    let mut output = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    let mut quote: Option<char> = None;
+    let mut escaped = false;
+    let mut line_comment = false;
+    let mut block_comment = false;
+
+    while let Some(character) = chars.next() {
+        if line_comment {
+            if character == '\n' {
+                line_comment = false;
+                output.push('\n');
+            } else {
+                output.push(' ');
+            }
+            continue;
+        }
+
+        if block_comment {
+            if character == '*' && chars.peek() == Some(&'/') {
+                output.push(' ');
+                output.push(' ');
+                chars.next();
+                block_comment = false;
+            } else if character == '\n' {
+                output.push('\n');
+            } else {
+                output.push(' ');
+            }
+            continue;
+        }
+
+        if let Some(active_quote) = quote {
+            if character == '\n' {
+                output.push('\n');
+                if active_quote != '`' {
+                    quote = None;
+                }
+                escaped = false;
+                continue;
+            }
+            output.push(' ');
+            if escaped {
+                escaped = false;
+            } else if character == '\\' {
+                escaped = true;
+            } else if character == active_quote {
+                quote = None;
+            }
+            continue;
+        }
+
+        if character == '/' && chars.peek() == Some(&'/') {
+            output.push(' ');
+            output.push(' ');
+            chars.next();
+            line_comment = true;
+            continue;
+        }
+        if character == '/' && chars.peek() == Some(&'*') {
+            output.push(' ');
+            output.push(' ');
+            chars.next();
+            block_comment = true;
+            continue;
+        }
+        if language == OracleLanguage::Python && character == '#' {
+            output.push(' ');
+            line_comment = true;
+            continue;
+        }
+        if matches!(character, '\'' | '"' | '`') {
+            output.push(' ');
+            quote = Some(character);
+            escaped = false;
+            continue;
+        }
+
+        output.push(character);
+    }
+
+    output
 }
 
 fn test_language(path: &Path, relative: &str) -> Option<OracleLanguage> {
@@ -3789,7 +3969,7 @@ jobs:
         assert!(diff.base.tests.iter().all(|test| test
             .extractor
             .evidence_label
-            .contains("structured_test_block")));
+            .contains("parser_backed_subset")));
         assert!(diff.base.tests.iter().any(|test| test
             .assertion_signals
             .iter()
@@ -3808,6 +3988,70 @@ jobs:
         );
         assert!(oracle_mitigated_risks().contains(&"R-020".to_string()));
         assert!(oracle_mitigated_risks().contains(&"R-089".to_string()));
+    }
+
+    #[test]
+    fn oracle_parser_subset_ignores_comments_and_strings() {
+        let python_tests = discover_python_tests(
+            "tests/test_comments.py",
+            r#"
+def test_python_parser_subset():
+    note = "assert total == 0 and pytest.mark.skip"
+    # pytest.skip("not a real skip")
+    assert (
+        total
+        == expected
+    )
+"#,
+        );
+        assert_eq!(python_tests.len(), 1);
+        assert!(!python_tests[0].skipped);
+        assert_eq!(python_tests[0].assertion_count, 1);
+        assert!(python_tests[0]
+            .assertion_signals
+            .iter()
+            .any(|signal| signal.kind == "equality"));
+
+        let typescript_tests = discover_typescript_tests(
+            "tests/order.test.ts",
+            r#"
+it("typescript parser subset", () => {
+  const note = "expect(value).toEqual({})";
+  // it.skip("not a real skip")
+  expect(value)
+    .toEqual({
+      total: 42
+    });
+});
+"#,
+        );
+        assert_eq!(typescript_tests.len(), 1);
+        assert!(!typescript_tests[0].skipped);
+        assert!(typescript_tests[0]
+            .assertion_signals
+            .iter()
+            .any(|signal| signal.kind == "deep_equality"));
+
+        let rust_tests = discover_rust_tests(
+            "tests/order_test.rs",
+            r#"
+#[test]
+fn rust_parser_subset() {
+    let note = "assert_eq!(wrong, value)";
+    // #[ignore]
+    assert_eq!(
+        total,
+        expected
+    );
+}
+"#,
+        );
+        assert_eq!(rust_tests.len(), 1);
+        assert!(!rust_tests[0].skipped);
+        assert!(rust_tests[0]
+            .assertion_signals
+            .iter()
+            .any(|signal| signal.kind == "equality"));
     }
 
     #[test]
