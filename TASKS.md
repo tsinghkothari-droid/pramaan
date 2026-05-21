@@ -71,7 +71,7 @@ This table is the quick answer for whether P0, P1, and P2 are complete.
 
 | Priority | Status | Meaning | Still blocking |
 | --- | --- | --- | --- |
-| P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, and three external local pilots are done. | Public Alpha still needs Phase 26.1 live Action proof. |
+| P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, three external local pilots, and a live workflow-dispatch Action proof are done. | Public review still needs the remaining pre-36 readiness phases. |
 | P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Phase 27.1 full compiler AST hardening and Phase 28 real Hypothesis/fast-check harnesses. |
 | P2 | Not complete | P2 is the trust/adoption layer after the core loop: signing, redaction, plugin trust, SARIF/policy integration, corpus, calibration, docs, and language depth. Phase 28.5 has started the trust bridge, but the rest remains open. | Phases 29-36. |
 | P3 | Not started as product scope | Multi-forge, multi-agent provenance, and adapter certification are later expansion tracks. | Phases 37-39. |
@@ -88,7 +88,7 @@ it can run in parallel.
 | Order | Phase | What to make | Why now | Blocks |
 | --- | --- | --- | --- | --- |
 | 1 | Phase 26 | External local pilot reports for Python, TypeScript, and Rust repositories | Public Alpha needed real-repo evidence beyond internal fixtures. | Public Alpha evidence |
-| 1.1 | Phase 26.1 | Live GitHub Action proof on a real PR or PR-like branch | Public Alpha is still no-go until CI artifact and summary evidence exist. | Public Alpha claims |
+| 1.1 | Phase 26.1 | Live GitHub Action proof on a real PR or PR-like branch | Live workflow-dispatch evidence exists; a PR-event demo remains useful in Phase 26.4. | Public Alpha claims |
 | 1.2 | Phase 26.2 | Competitive benchmark and prior-art matrix | The repo should prove where Pramaan is different from AI reviewers, test monitors, and attestation tools. | Positioning and scope discipline |
 | 1.3 | Phase 26.3 | Competitor-gap fixtures | "Pramaan catches what X misses" must be executable evidence, not a marketing sentence. | Demo credibility |
 | 1.4 | Phase 26.4 | Minimum lovable verifier loop | One command, one report, one proof bundle, one killer demo should feel complete before expanding. | Real MVP wedge |
@@ -118,7 +118,8 @@ it can run in parallel.
 Execution guardrails:
 
 - Start with Phase 26 unless the user explicitly asks for a narrower phase.
-- Do not market public Alpha before Phase 26.1 has live GitHub Action evidence.
+- Do not market public Alpha from live Action evidence alone; Phase 26.1 is
+  complete, but public review still needs the remaining pre-36 readiness phases.
 - Do not claim Pramaan is better than AI reviewers before Phase 26.2 and Phase
   26.3 create a benchmark matrix and executable competitor-gap fixtures.
 - Do not broaden engines before Phase 26.4 proves the minimum lovable verifier
@@ -223,8 +224,8 @@ unfinished task family below into an executable GSD phase.
 | Phase 39 | P3 adjacent | Keep adapter certification bounded, with proof-bundle examples and adapter risk taxonomy. |
 | Phase 40 | Serious v1 gate | 100-scenario corpus, benchmark-integrity checks, cross-platform CI, final claim audit, and Serious v1 go/no-go decision. |
 
-Execution rule: **Phase 26.1 remains the public Alpha gate.** Do not market
-public Alpha until Phase 26.1 has live GitHub Action evidence. Do not expand the
+Execution rule: **Phase 26.1 live Action evidence now exists, but public review
+still depends on the remaining pre-36 readiness phases.** Do not expand the
 plugin ecosystem until Phase 31 defines plugin trust and isolation. Do not claim
 public-safe bundle sharing until Phase 30 redaction tests pass. Do not claim
 Serious v1 until Phase 40 closes the 100-scenario corpus and final release gate.
@@ -287,8 +288,9 @@ Public Alpha blockers:
   Rust, or keep those claims explicitly planned.
 - [x] Add local/offline VSA and in-toto attestation evidence, while keeping
   production Sigstore/GitHub identity claims explicitly planned.
-- [ ] Prove the GitHub Action on a live PR, not only through local Action
-  summary tests.
+- [x] Prove the GitHub Action through a live `workflow_dispatch` run with an
+  uploaded bundle and rendered summary; a PR-event demo remains useful for
+  Phase 26.4.
 - [x] Add an auditable confidence-vote schema and receipt, or keep all
   confidence-score claims explicitly absent from public Alpha copy.
 

@@ -1,0 +1,89 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "claim_scope",
+  "status": "passed",
+  "tool": {
+    "name": "pramaan-cli",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-21T13:45:08Z",
+  "ended_at": "2026-05-21T13:45:08Z",
+  "exit_code": 0,
+  "inputs": [
+    {
+      "name": "base",
+      "value": "HEAD~1"
+    },
+    {
+      "name": "head",
+      "value": "3b089eedf6ec27d216351e2566839a7543008490"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "claim_scope",
+      "path": "claim_scope.synthetic.json",
+      "digest": "sha256:969d3ee09f98871f84cf48cf6ad74be145a0142a8053fb12e78113c699372312"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "claim_scope_json",
+      "path": "claim_scope.synthetic.json",
+      "media_type": "application/json"
+    }
+  ],
+  "summary": {
+    "title": "Synthetic claim scope emitted",
+    "details": "Claim scope was generated from CLI refs only; no PR metadata was inspected."
+  },
+  "limitations": [
+    "Synthetic Phase 1 receipt only; no repository checks were executed.",
+    "Risk IDs are sample references used to verify the receipt contract."
+  ],
+  "mitigated_risks": [
+    "R-003"
+  ],
+  "residual_risks": [
+    "R-090"
+  ],
+  "not_applicable_risks": [
+    "R-081"
+  ],
+  "plugin_identity": {
+    "name": "pramaan-core",
+    "version": "0.1.0",
+    "provenance": "workspace",
+    "sandbox_boundary": "in_process"
+  },
+  "plugin_permissions": {
+    "may_emit_receipts": true,
+    "may_emit_artifacts": true,
+    "may_read_previous_receipts": false,
+    "may_modify_previous_receipts": false,
+    "may_modify_manifest": false
+  },
+  "evidence_sensitivity": "internal",
+  "redaction_manifest": {
+    "profile": "internal-full",
+    "redacted_fields": [],
+    "hashed_fields": [],
+    "policy": "pramaan-redaction-v0"
+  },
+  "policy_decision": {
+    "decision": "informational",
+    "policy_id": "pramaan-default-v0",
+    "hard_failures": [],
+    "warnings": [
+      "synthetic_evidence_only"
+    ],
+    "waived": []
+  },
+  "stage_budget": {
+    "target_ms": 30000,
+    "max_ms": 60000,
+    "consumed_ms": 0,
+    "exhausted": false,
+    "partial_evidence": true
+  }
+}

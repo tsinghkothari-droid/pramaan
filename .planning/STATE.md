@@ -23,7 +23,11 @@ Optional pre-alpha proof phases can run in parallel if they do not delay the
 live Action gate: Phase 26.2 competitive benchmark, Phase 26.3 competitor-gap
 fixtures, and Phase 26.4 minimum lovable verifier loop.
 
-Public Alpha gate still open: Phase 26.1 Live GitHub Action Proof.
+Phase 26.1 live Action proof is complete. Public review still depends on the
+remaining pre-36 readiness phases: competitive benchmark, competitor-gap
+fixtures, minimum lovable verifier loop, full parser/AST oracle hardening, real
+Hypothesis/fast-check execution, sandboxed generated probes, anti-gaming
+hardening, and local reviewer reports.
 
 ## Status
 
@@ -130,3 +134,4 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Executed Phase 34 calibration and feedback loop. | `pramaan feedback override` persists override evidence, while `pramaan feedback analyze` exports baseline drift, confidence calibration, and agent-attribution metrics as local JSON/CSV without claiming hosted analytics. |
 | 2026-05-21 | Executed Phase 35 operator docs and release packaging. | Private-preview adoption docs, plugin-author guidance, security model, enterprise deployment notes, troubleshooting, rendered examples, release checklist, and a docs link checker now exist while Marketplace publication remains unclaimed. |
 | 2026-05-21 | Added pre-Phase-36 autonomous GSD prompt. | `.planning/AUTONOMOUS_GSD_BEFORE_PHASE_36_PROMPT.md` now gives a fresh agent the exact remaining pre-language-depth phase order, verification contract, commit/push discipline, and honesty rules. |
+| 2026-05-21 | Completed Phase 26.1 live GitHub Action proof. | Live run `26229890652` built Pramaan, ran verification, rendered the job summary, and uploaded `pramaan-proof-bundle`; several Action and artifact-path bugs were fixed on the way. |

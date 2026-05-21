@@ -5,11 +5,20 @@ base/head refs, uploads the proof bundle, and writes a risk-aware job summary.
 
 ## Live Proof Status
 
-Local action-summary tests pass, and Phase 26 recorded three external local
-pilot runs. A live GitHub Actions run on a real pull request is still required
-before public Alpha. That remaining proof is tracked as Phase 26.1 and must
-record the run URL, uploaded artifact, manifest digest, and rendered job
-summary.
+Local action-summary tests pass, Phase 26 recorded three external local pilot
+runs, and Phase 26.1 captured a live `workflow_dispatch` proof run:
+
+- Run: https://github.com/tsinghkothari-droid/pramaan/actions/runs/26229890652
+- Artifact: `pramaan-proof-bundle`
+- Artifact URL: https://github.com/tsinghkothari-droid/pramaan/actions/runs/26229890652/artifacts/7137454243
+- Rendered summary: captured in
+  `.planning/reports/phase-26.1-live-action-artifact/github-step-summary.md`
+
+This proves the composite Action can build Pramaan, run verification, upload a
+bundle, and render the job summary on GitHub Actions. Public review still
+requires the remaining pre-36 readiness phases because this was a
+`workflow_dispatch` run with `inconclusive` residual-risk evidence, not a full
+PR-demo launch.
 
 ```yaml
 name: Pramaan

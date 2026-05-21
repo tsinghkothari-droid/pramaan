@@ -1,0 +1,510 @@
+{
+  "schema_version": "pramaan.differential_fuzz.v1",
+  "adapter": "deterministic_simulated",
+  "adapter_availability": {
+    "hypothesis_available": false,
+    "fast_check_available": false,
+    "selected_mode": "deterministic_simulated",
+    "tool_backed": false,
+    "reason": "no supported external property-testing adapter was available for the discovered pure-function candidates; deterministic replay evidence was selected"
+  },
+  "seed": 1337,
+  "generated_input_count": 7,
+  "corpus_hash": "sha256:bd8eda09b1c984e28550b8cc9eb0ebfe9ef0534c57d455b49a3bc44c382f82e7",
+  "replay_path": "target/pramaan/fuzz-replay.json",
+  "example_database_path": "target/pramaan/hypothesis-example-db-or-fast-check-path.txt",
+  "counterexample_path": null,
+  "base_discovery": {
+    "root": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/base",
+    "safe_functions": [
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/base/math_ops.py",
+        "name": "add_one",
+        "stable_id": "examples/fixtures/fuzz/base/math_ops.py::add_one",
+        "parameters": [
+          "x"
+        ],
+        "return_expression": "x + 1",
+        "safety_notes": [
+          "single return expression",
+          "integer arithmetic grammar only"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/base/math_ops.py",
+        "name": "double",
+        "stable_id": "examples/fixtures/fuzz/base/math_ops.py::double",
+        "parameters": [
+          "x"
+        ],
+        "return_expression": "x * 2",
+        "safety_notes": [
+          "single return expression",
+          "integer arithmetic grammar only"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/head/math_ops.py",
+        "name": "add_one",
+        "stable_id": "examples/fixtures/fuzz/head/math_ops.py::add_one",
+        "parameters": [
+          "x"
+        ],
+        "return_expression": "x + 2",
+        "safety_notes": [
+          "single return expression",
+          "integer arithmetic grammar only"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/head/math_ops.py",
+        "name": "double",
+        "stable_id": "examples/fixtures/fuzz/head/math_ops.py::double",
+        "parameters": [
+          "x"
+        ],
+        "return_expression": "x * 3",
+        "safety_notes": [
+          "single return expression",
+          "integer arithmetic grammar only"
+        ]
+      }
+    ],
+    "unsafe_functions": [
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/fuzz/base-ts/math.ts",
+        "name": "bonus",
+        "reason": "return expression is outside the deterministic integer grammar"
+      },
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/fuzz/head-ts/math.ts",
+        "name": "bonus",
+        "reason": "return expression is outside the deterministic integer grammar"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/unsafe/side_effects.py",
+        "name": "log_and_return",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/unsafe/side_effects.py",
+        "name": "read_secret",
+        "reason": "return expression contains unsafe token `open(`"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/mutation/python/checkout.py",
+        "name": "discounted_total",
+        "reason": "return expression contains a call or attribute access"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/mutation/python/checkout.py",
+        "name": "total",
+        "reason": "return expression contains a call or attribute access"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/mutation/python/test_checkout.py",
+        "name": "test_discounted_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/mutation/typescript/src/checkout.ts",
+        "name": "total",
+        "reason": "function body is not a single inline return expression"
+      },
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/oracle/base/tests/order.test.ts",
+        "name": "formatOrderId",
+        "reason": "function body is not a single inline return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_bulk_price",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_deleted_regression",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_discount_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_rejects_negative_quantity",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_rename_without_loss",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/oracle/head/tests/order.test.ts",
+        "name": "formatOrderId",
+        "reason": "function body is not a single inline return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "name": "test_bulk_price",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "name": "test_discount_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "name": "test_rejects_negative_quantity",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "name": "test_rename_without_loss_new_name",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/static/python/broken_import.py",
+        "name": "call_missing_module",
+        "reason": "function has no generated input parameters"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/static/python/ok.py",
+        "name": "greet",
+        "reason": "return expression contains unsafe token `{`"
+      },
+      {
+        "language": "python",
+        "path": "examples/oracle-integrity/parser-negative-fixtures/python/test_comments_and_strings.py",
+        "name": "test_parser_ignores_comment_and_string_noise",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/base/order.py",
+        "name": "render_order_summary",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/base/tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/head/order.py",
+        "name": "render_order_summary",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/head/tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/base/checkout.py",
+        "name": "discounted_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/base/test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/weakened-test/checkout.py",
+        "name": "discounted_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/weakened-test/test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "reason": "function body is not a single return expression"
+      }
+    ],
+    "not_applicable_reason": null
+  },
+  "head_discovery": {
+    "root": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/head",
+    "safe_functions": [
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/base/math_ops.py",
+        "name": "add_one",
+        "stable_id": "examples/fixtures/fuzz/base/math_ops.py::add_one",
+        "parameters": [
+          "x"
+        ],
+        "return_expression": "x + 1",
+        "safety_notes": [
+          "single return expression",
+          "integer arithmetic grammar only"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/base/math_ops.py",
+        "name": "double",
+        "stable_id": "examples/fixtures/fuzz/base/math_ops.py::double",
+        "parameters": [
+          "x"
+        ],
+        "return_expression": "x * 2",
+        "safety_notes": [
+          "single return expression",
+          "integer arithmetic grammar only"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/head/math_ops.py",
+        "name": "add_one",
+        "stable_id": "examples/fixtures/fuzz/head/math_ops.py::add_one",
+        "parameters": [
+          "x"
+        ],
+        "return_expression": "x + 2",
+        "safety_notes": [
+          "single return expression",
+          "integer arithmetic grammar only"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/head/math_ops.py",
+        "name": "double",
+        "stable_id": "examples/fixtures/fuzz/head/math_ops.py::double",
+        "parameters": [
+          "x"
+        ],
+        "return_expression": "x * 3",
+        "safety_notes": [
+          "single return expression",
+          "integer arithmetic grammar only"
+        ]
+      }
+    ],
+    "unsafe_functions": [
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/fuzz/base-ts/math.ts",
+        "name": "bonus",
+        "reason": "return expression is outside the deterministic integer grammar"
+      },
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/fuzz/head-ts/math.ts",
+        "name": "bonus",
+        "reason": "return expression is outside the deterministic integer grammar"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/unsafe/side_effects.py",
+        "name": "log_and_return",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/fuzz/unsafe/side_effects.py",
+        "name": "read_secret",
+        "reason": "return expression contains unsafe token `open(`"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/mutation/python/checkout.py",
+        "name": "discounted_total",
+        "reason": "return expression contains a call or attribute access"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/mutation/python/checkout.py",
+        "name": "total",
+        "reason": "return expression contains a call or attribute access"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/mutation/python/test_checkout.py",
+        "name": "test_discounted_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/mutation/typescript/src/checkout.ts",
+        "name": "total",
+        "reason": "function body is not a single inline return expression"
+      },
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/oracle/base/tests/order.test.ts",
+        "name": "formatOrderId",
+        "reason": "function body is not a single inline return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_bulk_price",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_deleted_regression",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_discount_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_rejects_negative_quantity",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "name": "test_rename_without_loss",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "type_script",
+        "path": "examples/fixtures/oracle/head/tests/order.test.ts",
+        "name": "formatOrderId",
+        "reason": "function body is not a single inline return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "name": "test_bulk_price",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "name": "test_discount_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "name": "test_rejects_negative_quantity",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "name": "test_rename_without_loss_new_name",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/static/python/broken_import.py",
+        "name": "call_missing_module",
+        "reason": "function has no generated input parameters"
+      },
+      {
+        "language": "python",
+        "path": "examples/fixtures/static/python/ok.py",
+        "name": "greet",
+        "reason": "return expression contains unsafe token `{`"
+      },
+      {
+        "language": "python",
+        "path": "examples/oracle-integrity/parser-negative-fixtures/python/test_comments_and_strings.py",
+        "name": "test_parser_ignores_comment_and_string_noise",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/base/order.py",
+        "name": "render_order_summary",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/base/tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/head/order.py",
+        "name": "render_order_summary",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/head/tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/base/checkout.py",
+        "name": "discounted_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/base/test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/weakened-test/checkout.py",
+        "name": "discounted_total",
+        "reason": "function body is not a single return expression"
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/weakened-test/test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "reason": "function body is not a single return expression"
+      }
+    ],
+    "not_applicable_reason": null
+  },
+  "divergences": [],
+  "limitations": [
+    "Pure-function discovery is intentionally conservative; functions with side effects, calls, imports, async/yield, or complex bodies are marked not applicable.",
+    "When Hypothesis or fast-check project wiring is unavailable or not yet safely generated, Pramaan emits deterministic differential evidence with the same seed/replay/corpus receipt fields and labels it non-tool-backed."
+  ]
+}

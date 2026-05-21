@@ -1,0 +1,47 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "static_typescript_lint",
+  "status": "not_applicable",
+  "tool": {
+    "name": "pramaan-typescript-static",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-21T13:45:10Z",
+  "ended_at": "2026-05-21T13:45:10Z",
+  "inputs": [
+    {
+      "name": "repository",
+      "value": "."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "static_receipt",
+      "path": "receipts/static/typescript-lint.receipt.json"
+    }
+  ],
+  "artifacts": [],
+  "summary": {
+    "title": "TypeScript lint script not applicable",
+    "details": "package.json was not found"
+  },
+  "limitations": [
+    "No static evidence was produced because package.json was not found."
+  ],
+  "mitigated_risks": [],
+  "residual_risks": [
+    "R-031",
+    "R-032"
+  ],
+  "not_applicable_risks": [
+    "R-038"
+  ],
+  "metadata": {
+    "command": "npm run lint",
+    "configured": "false",
+    "duration_ms": "255",
+    "language": "typescript",
+    "relaxed_static_config": "clippy_allows,eslint_disable,mypy_ignore_errors,typescript_skip_lib_check,typescript_strict_false",
+    "security_sensitive_categories": "auth,crypto,deserialization,filesystem,network,secrets,sql,subprocess"
+  }
+}

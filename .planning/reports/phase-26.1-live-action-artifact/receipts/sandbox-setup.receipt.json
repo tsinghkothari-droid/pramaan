@@ -1,0 +1,69 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "sandbox_setup",
+  "status": "passed",
+  "tool": {
+    "name": "pramaan-sandbox",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-21T13:45:08Z",
+  "ended_at": "2026-05-21T13:45:08Z",
+  "exit_code": 0,
+  "inputs": [
+    {
+      "name": "base",
+      "value": "HEAD~1",
+      "digest": "704fb9e5e0df7b97150e893b7b2539b2ec4fa16f"
+    },
+    {
+      "name": "head",
+      "value": "3b089eedf6ec27d216351e2566839a7543008490",
+      "digest": "3b089eedf6ec27d216351e2566839a7543008490"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "sandbox_evidence",
+      "path": "sandbox/sandbox-evidence.json",
+      "digest": "sha256:da8d78999af5950778414bff4d8c2372cc55372a35872738259ee57d40f92fe8"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "sandbox_evidence_json",
+      "path": "sandbox/sandbox-evidence.json",
+      "media_type": "application/json"
+    }
+  ],
+  "summary": {
+    "title": "Sandbox worktrees prepared",
+    "details": "Base 704fb9e5e0df7b97150e893b7b2539b2ec4fa16f and head 3b089eedf6ec27d216351e2566839a7543008490 were materialized into isolated worktrees; hermetic=false."
+  },
+  "limitations": [
+    "No container or VM image digest was supplied; host runtime may affect results.",
+    "Sandbox worktrees isolate Git refs, but this run is not fully hermetic."
+  ],
+  "mitigated_risks": [
+    "R-021",
+    "R-022",
+    "R-023",
+    "R-024",
+    "R-025",
+    "R-026",
+    "R-027",
+    "R-030"
+  ],
+  "residual_risks": [
+    "R-028",
+    "R-029",
+    "R-033",
+    "R-031",
+    "R-032"
+  ],
+  "not_applicable_risks": [],
+  "metadata": {
+    "base_worktree": "target/pramaan/sandbox/worktrees-3216-1779371108593954747/base",
+    "head_worktree": "target/pramaan/sandbox/worktrees-3216-1779371108593954747/head",
+    "source_dirty": "false"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "oracle_integrity",
+  "status": "passed",
+  "tool": {
+    "name": "pramaan-oracle",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-21T13:45:36Z",
+  "ended_at": "2026-05-21T13:45:36Z",
+  "exit_code": 0,
+  "inputs": [
+    {
+      "name": "base_repo",
+      "value": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/base"
+    },
+    {
+      "name": "head_repo",
+      "value": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/head"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "oracle_diff",
+      "path": "oracle-diff.json",
+      "digest": "sha256:321da84786437f4c557c3e7cd95d900d1adab4a4a78ccf6f3eaf8cd0f6bf25d0"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "oracle_diff_json",
+      "path": "oracle-diff.json",
+      "media_type": "application/json",
+      "digest": "sha256:321da84786437f4c557c3e7cd95d900d1adab4a4a78ccf6f3eaf8cd0f6bf25d0"
+    }
+  ],
+  "summary": {
+    "title": "Oracle integrity passed",
+    "details": "Discovered 21 base tests, 21 head tests, 106 sensitive artifacts, and 0 oracle findings."
+  },
+  "limitations": [
+    "Oracle weakening detection uses deterministic parser-backed subset extractors for Python, TypeScript, and Rust; current extractors are not full compiler ASTs and are labeled in oracle-diff evidence.",
+    "Claim-vs-oracle scope mismatch risks are covered by risk IDs but require claim-scope evidence from adjacent stages for final judgment."
+  ],
+  "mitigated_risks": [
+    "R-004",
+    "R-005",
+    "R-006",
+    "R-007",
+    "R-008",
+    "R-009",
+    "R-010",
+    "R-011",
+    "R-012",
+    "R-013",
+    "R-014",
+    "R-015",
+    "R-016",
+    "R-017",
+    "R-018",
+    "R-019",
+    "R-020",
+    "R-087",
+    "R-088",
+    "R-089"
+  ],
+  "residual_risks": [],
+  "not_applicable_risks": [],
+  "metadata": {
+    "assertion_signal_count": "498",
+    "base_tests": "21",
+    "extractor_engines": "python_indent_parser_v2,rust_attribute_brace_parser_v2,typescript_balanced_call_parser_v2",
+    "findings": "0",
+    "head_tests": "21",
+    "sensitive_artifact_findings": "0"
+  }
+}

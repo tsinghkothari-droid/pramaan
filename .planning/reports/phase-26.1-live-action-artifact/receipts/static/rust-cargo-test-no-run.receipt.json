@@ -1,0 +1,53 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "static_rust_cargo_test_no_run",
+  "status": "passed",
+  "tool": {
+    "name": "pramaan-rust-static",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-21T13:45:19Z",
+  "ended_at": "2026-05-21T13:45:30Z",
+  "exit_code": 0,
+  "inputs": [
+    {
+      "name": "repository",
+      "value": "."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "static_receipt",
+      "path": "receipts/static/rust-cargo-test-no-run.receipt.json"
+    }
+  ],
+  "artifacts": [],
+  "summary": {
+    "title": "Rust cargo test --no-run passed",
+    "details": "\u001b[1m\u001b[92m   Compiling\u001b[0m serde_core v1.0.228\n\u001b[1m\u001b[92m   Compiling\u001b[0m typenum v1.20.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m   Compiling\u001b[0m zmij v1.0.21\n\u001b[1m\u001b[92m   Compiling\u001b[0m iana-time-zone v0.1.65\n\u001b[1m\u001b[92m   Compiling\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m   Compiling\u001b[0m memchr v2.8.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m thiserror v1.0.69"
+  },
+  "limitations": [
+    "Static checks are command evidence only; they do not prove semantic correctness."
+  ],
+  "mitigated_risks": [
+    "R-031",
+    "R-032",
+    "R-038"
+  ],
+  "residual_risks": [
+    "R-039",
+    "R-040"
+  ],
+  "not_applicable_risks": [],
+  "metadata": {
+    "command": "cargo test --no-run",
+    "config_path": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/head/Cargo.toml",
+    "configured": "true",
+    "duration_ms": "11293",
+    "language": "rust",
+    "relaxed_static_config": "clippy_allows,eslint_disable,mypy_ignore_errors,typescript_skip_lib_check,typescript_strict_false",
+    "security_sensitive_categories": "auth,crypto,deserialization,filesystem,network,secrets,sql,subprocess",
+    "tool_executed": "cargo",
+    "tool_executed_version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)"
+  }
+}

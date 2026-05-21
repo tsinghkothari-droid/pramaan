@@ -1,0 +1,47 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "static_python_mypy",
+  "status": "not_applicable",
+  "tool": {
+    "name": "pramaan-python-static",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-21T13:45:09Z",
+  "ended_at": "2026-05-21T13:45:09Z",
+  "inputs": [
+    {
+      "name": "repository",
+      "value": "."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "static_receipt",
+      "path": "receipts/static/python-mypy.receipt.json"
+    }
+  ],
+  "artifacts": [],
+  "summary": {
+    "title": "Python mypy not applicable",
+    "details": "mypy is not configured"
+  },
+  "limitations": [
+    "No static evidence was produced because mypy is not configured."
+  ],
+  "mitigated_risks": [],
+  "residual_risks": [
+    "R-031",
+    "R-032"
+  ],
+  "not_applicable_risks": [
+    "R-038"
+  ],
+  "metadata": {
+    "command": "mypy .",
+    "configured": "false",
+    "duration_ms": "255",
+    "language": "python",
+    "relaxed_static_config": "clippy_allows,eslint_disable,mypy_ignore_errors,typescript_skip_lib_check,typescript_strict_false",
+    "security_sensitive_categories": "auth,crypto,deserialization,filesystem,network,secrets,sql,subprocess"
+  }
+}

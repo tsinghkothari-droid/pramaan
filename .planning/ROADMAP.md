@@ -428,6 +428,13 @@ and capture the uploaded proof bundle plus rendered job summary.
 
 **Priority:** Alpha gate
 
+**Status:** Completed 2026-05-21 via live `workflow_dispatch` run
+`26229890652`. The run built Pramaan, executed verification, emitted local VSA
+and in-toto attestations, rendered `github-step-summary.md`, and uploaded the
+`pramaan-proof-bundle` artifact. The result was `inconclusive` with policy
+`warning`, which is honest residual-risk evidence rather than a production v1
+claim.
+
 **Success Criteria:**
 
 1. A live GitHub Actions run URL is recorded.

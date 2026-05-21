@@ -1,0 +1,44 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "bundle.manifest.json",
+      "digest": {
+        "sha256": "3cae6f3ca2d09c46526d2668df23ce1ba9f19419b8311d3b3aea790ced37a28b"
+      }
+    }
+  ],
+  "predicateType": "https://slsa.dev/verification_summary/v1",
+  "predicate": {
+    "schema_version": "pramaan.vsa.v1",
+    "predicate_type": "https://slsa.dev/verification_summary/v1",
+    "subject": [
+      {
+        "name": "bundle.manifest.json",
+        "digest": {
+          "sha256": "3cae6f3ca2d09c46526d2668df23ce1ba9f19419b8311d3b3aea790ced37a28b"
+        }
+      }
+    ],
+    "verifier": {
+      "id": "pramaan-offline-verifier",
+      "version": "0.1.0"
+    },
+    "time_verified": "2026-05-21T13:45:36Z",
+    "policy": {
+      "id": "pramaan-local-offline-v0",
+      "uri": "https://docs.pramaan.dev/policies/local-offline-v0"
+    },
+    "verification_result": "WARNING",
+    "manifest_digest": {
+      "algorithm": "sha256",
+      "value": "3cae6f3ca2d09c46526d2668df23ce1ba9f19419b8311d3b3aea790ced37a28b"
+    },
+    "verified_levels": [
+      "bundle_hash_integrity"
+    ],
+    "dependency_levels": [],
+    "resource_uri": "bundle.manifest.json",
+    "summary": "Offline VSA records Pramaan bundle hash integrity as WARNING; it is evidence, not a correctness proof."
+  }
+}

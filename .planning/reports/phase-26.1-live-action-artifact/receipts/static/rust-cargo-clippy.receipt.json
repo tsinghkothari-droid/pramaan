@@ -1,0 +1,53 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "static_rust_cargo_clippy",
+  "status": "passed",
+  "tool": {
+    "name": "pramaan-rust-static",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-21T13:45:30Z",
+  "ended_at": "2026-05-21T13:45:36Z",
+  "exit_code": 0,
+  "inputs": [
+    {
+      "name": "repository",
+      "value": "."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "static_receipt",
+      "path": "receipts/static/rust-cargo-clippy.receipt.json"
+    }
+  ],
+  "artifacts": [],
+  "summary": {
+    "title": "Rust cargo clippy passed",
+    "details": "\u001b[1m\u001b[92m    Checking\u001b[0m pramaan-core v0.1.0 (/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/head/crates/pramaan-core)\n\u001b[1m\u001b[92m    Checking\u001b[0m pramaan-sandbox v0.1.0 (/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/head/crates/pramaan-sandbox)\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: this `if` can be collapsed into the outer `match`\u001b[0m\n\u001b[1m\u001b[94m--> \u001b[0mcrates/pramaan-sandbox/src/lib.rs:596:17\n\u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m596\u001b[0m \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[33m/\u001b[0m                 if image_name.is_none() {\n\u001b[1m\u001b[94m597\u001b[0m \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[33m|\u001b[0m                     image_name = Some(value.to_string());\n\u001b[1m\u001b[94m598\u001b[0m \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[33m|\u001b[0m                     sources.push(format!(\"env:{key}\"));"
+  },
+  "limitations": [
+    "Static checks are command evidence only; they do not prove semantic correctness."
+  ],
+  "mitigated_risks": [
+    "R-031",
+    "R-032",
+    "R-038"
+  ],
+  "residual_risks": [
+    "R-039",
+    "R-040"
+  ],
+  "not_applicable_risks": [],
+  "metadata": {
+    "command": "cargo clippy --all-targets --no-deps",
+    "config_path": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/head/Cargo.toml",
+    "configured": "true",
+    "duration_ms": "5788",
+    "language": "rust",
+    "relaxed_static_config": "clippy_allows,eslint_disable,mypy_ignore_errors,typescript_skip_lib_check,typescript_strict_false",
+    "security_sensitive_categories": "auth,crypto,deserialization,filesystem,network,secrets,sql,subprocess",
+    "tool_executed": "cargo",
+    "tool_executed_version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)"
+  }
+}

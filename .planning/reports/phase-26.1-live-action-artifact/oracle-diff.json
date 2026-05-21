@@ -1,0 +1,3999 @@
+{
+  "base": {
+    "root": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/base",
+    "tests": [
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "agent_attribution_flows_through_when_env_vars_are_set",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::agent_attribution_flows_through_when_env_vars_are_set",
+        "fingerprint": "fnv64:92fc972c7d8f17cd",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 7,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:b3a8599bcce7189d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:38f6e21d12322a4c"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:9c2ebcd1521029a4"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:186d09a9ef4e7d68"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:7845a295a050194c"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:8da7293c34f01798"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e5715b3724389c50"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "agent_explain_blocks_weakened_oracle_bundle",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::agent_explain_blocks_weakened_oracle_bundle",
+        "fingerprint": "fnv64:eed709eadf6a1959",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 4,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e17b9e46c4f775a0"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:138729c3415149ca"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:c1c9b5eafd1ad9ef"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f523ece81625f7b9"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "contains",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "bundle_export_redacted_scrubs_sensitive_bundle_copy",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::bundle_export_redacted_scrubs_sensitive_bundle_copy",
+        "fingerprint": "fnv64:a7591d1821749d79",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 12,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:ee42bf35ee34bf17"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:81232be728881de6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:155583713a351db3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:fc8d8507cc0a3f89"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7f72e041d1b4520f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:42b1e3477ce519e0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f5f876235d510c5c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f96bfaffa98b62e5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f0505c60e1162d89"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5477ec22848d2fac"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:bc93a3352aa23195"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:497918cd414a9a7b"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "boundary_null",
+          "contains",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "bundle_verify_fails_when_artifact_is_tampered",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::bundle_verify_fails_when_artifact_is_tampered",
+        "fingerprint": "fnv64:c559ce5678fe6745",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 3,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e350e3bf028bf39f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f1b4210d6bd10017"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:99e467cb0f6efcfe"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": []
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "fuzz_emits_replayable_divergence_receipt_for_python_fixture_pair",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::fuzz_emits_replayable_divergence_receipt_for_python_fixture_pair",
+        "fingerprint": "fnv64:3eab1e3d35a3aaa8",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 24,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:740df462274f8c4b"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8999460f4883c6de"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:949f80e41d446a0b"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7012e1dc3591313c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8c8b5ecf0fdf99d4"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1f7b9fa000b6ca7e"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0fc952bd9862285a"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:051bf096345c35bb"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4b3b0cde2de370ab"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:41ec7817a07996b9"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c2eb2b712fe3b821"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7156e1b09ac5ef7c"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:ed68fa25629fe71b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:cf37519bfb79b7ec"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:89df667b13fb7af7"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:fa698f46584bc526"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1d189119388db685"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c69a700f583e282d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:68b71e061fd72b86"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:dd9cadce6e397154"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4ab7a919af6fefb0"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:9aa385b42d7ca1b9"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:11c6829fd7ce7f80"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e191511d39e50f6e"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "fuzz_emits_typescript_fast_check_compatible_fields",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::fuzz_emits_typescript_fast_check_compatible_fields",
+        "fingerprint": "fnv64:50dcb3ce3b0fe9aa",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 6,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f895785f176448aa"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a1642447fff7f750"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:b641bd1a4347a929"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4b3b0cde2de370ab"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:535cd8c9ab7530bc"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:d5db7c78637b6320"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "fuzz_marks_unsafe_discovery_not_applicable",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::fuzz_marks_unsafe_discovery_not_applicable",
+        "fingerprint": "fnv64:0d5e12bef79aff95",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 4,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a5f63d175ac46fa8"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:44edb866d080b1a4"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:6ba4ee28a3a02c22"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4f171cf5fb46fff0"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "mutation_emits_diff_scoped_receipts_with_budget_metadata",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::mutation_emits_diff_scoped_receipts_with_budget_metadata",
+        "fingerprint": "fnv64:7b259ff38a42a066",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 24,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a8fa36fa24dcbcf1"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:bf7be21ab563e064"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:3a2b74718df2b2e0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:634bceb9219537cb"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:74d7832c6843baa1"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f67ec807e37cddfa"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:d6491fbaddc3b091"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:187a52e721b2994f"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:68b71e061fd72b86"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0b89050a80282fd6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cdfa8b379aeedbc3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:48dea5f15cf41f12"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:16a122e6ca47ddd5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1b08ea3271be579d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:dec6a3b0554bd899"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:14d71e8e7a9d54e5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:85361c52f98a59da"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c142c31b244e7372"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:9678065229fbf7b6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:76f394407ad107a3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:418eec9d5c763ee7"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f879847af401b57d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:c1bca18ff19f65b8"
+          },
+          {
+            "kind": "contains",
+            "strength": 2,
+            "text_hash": "fnv64:8e93a5c287ad128b"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "contains",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "oracle_emits_failed_receipt_for_weakened_fixture_pair",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::oracle_emits_failed_receipt_for_weakened_fixture_pair",
+        "fingerprint": "fnv64:7e3c70ce444496d9",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 17,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cee366274894c0a9"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:6be9e718cd3faf47"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:149f96a846cdaa2d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:83d200fd857bdcf4"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:503e1b91ad2ab60a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5a69575985c766af"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:2deffdda5339d026"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e7f37dfc35b095af"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:ebf5b9928c248659"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:b16f1e6c536cd9fd"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:988e896f52457a6f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a1de09c504b7243d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:68b71e061fd72b86"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:c3f350892c7c0751"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4ab7a919af6fefb0"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:597ebac3d89c2cf3"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:5a18a670b11ac790"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "probe_plan_preserves_ai_candidates_as_pending_evidence",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::probe_plan_preserves_ai_candidates_as_pending_evidence",
+        "fingerprint": "fnv64:4efaffae69da1372",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 18,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:db36c3ea3a2e6a3b"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0f0122dc925f0239"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:ec7bb85ec91eacfa"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4df2071c7102793f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4ba009fa4855296f"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a8f29b738aae8161"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:97027db10b6e19ca"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:6d5d7482fa4a839b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:85a98bb27f02fbce"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:0434e1f67864d709"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:89af1c1e7b01fa34"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:61e75d64be0141b8"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:c41d5b2f4269e09f"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:530d2c39ae6c287b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:9e07733fa9338e27"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:912d8d522c4332cf"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:125db5cda23705a1"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a48cf3f4ac17eca6"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "boundary_null",
+          "boundary_zero",
+          "contains",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "static_checks_emit_fixture_receipts_and_classify_broken_imports",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::static_checks_emit_fixture_receipts_and_classify_broken_imports",
+        "fingerprint": "fnv64:161dfbdcad258e73",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 11,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:d9f4c18342c2777e"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1f53a10a900e362d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:d6ddf2a9e1044da2"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:13eb171079d74b68"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f0d4edb78ef61f1e"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:436c52443a2cd4d1"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:f39b937db4caff67"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:97dad00b91aa0d09"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:dedf02ad02602cf7"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:b63f6594ab12d1c8"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a4b32937eee117cc"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "static_checks_emit_python_fixture_receipts",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::static_checks_emit_python_fixture_receipts",
+        "fingerprint": "fnv64:7c675648ebc7abe0",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 4,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:d9f4c18342c2777e"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:50a362f9f2be7bf9"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:31b55b2fd9b2a4d9"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0c2b730380757cbb"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "verify_runs_real_stages_when_none_skipped",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::verify_runs_real_stages_when_none_skipped",
+        "fingerprint": "fnv64:878634f9ed03bc17",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 7,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e350e3bf028bf39f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:3630fc024eab377c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:902f4682147ce4f6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7816fb572bdd08bb"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a74af84f8b2d2d4b"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:718601afbddb6f27"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:bab1ef7cb28d3b9f"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_null",
+          "comparison"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "verify_writes_receipts_and_prints_a_claim_disciplined_summary",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::verify_writes_receipts_and_prints_a_claim_disciplined_summary",
+        "fingerprint": "fnv64:21a492ad5a8e30bb",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 101,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e350e3bf028bf39f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:de880223677bfdba"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:58c4cc04d630c0b5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:9242ad79ea57d778"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:ce8ffbb255ec4a58"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8d6363f2ecaa4867"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:44edb866d080b1a4"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1d3c8966491ea802"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4f606c0e515d8165"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0eee6f794227a468"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c237eaaf2902431f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:15a3b5ea1e186b59"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:980e1f7bc59a0a13"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7fa5b6548f13dff5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c3b252a6d9863e61"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5db1dc8a4d2c7352"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a48cf3f4ac17eca6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:3569530118ac419a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:34a30b5e93067fa9"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:33ef426d0f3cd859"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:71221c74c4c347bc"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0c4c1441d0bd8b8f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cc6e4aaad1dc7406"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:b04372b4867445b0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cbe3efb9616aea1f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:72c0db37a2361914"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:fd094f87b03efeb8"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:166e35bc713e2dad"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1860dd997036a7e0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:3b04d38d6fefc0ab"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:800f47488d0cba53"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:2af6b5ef5b4379d5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e7e02da5294427ee"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4376e51a0a58e2b4"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:874b51e162f3d414"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:6b384a999533a571"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8f26e47f21bf5055"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:57866ed13e4841a1"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e2873baa19ca3d03"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:42921275f36b2058"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:9f2ae33b78218b0c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:95bea19ff55e30e8"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:9f4261d50518b17d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:95ec00d6b8c380dc"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a66acb35e690e172"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:93936a99c32f907b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4a9cc2c6253010cb"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a2e7f8a65604f834"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:28ed4447c31f87d3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a36a7752dfba9385"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:99038a148642b0ff"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:7d3dc6c06e8d683b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:748b8554688f7884"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:6912ed318adb6888"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e03d539d24dc494c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:92a21ea2118a300c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f8b553f34512791a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:be8e4260c7635034"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:48921d9cd1eb8b70"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1e19b683a7f5a98a"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:1b48518aae9ca532"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:75757150d776b581"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:d7fdc848276c5235"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:83837068bd706af3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:07ce5cc6c66b4e81"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:2f89f562ec597014"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e4d4e7a360a40b57"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:de65bcd6668e1d2f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:80584ad0f92a3a0d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:12438db3272f9f11"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4541440ded8d2a14"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:96ff38885aadf6e0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:01d208c123e27551"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:6dae9b2974e9622f"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4a6abcecf13b66de"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:883c3eefb561c5a7"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:1082152a9a76017a"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:db36355bef036371"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8601789e69f888c0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f0a3921f21a8e2ba"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4c0043a31d332159"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:bff5df775f81ac65"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:2f4cff57ece04672"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:29eb7cf2486bd54d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:83bb6e4b8336cdbf"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4c0c47d53a88360a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:dbe7b1d7f35aaff5"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:1b4dff03d67f7c26"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:29bb99dc5dcbe0b2"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4b9cb4b799498ae0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4f053e29b6ecd483"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:51ff12baa92b2d11"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:302b1408f76d3446"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:14290bba43a739c8"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5fa1471bef6e0b64"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:3b593490d8194c79"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a53b152e7e3cd9c1"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:d143647fcb1c460a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:2914542b7797fbdf"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cacf7202c45e2f22"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5104177a14f09455"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "boundary_null",
+          "comparison",
+          "equals"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/oracle-integrity/parser-negative-fixtures/python/test_comments_and_strings.py",
+        "name": "test_parser_ignores_comment_and_string_noise",
+        "stable_id": "examples/oracle-integrity/parser-negative-fixtures/python/test_comments_and_strings.py::test_parser_ignores_comment_and_string_noise",
+        "fingerprint": "fnv64:9f3329661b5c0623",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:b4b699e558e685dc"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "examples/oracle-integrity/parser-negative-fixtures/rust/order_test.rs",
+        "name": "parser_ignores_comment_and_string_noise",
+        "stable_id": "examples/oracle-integrity/parser-negative-fixtures/rust/order_test.rs::parser_ignores_comment_and_string_noise",
+        "fingerprint": "fnv64:d2c3a546e8488da6",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:2ce071687381c613"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "type_script",
+        "path": "examples/oracle-integrity/parser-negative-fixtures/typescript/order.test.ts",
+        "name": "parser ignores comment and string noise",
+        "stable_id": "examples/oracle-integrity/parser-negative-fixtures/typescript/order.test.ts::parser ignores comment and string noise",
+        "fingerprint": "fnv64:57b1e97e02073fc0",
+        "extractor": {
+          "engine": "typescript_balanced_call_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_typescript_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "deep_equality",
+            "strength": 4,
+            "text_hash": "fnv64:f90e6ef2990761eb"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "comparison",
+          "equals"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/base/tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "stable_id": "examples/snapshot-fixture-drift-pr/base/tests/test_order_summary.py::test_order_summary_matches_snapshot",
+        "fingerprint": "fnv64:c12a1665c327fbae",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:7c3dc77586350971"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals",
+          "snapshot"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/head/tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "stable_id": "examples/snapshot-fixture-drift-pr/head/tests/test_order_summary.py::test_order_summary_matches_snapshot",
+        "fingerprint": "fnv64:c12a1665c327fbae",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:7c3dc77586350971"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals",
+          "snapshot"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/base/test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "stable_id": "examples/vulnerable-python-pr/base/test_checkout.py::test_applies_percentage_discount",
+        "fingerprint": "fnv64:b2c4f7fac027d266",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e032d8a59e8cc037"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/weakened-test/test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "stable_id": "examples/vulnerable-python-pr/weakened-test/test_checkout.py::test_applies_percentage_discount",
+        "fingerprint": "fnv64:8f0f8abd16c55928",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "comparison",
+            "strength": 2,
+            "text_hash": "fnv64:cd861e26c0622f7d"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_zero",
+          "comparison",
+          "equals"
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "examples/fixtures/README.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:efe0f48e15a7295d"
+      },
+      {
+        "path": "examples/fixtures/adapter_certification.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:26c76b9f70ecac6e"
+      },
+      {
+        "path": "examples/fixtures/bundle.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:12c5d474ccda8a8c"
+      },
+      {
+        "path": "examples/fixtures/calibration-observations.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:51b2c1a167e98812"
+      },
+      {
+        "path": "examples/fixtures/claim_scope.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ec0ce69573feb760"
+      },
+      {
+        "path": "examples/fixtures/confidence.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:0929e3ec236cce81"
+      },
+      {
+        "path": "examples/fixtures/confidence.synthetic.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:fe49c3a8360ea7a4"
+      },
+      {
+        "path": "examples/fixtures/fuzz/base-ts/math.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:f857efa164e7784e"
+      },
+      {
+        "path": "examples/fixtures/fuzz/base/math_ops.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:898aba1354517b9e"
+      },
+      {
+        "path": "examples/fixtures/fuzz/claim_scope.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:4103885bc373d328"
+      },
+      {
+        "path": "examples/fixtures/fuzz/claim_scope_ts.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ee5a725edcf3e0c8"
+      },
+      {
+        "path": "examples/fixtures/fuzz/head-ts/math.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:445c2761f1be9f5d"
+      },
+      {
+        "path": "examples/fixtures/fuzz/head/math_ops.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:fead0ff9f9eeaae8"
+      },
+      {
+        "path": "examples/fixtures/fuzz/unsafe/side_effects.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:e72827babbad4711"
+      },
+      {
+        "path": "examples/fixtures/mutation/README.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:fe2a0850cccacf29"
+      },
+      {
+        "path": "examples/fixtures/mutation/python/checkout.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:409ab519e84e7dff"
+      },
+      {
+        "path": "examples/fixtures/mutation/python/test_checkout.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:a04ff6bce0382b56"
+      },
+      {
+        "path": "examples/fixtures/mutation/rust/Cargo.toml",
+        "kind": "fixture",
+        "fingerprint": "fnv64:4c65c1f7909029c4"
+      },
+      {
+        "path": "examples/fixtures/mutation/rust/src/lib.rs",
+        "kind": "fixture",
+        "fingerprint": "fnv64:b3f3cc9130776e89"
+      },
+      {
+        "path": "examples/fixtures/mutation/typescript/package.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:7019184bfe4e36dd"
+      },
+      {
+        "path": "examples/fixtures/mutation/typescript/src/checkout.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:3474aac5ada2c016"
+      },
+      {
+        "path": "examples/fixtures/oracle/README.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:dc59d8a273030ac6"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/fixtures/prices.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:760f044a2ed54cbc"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:631cc07f7b89366a"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/tests/checkout_test.rs",
+        "kind": "fixture",
+        "fingerprint": "fnv64:9adc4f9cc6457416"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/tests/order.test.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:c2abd8ff113f4f6f"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:7b9fd10b175986a4"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/fixtures/prices.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:c5fb493f42844890"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:5f68def49212ec58"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/tests/checkout_test.rs",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ef303d68c93eae9d"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/tests/order.test.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:8ec8f4cbb82b124c"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:53e3a764a3dfdea7"
+      },
+      {
+        "path": "examples/fixtures/receipt.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:0fb1e139ef4690f3"
+      },
+      {
+        "path": "examples/fixtures/repo-baseline.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:4e47493949bf7dc3"
+      },
+      {
+        "path": "examples/fixtures/risk_taxonomy.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:c3c97bc73d041b32"
+      },
+      {
+        "path": "examples/fixtures/sandbox/clean.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:9f6c248593814d37"
+      },
+      {
+        "path": "examples/fixtures/sandbox/dirty.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:04a13eb1989fa3ea"
+      },
+      {
+        "path": "examples/fixtures/sandbox/missing-lockfile.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:8aaf1698deb377d8"
+      },
+      {
+        "path": "examples/fixtures/sandbox/non-hermetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:05e13f49de5a674b"
+      },
+      {
+        "path": "examples/fixtures/static/README.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:cba1a6c37d48b674"
+      },
+      {
+        "path": "examples/fixtures/static/python/broken_import.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:5bfb337c8430b719"
+      },
+      {
+        "path": "examples/fixtures/static/python/ok.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:9cd13b64908b4a1b"
+      },
+      {
+        "path": "examples/fixtures/static/python/pyproject.toml",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ed354d2ff5506ab9"
+      },
+      {
+        "path": "examples/fixtures/static/rust/Cargo.lock",
+        "kind": "fixture",
+        "fingerprint": "fnv64:400e8ec92c30d439"
+      },
+      {
+        "path": "examples/fixtures/static/rust/Cargo.toml",
+        "kind": "fixture",
+        "fingerprint": "fnv64:8d4fbf713eb71bb0"
+      },
+      {
+        "path": "examples/fixtures/static/rust/src/lib.rs",
+        "kind": "fixture",
+        "fingerprint": "fnv64:6ea34a7f251818e8"
+      },
+      {
+        "path": "examples/fixtures/static/typescript/package.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:84836c6e35841872"
+      },
+      {
+        "path": "examples/fixtures/static/typescript/src/index.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:76e83628ad1a3959"
+      },
+      {
+        "path": "examples/fixtures/static/typescript/tsconfig.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:e005e0a05d0406e4"
+      },
+      {
+        "path": "examples/snapshot-fixture-drift-pr/base/fixtures/order.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ef1ef4ed17d2946f"
+      },
+      {
+        "path": "examples/snapshot-fixture-drift-pr/base/tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:7d908f822e38042a"
+      },
+      {
+        "path": "examples/snapshot-fixture-drift-pr/head/fixtures/order.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:c00156a96ededbf3"
+      },
+      {
+        "path": "examples/snapshot-fixture-drift-pr/head/tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:dac2e77757d99684"
+      }
+    ]
+  },
+  "head": {
+    "root": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/head",
+    "tests": [
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "agent_attribution_flows_through_when_env_vars_are_set",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::agent_attribution_flows_through_when_env_vars_are_set",
+        "fingerprint": "fnv64:92fc972c7d8f17cd",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 7,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:b3a8599bcce7189d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:38f6e21d12322a4c"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:9c2ebcd1521029a4"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:186d09a9ef4e7d68"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:7845a295a050194c"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:8da7293c34f01798"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e5715b3724389c50"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "agent_explain_blocks_weakened_oracle_bundle",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::agent_explain_blocks_weakened_oracle_bundle",
+        "fingerprint": "fnv64:eed709eadf6a1959",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 4,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e17b9e46c4f775a0"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:138729c3415149ca"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:c1c9b5eafd1ad9ef"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f523ece81625f7b9"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "contains",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "bundle_export_redacted_scrubs_sensitive_bundle_copy",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::bundle_export_redacted_scrubs_sensitive_bundle_copy",
+        "fingerprint": "fnv64:a7591d1821749d79",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 12,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:ee42bf35ee34bf17"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:81232be728881de6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:155583713a351db3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:fc8d8507cc0a3f89"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7f72e041d1b4520f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:42b1e3477ce519e0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f5f876235d510c5c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f96bfaffa98b62e5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f0505c60e1162d89"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5477ec22848d2fac"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:bc93a3352aa23195"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:497918cd414a9a7b"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "boundary_null",
+          "contains",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "bundle_verify_fails_when_artifact_is_tampered",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::bundle_verify_fails_when_artifact_is_tampered",
+        "fingerprint": "fnv64:c559ce5678fe6745",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 3,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e350e3bf028bf39f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f1b4210d6bd10017"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:99e467cb0f6efcfe"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": []
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "fuzz_emits_replayable_divergence_receipt_for_python_fixture_pair",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::fuzz_emits_replayable_divergence_receipt_for_python_fixture_pair",
+        "fingerprint": "fnv64:3eab1e3d35a3aaa8",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 24,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:740df462274f8c4b"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8999460f4883c6de"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:949f80e41d446a0b"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7012e1dc3591313c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8c8b5ecf0fdf99d4"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1f7b9fa000b6ca7e"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0fc952bd9862285a"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:051bf096345c35bb"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4b3b0cde2de370ab"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:41ec7817a07996b9"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c2eb2b712fe3b821"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7156e1b09ac5ef7c"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:ed68fa25629fe71b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:cf37519bfb79b7ec"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:89df667b13fb7af7"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:fa698f46584bc526"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1d189119388db685"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c69a700f583e282d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:68b71e061fd72b86"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:dd9cadce6e397154"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4ab7a919af6fefb0"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:9aa385b42d7ca1b9"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:11c6829fd7ce7f80"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e191511d39e50f6e"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "fuzz_emits_typescript_fast_check_compatible_fields",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::fuzz_emits_typescript_fast_check_compatible_fields",
+        "fingerprint": "fnv64:50dcb3ce3b0fe9aa",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 6,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f895785f176448aa"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a1642447fff7f750"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:b641bd1a4347a929"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4b3b0cde2de370ab"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:535cd8c9ab7530bc"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:d5db7c78637b6320"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "fuzz_marks_unsafe_discovery_not_applicable",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::fuzz_marks_unsafe_discovery_not_applicable",
+        "fingerprint": "fnv64:0d5e12bef79aff95",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 4,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a5f63d175ac46fa8"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:44edb866d080b1a4"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:6ba4ee28a3a02c22"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4f171cf5fb46fff0"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "mutation_emits_diff_scoped_receipts_with_budget_metadata",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::mutation_emits_diff_scoped_receipts_with_budget_metadata",
+        "fingerprint": "fnv64:7b259ff38a42a066",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 24,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a8fa36fa24dcbcf1"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:bf7be21ab563e064"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:3a2b74718df2b2e0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:634bceb9219537cb"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:74d7832c6843baa1"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f67ec807e37cddfa"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:d6491fbaddc3b091"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:187a52e721b2994f"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:68b71e061fd72b86"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0b89050a80282fd6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cdfa8b379aeedbc3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:48dea5f15cf41f12"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:16a122e6ca47ddd5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1b08ea3271be579d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:dec6a3b0554bd899"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:14d71e8e7a9d54e5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:85361c52f98a59da"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c142c31b244e7372"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:9678065229fbf7b6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:76f394407ad107a3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:418eec9d5c763ee7"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f879847af401b57d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:c1bca18ff19f65b8"
+          },
+          {
+            "kind": "contains",
+            "strength": 2,
+            "text_hash": "fnv64:8e93a5c287ad128b"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "contains",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "oracle_emits_failed_receipt_for_weakened_fixture_pair",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::oracle_emits_failed_receipt_for_weakened_fixture_pair",
+        "fingerprint": "fnv64:7e3c70ce444496d9",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 17,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cee366274894c0a9"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:6be9e718cd3faf47"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:149f96a846cdaa2d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:83d200fd857bdcf4"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:503e1b91ad2ab60a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5a69575985c766af"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:2deffdda5339d026"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e7f37dfc35b095af"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:ebf5b9928c248659"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:b16f1e6c536cd9fd"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:988e896f52457a6f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a1de09c504b7243d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:68b71e061fd72b86"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:c3f350892c7c0751"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4ab7a919af6fefb0"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:597ebac3d89c2cf3"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:5a18a670b11ac790"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "probe_plan_preserves_ai_candidates_as_pending_evidence",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::probe_plan_preserves_ai_candidates_as_pending_evidence",
+        "fingerprint": "fnv64:4efaffae69da1372",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 18,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:db36c3ea3a2e6a3b"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0f0122dc925f0239"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:ec7bb85ec91eacfa"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4df2071c7102793f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4ba009fa4855296f"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a8f29b738aae8161"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:97027db10b6e19ca"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:6d5d7482fa4a839b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:85a98bb27f02fbce"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:0434e1f67864d709"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:89af1c1e7b01fa34"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:61e75d64be0141b8"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:c41d5b2f4269e09f"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:530d2c39ae6c287b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:9e07733fa9338e27"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:912d8d522c4332cf"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:125db5cda23705a1"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a48cf3f4ac17eca6"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "boundary_null",
+          "boundary_zero",
+          "contains",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "static_checks_emit_fixture_receipts_and_classify_broken_imports",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::static_checks_emit_fixture_receipts_and_classify_broken_imports",
+        "fingerprint": "fnv64:161dfbdcad258e73",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 11,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:d9f4c18342c2777e"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1f53a10a900e362d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:d6ddf2a9e1044da2"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:13eb171079d74b68"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f0d4edb78ef61f1e"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:436c52443a2cd4d1"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:f39b937db4caff67"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:97dad00b91aa0d09"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:dedf02ad02602cf7"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:b63f6594ab12d1c8"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a4b32937eee117cc"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "static_checks_emit_python_fixture_receipts",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::static_checks_emit_python_fixture_receipts",
+        "fingerprint": "fnv64:7c675648ebc7abe0",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 4,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:d9f4c18342c2777e"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:50a362f9f2be7bf9"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:31b55b2fd9b2a4d9"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0c2b730380757cbb"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "verify_runs_real_stages_when_none_skipped",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::verify_runs_real_stages_when_none_skipped",
+        "fingerprint": "fnv64:878634f9ed03bc17",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 7,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e350e3bf028bf39f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:3630fc024eab377c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:902f4682147ce4f6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7816fb572bdd08bb"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a74af84f8b2d2d4b"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:718601afbddb6f27"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:bab1ef7cb28d3b9f"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_null",
+          "comparison"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "crates/pramaan-cli/tests/smoke.rs",
+        "name": "verify_writes_receipts_and_prints_a_claim_disciplined_summary",
+        "stable_id": "crates/pramaan-cli/tests/smoke.rs::verify_writes_receipts_and_prints_a_claim_disciplined_summary",
+        "fingerprint": "fnv64:21a492ad5a8e30bb",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 101,
+        "assertion_signals": [
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e350e3bf028bf39f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:de880223677bfdba"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:58c4cc04d630c0b5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:9242ad79ea57d778"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:ce8ffbb255ec4a58"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8d6363f2ecaa4867"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:44edb866d080b1a4"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1d3c8966491ea802"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4f606c0e515d8165"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0eee6f794227a468"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c237eaaf2902431f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:15a3b5ea1e186b59"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:980e1f7bc59a0a13"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:7fa5b6548f13dff5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:c3b252a6d9863e61"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5db1dc8a4d2c7352"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a48cf3f4ac17eca6"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:3569530118ac419a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:34a30b5e93067fa9"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:33ef426d0f3cd859"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:71221c74c4c347bc"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:0c4c1441d0bd8b8f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cc6e4aaad1dc7406"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:b04372b4867445b0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cbe3efb9616aea1f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:72c0db37a2361914"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:fd094f87b03efeb8"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:166e35bc713e2dad"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1860dd997036a7e0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:3b04d38d6fefc0ab"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:800f47488d0cba53"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:2af6b5ef5b4379d5"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e7e02da5294427ee"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4376e51a0a58e2b4"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:874b51e162f3d414"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:6b384a999533a571"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8f26e47f21bf5055"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:57866ed13e4841a1"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e2873baa19ca3d03"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:42921275f36b2058"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:9f2ae33b78218b0c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:95bea19ff55e30e8"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:9f4261d50518b17d"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:95ec00d6b8c380dc"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a66acb35e690e172"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:93936a99c32f907b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4a9cc2c6253010cb"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a2e7f8a65604f834"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:28ed4447c31f87d3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:a36a7752dfba9385"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:99038a148642b0ff"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:7d3dc6c06e8d683b"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:748b8554688f7884"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:6912ed318adb6888"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:e03d539d24dc494c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:92a21ea2118a300c"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f8b553f34512791a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:be8e4260c7635034"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:48921d9cd1eb8b70"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:1e19b683a7f5a98a"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:1b48518aae9ca532"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:75757150d776b581"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:d7fdc848276c5235"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:83837068bd706af3"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:07ce5cc6c66b4e81"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:2f89f562ec597014"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e4d4e7a360a40b57"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:de65bcd6668e1d2f"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:80584ad0f92a3a0d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:12438db3272f9f11"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4541440ded8d2a14"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:96ff38885aadf6e0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:01d208c123e27551"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:6dae9b2974e9622f"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4a6abcecf13b66de"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:883c3eefb561c5a7"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:1082152a9a76017a"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:db36355bef036371"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:8601789e69f888c0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:f0a3921f21a8e2ba"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4c0043a31d332159"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:bff5df775f81ac65"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:2f4cff57ece04672"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:29eb7cf2486bd54d"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:83bb6e4b8336cdbf"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4c0c47d53a88360a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:dbe7b1d7f35aaff5"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:1b4dff03d67f7c26"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:29bb99dc5dcbe0b2"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:4b9cb4b799498ae0"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:4f053e29b6ecd483"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:51ff12baa92b2d11"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:302b1408f76d3446"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:14290bba43a739c8"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5fa1471bef6e0b64"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:3b593490d8194c79"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:a53b152e7e3cd9c1"
+          },
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:d143647fcb1c460a"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:2914542b7797fbdf"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:cacf7202c45e2f22"
+          },
+          {
+            "kind": "unknown_assertion",
+            "strength": 1,
+            "text_hash": "fnv64:5104177a14f09455"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_empty",
+          "boundary_null",
+          "comparison",
+          "equals"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/oracle-integrity/parser-negative-fixtures/python/test_comments_and_strings.py",
+        "name": "test_parser_ignores_comment_and_string_noise",
+        "stable_id": "examples/oracle-integrity/parser-negative-fixtures/python/test_comments_and_strings.py::test_parser_ignores_comment_and_string_noise",
+        "fingerprint": "fnv64:9f3329661b5c0623",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:b4b699e558e685dc"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "rust",
+        "path": "examples/oracle-integrity/parser-negative-fixtures/rust/order_test.rs",
+        "name": "parser_ignores_comment_and_string_noise",
+        "stable_id": "examples/oracle-integrity/parser-negative-fixtures/rust/order_test.rs::parser_ignores_comment_and_string_noise",
+        "fingerprint": "fnv64:d2c3a546e8488da6",
+        "extractor": {
+          "engine": "rust_attribute_brace_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_rust_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:2ce071687381c613"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "type_script",
+        "path": "examples/oracle-integrity/parser-negative-fixtures/typescript/order.test.ts",
+        "name": "parser ignores comment and string noise",
+        "stable_id": "examples/oracle-integrity/parser-negative-fixtures/typescript/order.test.ts::parser ignores comment and string noise",
+        "fingerprint": "fnv64:57b1e97e02073fc0",
+        "extractor": {
+          "engine": "typescript_balanced_call_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_typescript_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "deep_equality",
+            "strength": 4,
+            "text_hash": "fnv64:f90e6ef2990761eb"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "comparison",
+          "equals"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/base/tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "stable_id": "examples/snapshot-fixture-drift-pr/base/tests/test_order_summary.py::test_order_summary_matches_snapshot",
+        "fingerprint": "fnv64:c12a1665c327fbae",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:7c3dc77586350971"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals",
+          "snapshot"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/snapshot-fixture-drift-pr/head/tests/test_order_summary.py",
+        "name": "test_order_summary_matches_snapshot",
+        "stable_id": "examples/snapshot-fixture-drift-pr/head/tests/test_order_summary.py::test_order_summary_matches_snapshot",
+        "fingerprint": "fnv64:c12a1665c327fbae",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:7c3dc77586350971"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals",
+          "snapshot"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/base/test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "stable_id": "examples/vulnerable-python-pr/base/test_checkout.py::test_applies_percentage_discount",
+        "fingerprint": "fnv64:b2c4f7fac027d266",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "equality",
+            "strength": 3,
+            "text_hash": "fnv64:e032d8a59e8cc037"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "equals"
+        ]
+      },
+      {
+        "language": "python",
+        "path": "examples/vulnerable-python-pr/weakened-test/test_checkout.py",
+        "name": "test_applies_percentage_discount",
+        "stable_id": "examples/vulnerable-python-pr/weakened-test/test_checkout.py::test_applies_percentage_discount",
+        "fingerprint": "fnv64:8f0f8abd16c55928",
+        "extractor": {
+          "engine": "python_indent_parser_v2",
+          "evidence_label": "parser_backed_subset_not_full_python_ast",
+          "parser_available": true
+        },
+        "assertion_count": 1,
+        "assertion_signals": [
+          {
+            "kind": "comparison",
+            "strength": 2,
+            "text_hash": "fnv64:cd861e26c0622f7d"
+          }
+        ],
+        "parametrized_case_count": 1,
+        "skipped": false,
+        "skip_reason": null,
+        "skip_markers": [],
+        "signal_tokens": [
+          "boundary_zero",
+          "comparison",
+          "equals"
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "examples/fixtures/README.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:efe0f48e15a7295d"
+      },
+      {
+        "path": "examples/fixtures/adapter_certification.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:26c76b9f70ecac6e"
+      },
+      {
+        "path": "examples/fixtures/bundle.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:12c5d474ccda8a8c"
+      },
+      {
+        "path": "examples/fixtures/calibration-observations.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:51b2c1a167e98812"
+      },
+      {
+        "path": "examples/fixtures/claim_scope.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ec0ce69573feb760"
+      },
+      {
+        "path": "examples/fixtures/confidence.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:0929e3ec236cce81"
+      },
+      {
+        "path": "examples/fixtures/confidence.synthetic.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:fe49c3a8360ea7a4"
+      },
+      {
+        "path": "examples/fixtures/fuzz/base-ts/math.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:f857efa164e7784e"
+      },
+      {
+        "path": "examples/fixtures/fuzz/base/math_ops.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:898aba1354517b9e"
+      },
+      {
+        "path": "examples/fixtures/fuzz/claim_scope.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:4103885bc373d328"
+      },
+      {
+        "path": "examples/fixtures/fuzz/claim_scope_ts.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ee5a725edcf3e0c8"
+      },
+      {
+        "path": "examples/fixtures/fuzz/head-ts/math.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:445c2761f1be9f5d"
+      },
+      {
+        "path": "examples/fixtures/fuzz/head/math_ops.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:fead0ff9f9eeaae8"
+      },
+      {
+        "path": "examples/fixtures/fuzz/unsafe/side_effects.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:e72827babbad4711"
+      },
+      {
+        "path": "examples/fixtures/mutation/README.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:fe2a0850cccacf29"
+      },
+      {
+        "path": "examples/fixtures/mutation/python/checkout.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:409ab519e84e7dff"
+      },
+      {
+        "path": "examples/fixtures/mutation/python/test_checkout.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:a04ff6bce0382b56"
+      },
+      {
+        "path": "examples/fixtures/mutation/rust/Cargo.toml",
+        "kind": "fixture",
+        "fingerprint": "fnv64:4c65c1f7909029c4"
+      },
+      {
+        "path": "examples/fixtures/mutation/rust/src/lib.rs",
+        "kind": "fixture",
+        "fingerprint": "fnv64:b3f3cc9130776e89"
+      },
+      {
+        "path": "examples/fixtures/mutation/typescript/package.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:7019184bfe4e36dd"
+      },
+      {
+        "path": "examples/fixtures/mutation/typescript/src/checkout.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:3474aac5ada2c016"
+      },
+      {
+        "path": "examples/fixtures/oracle/README.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:dc59d8a273030ac6"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/fixtures/prices.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:760f044a2ed54cbc"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:631cc07f7b89366a"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/tests/checkout_test.rs",
+        "kind": "fixture",
+        "fingerprint": "fnv64:9adc4f9cc6457416"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/tests/order.test.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:c2abd8ff113f4f6f"
+      },
+      {
+        "path": "examples/fixtures/oracle/base/tests/test_pricing.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:7b9fd10b175986a4"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/fixtures/prices.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:c5fb493f42844890"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:5f68def49212ec58"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/tests/checkout_test.rs",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ef303d68c93eae9d"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/tests/order.test.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:8ec8f4cbb82b124c"
+      },
+      {
+        "path": "examples/fixtures/oracle/head/tests/test_pricing.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:53e3a764a3dfdea7"
+      },
+      {
+        "path": "examples/fixtures/receipt.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:0fb1e139ef4690f3"
+      },
+      {
+        "path": "examples/fixtures/repo-baseline.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:4e47493949bf7dc3"
+      },
+      {
+        "path": "examples/fixtures/risk_taxonomy.synthetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:c3c97bc73d041b32"
+      },
+      {
+        "path": "examples/fixtures/sandbox/clean.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:9f6c248593814d37"
+      },
+      {
+        "path": "examples/fixtures/sandbox/dirty.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:04a13eb1989fa3ea"
+      },
+      {
+        "path": "examples/fixtures/sandbox/missing-lockfile.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:8aaf1698deb377d8"
+      },
+      {
+        "path": "examples/fixtures/sandbox/non-hermetic.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:05e13f49de5a674b"
+      },
+      {
+        "path": "examples/fixtures/static/README.md",
+        "kind": "fixture",
+        "fingerprint": "fnv64:cba1a6c37d48b674"
+      },
+      {
+        "path": "examples/fixtures/static/python/broken_import.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:5bfb337c8430b719"
+      },
+      {
+        "path": "examples/fixtures/static/python/ok.py",
+        "kind": "fixture",
+        "fingerprint": "fnv64:9cd13b64908b4a1b"
+      },
+      {
+        "path": "examples/fixtures/static/python/pyproject.toml",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ed354d2ff5506ab9"
+      },
+      {
+        "path": "examples/fixtures/static/rust/Cargo.lock",
+        "kind": "fixture",
+        "fingerprint": "fnv64:400e8ec92c30d439"
+      },
+      {
+        "path": "examples/fixtures/static/rust/Cargo.toml",
+        "kind": "fixture",
+        "fingerprint": "fnv64:8d4fbf713eb71bb0"
+      },
+      {
+        "path": "examples/fixtures/static/rust/src/lib.rs",
+        "kind": "fixture",
+        "fingerprint": "fnv64:6ea34a7f251818e8"
+      },
+      {
+        "path": "examples/fixtures/static/typescript/package.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:84836c6e35841872"
+      },
+      {
+        "path": "examples/fixtures/static/typescript/src/index.ts",
+        "kind": "fixture",
+        "fingerprint": "fnv64:76e83628ad1a3959"
+      },
+      {
+        "path": "examples/fixtures/static/typescript/tsconfig.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:e005e0a05d0406e4"
+      },
+      {
+        "path": "examples/snapshot-fixture-drift-pr/base/fixtures/order.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:ef1ef4ed17d2946f"
+      },
+      {
+        "path": "examples/snapshot-fixture-drift-pr/base/tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:7d908f822e38042a"
+      },
+      {
+        "path": "examples/snapshot-fixture-drift-pr/head/fixtures/order.json",
+        "kind": "fixture",
+        "fingerprint": "fnv64:c00156a96ededbf3"
+      },
+      {
+        "path": "examples/snapshot-fixture-drift-pr/head/tests/__snapshots__/order.snap",
+        "kind": "snapshot",
+        "fingerprint": "fnv64:dac2e77757d99684"
+      }
+    ]
+  },
+  "findings": []
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": "pramaan.claim_scope.v1",
+  "source_refs": [
+    {
+      "kind": "base_ref",
+      "reference": "HEAD~1"
+    },
+    {
+      "kind": "head_ref",
+      "reference": "3b089eedf6ec27d216351e2566839a7543008490"
+    },
+    {
+      "kind": "github_event",
+      "reference": "/home/runner/work/_temp/_github_workflow/event.json"
+    }
+  ],
+  "expected_behavior": [
+    "Phase 1 synthetic verification records the requested base and head refs.",
+    "Future stages can replace this claim with PR title/body and issue evidence."
+  ],
+  "out_of_scope_behavior": [
+    "No real sandbox, static, oracle, mutation, or fuzz checks run in Plan 02."
+  ],
+  "touched_public_apis": [
+    "crates/pramaan-cli/src/fuzz.rs::pub fn run_fuzz(",
+    "crates/pramaan-cli/src/mutation.rs::pub fn run_mutation(",
+    "crates/pramaan-cli/src/oracle.rs::pub fn run_oracle(base_repo: PathBuf, head_repo: PathBuf, out: PathBuf) -> Result<()> {"
+  ],
+  "extraction_method": "synthetic_cli_arguments",
+  "confidence": "low",
+  "limitations": [
+    "No PR title, PR body, issue text, or maintainer scope note was available; claim scope is low confidence.",
+    "Changed public APIs were detected, but claim text does not mention matching symbols; semantic scope mismatch needs review."
+  ],
+  "risk_refs": [
+    "R-001",
+    "R-002",
+    "R-007"
+  ]
+}

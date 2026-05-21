@@ -1,0 +1,752 @@
+{
+  "schema_version": "pramaan.bundle.v1",
+  "bundle_id": "bundle_1779371136",
+  "run_id": "run_1779371136",
+  "created_at": "2026-05-21T13:45:36Z",
+  "final_status": "inconclusive",
+  "repository": {
+    "path": ".",
+    "base_ref": "HEAD~1",
+    "head_ref": "3b089eedf6ec27d216351e2566839a7543008490"
+  },
+  "tool_versions": [
+    {
+      "name": "pramaan-cli",
+      "version": "0.1.0",
+      "runtime": "rust"
+    },
+    {
+      "name": "pramaan-differential-fuzz",
+      "version": "0.1.0",
+      "runtime": "rust"
+    },
+    {
+      "name": "pramaan-oracle",
+      "version": "0.1.0",
+      "runtime": "rust"
+    },
+    {
+      "name": "pramaan-python-static",
+      "version": "0.1.0",
+      "runtime": "rust"
+    },
+    {
+      "name": "pramaan-rust-static",
+      "version": "0.1.0",
+      "runtime": "rust"
+    },
+    {
+      "name": "pramaan-sandbox",
+      "version": "0.1.0",
+      "runtime": "rust"
+    },
+    {
+      "name": "pramaan-typescript-static",
+      "version": "0.1.0",
+      "runtime": "rust"
+    }
+  ],
+  "stages": [
+    {
+      "id": "claim_scope",
+      "status": "passed",
+      "receipt_path": "receipts/claim-scope.receipt.json",
+      "tool": {
+        "name": "pramaan-cli",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [
+        "R-003"
+      ],
+      "residual_risks": [
+        "R-090"
+      ],
+      "not_applicable_risks": [
+        "R-081"
+      ],
+      "plugin_identity": {
+        "name": "pramaan-core",
+        "version": "0.1.0",
+        "provenance": "workspace",
+        "sandbox_boundary": "in_process"
+      },
+      "policy_decision": {
+        "decision": "informational",
+        "policy_id": "pramaan-default-v0",
+        "hard_failures": [],
+        "warnings": [
+          "synthetic_evidence_only"
+        ],
+        "waived": []
+      },
+      "stage_budget": {
+        "target_ms": 30000,
+        "max_ms": 60000,
+        "consumed_ms": 0,
+        "exhausted": false,
+        "partial_evidence": true
+      },
+      "evidence_sensitivity": "internal"
+    },
+    {
+      "id": "differential_fuzz",
+      "status": "passed",
+      "receipt_path": "receipts/differential-fuzz.receipt.json",
+      "tool": {
+        "name": "pramaan-differential-fuzz",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [
+        "R-073",
+        "R-074",
+        "R-075",
+        "R-076",
+        "R-077",
+        "R-078",
+        "R-079",
+        "R-080"
+      ],
+      "residual_risks": [
+        "R-073",
+        "R-077"
+      ],
+      "not_applicable_risks": [],
+      "seeds": [
+        "1337"
+      ],
+      "corpus_hashes": [
+        "sha256:bd8eda09b1c984e28550b8cc9eb0ebfe9ef0534c57d455b49a3bc44c382f82e7"
+      ]
+    },
+    {
+      "id": "oracle_integrity",
+      "status": "passed",
+      "receipt_path": "receipts/oracle-integrity.receipt.json",
+      "tool": {
+        "name": "pramaan-oracle",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [
+        "R-004",
+        "R-005",
+        "R-006",
+        "R-007",
+        "R-008",
+        "R-009",
+        "R-010",
+        "R-011",
+        "R-012",
+        "R-013",
+        "R-014",
+        "R-015",
+        "R-016",
+        "R-017",
+        "R-018",
+        "R-019",
+        "R-020",
+        "R-087",
+        "R-088",
+        "R-089"
+      ],
+      "residual_risks": [],
+      "not_applicable_risks": []
+    },
+    {
+      "id": "sandbox_setup",
+      "status": "passed",
+      "receipt_path": "receipts/sandbox-setup.receipt.json",
+      "tool": {
+        "name": "pramaan-sandbox",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [
+        "R-021",
+        "R-022",
+        "R-023",
+        "R-024",
+        "R-025",
+        "R-026",
+        "R-027",
+        "R-030"
+      ],
+      "residual_risks": [
+        "R-028",
+        "R-029",
+        "R-033",
+        "R-031",
+        "R-032"
+      ],
+      "not_applicable_risks": []
+    },
+    {
+      "id": "static_python_compileall",
+      "status": "passed",
+      "receipt_path": "receipts/static/python-compileall.receipt.json",
+      "tool": {
+        "name": "pramaan-python-static",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [
+        "R-031",
+        "R-032",
+        "R-038"
+      ],
+      "residual_risks": [
+        "R-039",
+        "R-040"
+      ],
+      "not_applicable_risks": []
+    },
+    {
+      "id": "static_python_mypy",
+      "status": "not_applicable",
+      "receipt_path": "receipts/static/python-mypy.receipt.json",
+      "tool": {
+        "name": "pramaan-python-static",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [],
+      "residual_risks": [
+        "R-031",
+        "R-032"
+      ],
+      "not_applicable_risks": [
+        "R-038"
+      ]
+    },
+    {
+      "id": "static_python_pyright",
+      "status": "not_applicable",
+      "receipt_path": "receipts/static/python-pyright.receipt.json",
+      "tool": {
+        "name": "pramaan-python-static",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [],
+      "residual_risks": [
+        "R-031",
+        "R-032"
+      ],
+      "not_applicable_risks": [
+        "R-038"
+      ]
+    },
+    {
+      "id": "static_python_ruff",
+      "status": "not_applicable",
+      "receipt_path": "receipts/static/python-ruff.receipt.json",
+      "tool": {
+        "name": "pramaan-python-static",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [],
+      "residual_risks": [
+        "R-031",
+        "R-032"
+      ],
+      "not_applicable_risks": [
+        "R-038"
+      ]
+    },
+    {
+      "id": "static_rust_cargo_check",
+      "status": "passed",
+      "receipt_path": "receipts/static/rust-cargo-check.receipt.json",
+      "tool": {
+        "name": "pramaan-rust-static",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [
+        "R-031",
+        "R-032",
+        "R-038"
+      ],
+      "residual_risks": [
+        "R-039",
+        "R-040"
+      ],
+      "not_applicable_risks": []
+    },
+    {
+      "id": "static_rust_cargo_clippy",
+      "status": "passed",
+      "receipt_path": "receipts/static/rust-cargo-clippy.receipt.json",
+      "tool": {
+        "name": "pramaan-rust-static",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [
+        "R-031",
+        "R-032",
+        "R-038"
+      ],
+      "residual_risks": [
+        "R-039",
+        "R-040"
+      ],
+      "not_applicable_risks": []
+    },
+    {
+      "id": "static_rust_cargo_test_no_run",
+      "status": "passed",
+      "receipt_path": "receipts/static/rust-cargo-test-no-run.receipt.json",
+      "tool": {
+        "name": "pramaan-rust-static",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [
+        "R-031",
+        "R-032",
+        "R-038"
+      ],
+      "residual_risks": [
+        "R-039",
+        "R-040"
+      ],
+      "not_applicable_risks": []
+    },
+    {
+      "id": "static_typescript_lint",
+      "status": "not_applicable",
+      "receipt_path": "receipts/static/typescript-lint.receipt.json",
+      "tool": {
+        "name": "pramaan-typescript-static",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [],
+      "residual_risks": [
+        "R-031",
+        "R-032"
+      ],
+      "not_applicable_risks": [
+        "R-038"
+      ]
+    },
+    {
+      "id": "static_typescript_tsc",
+      "status": "not_applicable",
+      "receipt_path": "receipts/static/typescript-tsc.receipt.json",
+      "tool": {
+        "name": "pramaan-typescript-static",
+        "version": "0.1.0"
+      },
+      "mitigated_risks": [],
+      "residual_risks": [
+        "R-031",
+        "R-032"
+      ],
+      "not_applicable_risks": [
+        "R-038"
+      ]
+    }
+  ],
+  "receipts": [
+    {
+      "name": "claim-scope.receipt.json",
+      "path": "receipts/claim-scope.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "374ab623826e11cc2c163b42cc900be158224a0f86786c3dc3f6cf7ef4aaf939"
+      },
+      "media_type": "application/json",
+      "size_bytes": 2120
+    },
+    {
+      "name": "differential-fuzz.receipt.json",
+      "path": "receipts/differential-fuzz.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "e5dc756ccc1237386240eed031ac8a7e9585c835926aad06b95e1c05ed2ecbae"
+      },
+      "media_type": "application/json",
+      "size_bytes": 2880
+    },
+    {
+      "name": "oracle-integrity.receipt.json",
+      "path": "receipts/oracle-integrity.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "31185a9fd16b17234f9b9a83e80601bff88639324ec4af1ff4821524013bcdfb"
+      },
+      "media_type": "application/json",
+      "size_bytes": 2168
+    },
+    {
+      "name": "sandbox-setup.receipt.json",
+      "path": "receipts/sandbox-setup.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "bcc9801ccabc5a581256e3eb02317ae24980b72208b74021a8d43e7345ec1f36"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1811
+    },
+    {
+      "name": "python-compileall.receipt.json",
+      "path": "receipts/static/python-compileall.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "282e84ace7e96e5d6805f9e13a45f9371dec2bac9c435c99487297ca08820adc"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1368
+    },
+    {
+      "name": "python-mypy.receipt.json",
+      "path": "receipts/static/python-mypy.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "ed3b24b45bdce81ddcf13affca3026e1b35015773587dc271d2ec6dabe678d49"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1163
+    },
+    {
+      "name": "python-pyright.receipt.json",
+      "path": "receipts/static/python-pyright.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "79dde576337a8aae6c6807e78bd7594f5464447ce3eeded06888cb565eee9bd7"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1181
+    },
+    {
+      "name": "python-ruff.receipt.json",
+      "path": "receipts/static/python-ruff.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "8b87e53531dee1bd5c13888ecf4b6a9e5e79da80bcda6c4322c0ced56504acc7"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1169
+    },
+    {
+      "name": "rust-cargo-check.receipt.json",
+      "path": "receipts/static/rust-cargo-check.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "2f73f3a1fecdc129515fd7fbbcedbda40a2156e2d4f0d2542fc4bac0f1d76284"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1915
+    },
+    {
+      "name": "rust-cargo-clippy.receipt.json",
+      "path": "receipts/static/rust-cargo-clippy.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "4956d2a5319fd4784d9edf286ffb287aa4c94003bead8680a9d250f3fcb3b21d"
+      },
+      "media_type": "application/json",
+      "size_bytes": 2472
+    },
+    {
+      "name": "rust-cargo-test-no-run.receipt.json",
+      "path": "receipts/static/rust-cargo-test-no-run.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "96e4ca8121b34be35b3730bef0a5adea55209f3f265b409008e2db4846bb149c"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1929
+    },
+    {
+      "name": "typescript-lint.receipt.json",
+      "path": "receipts/static/typescript-lint.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "d32db050bfcadcc315d3f2fbdc72ac516a689631112fa65066cb3642f8a0a951"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1204
+    },
+    {
+      "name": "typescript-tsc.receipt.json",
+      "path": "receipts/static/typescript-tsc.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "0cd9e5ebf8544eecfd9de63bb86086678bc620bef6b942d8c4c1b79599795fd2"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1225
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "claim_scope.synthetic.json",
+      "path": "claim_scope.synthetic.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "969d3ee09f98871f84cf48cf6ad74be145a0142a8053fb12e78113c699372312"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1339
+    },
+    {
+      "name": "differential-fuzz.json",
+      "path": "differential-fuzz.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "d1141b8071c860afe27800c9f204398517f2e6db3d252ae66627fd446d1e5632"
+      },
+      "media_type": "application/json",
+      "size_bytes": 18627
+    },
+    {
+      "name": "fuzz-replay.json",
+      "path": "fuzz-replay.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "media_type": "application/json",
+      "size_bytes": 2
+    },
+    {
+      "name": "oracle-diff.json",
+      "path": "oracle-diff.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "321da84786437f4c557c3e7cd95d900d1adab4a4a78ccf6f3eaf8cd0f6bf25d0"
+      },
+      "media_type": "application/json",
+      "size_bytes": 120692
+    },
+    {
+      "name": "python-compileall.receipt.json",
+      "path": "receipts/static/python-compileall.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "282e84ace7e96e5d6805f9e13a45f9371dec2bac9c435c99487297ca08820adc"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1368
+    },
+    {
+      "name": "python-mypy.receipt.json",
+      "path": "receipts/static/python-mypy.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "ed3b24b45bdce81ddcf13affca3026e1b35015773587dc271d2ec6dabe678d49"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1163
+    },
+    {
+      "name": "python-pyright.receipt.json",
+      "path": "receipts/static/python-pyright.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "79dde576337a8aae6c6807e78bd7594f5464447ce3eeded06888cb565eee9bd7"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1181
+    },
+    {
+      "name": "python-ruff.receipt.json",
+      "path": "receipts/static/python-ruff.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "8b87e53531dee1bd5c13888ecf4b6a9e5e79da80bcda6c4322c0ced56504acc7"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1169
+    },
+    {
+      "name": "rust-cargo-check.receipt.json",
+      "path": "receipts/static/rust-cargo-check.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "2f73f3a1fecdc129515fd7fbbcedbda40a2156e2d4f0d2542fc4bac0f1d76284"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1915
+    },
+    {
+      "name": "rust-cargo-clippy.receipt.json",
+      "path": "receipts/static/rust-cargo-clippy.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "4956d2a5319fd4784d9edf286ffb287aa4c94003bead8680a9d250f3fcb3b21d"
+      },
+      "media_type": "application/json",
+      "size_bytes": 2472
+    },
+    {
+      "name": "rust-cargo-test-no-run.receipt.json",
+      "path": "receipts/static/rust-cargo-test-no-run.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "96e4ca8121b34be35b3730bef0a5adea55209f3f265b409008e2db4846bb149c"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1929
+    },
+    {
+      "name": "typescript-lint.receipt.json",
+      "path": "receipts/static/typescript-lint.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "d32db050bfcadcc315d3f2fbdc72ac516a689631112fa65066cb3642f8a0a951"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1204
+    },
+    {
+      "name": "typescript-tsc.receipt.json",
+      "path": "receipts/static/typescript-tsc.receipt.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "0cd9e5ebf8544eecfd9de63bb86086678bc620bef6b942d8c4c1b79599795fd2"
+      },
+      "media_type": "application/json",
+      "size_bytes": 1225
+    },
+    {
+      "name": "sandbox-evidence.json",
+      "path": "sandbox/sandbox-evidence.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "da8d78999af5950778414bff4d8c2372cc55372a35872738259ee57d40f92fe8"
+      },
+      "media_type": "application/json",
+      "size_bytes": 2390
+    }
+  ],
+  "risk_summary": {
+    "mitigated": [
+      "R-003",
+      "R-004",
+      "R-005",
+      "R-006",
+      "R-007",
+      "R-008",
+      "R-009",
+      "R-010",
+      "R-011",
+      "R-012",
+      "R-013",
+      "R-014",
+      "R-015",
+      "R-016",
+      "R-017",
+      "R-018",
+      "R-019",
+      "R-020",
+      "R-021",
+      "R-022",
+      "R-023",
+      "R-024",
+      "R-025",
+      "R-026",
+      "R-027",
+      "R-030",
+      "R-031",
+      "R-032",
+      "R-038",
+      "R-073",
+      "R-074",
+      "R-075",
+      "R-076",
+      "R-077",
+      "R-078",
+      "R-079",
+      "R-080",
+      "R-087",
+      "R-088",
+      "R-089"
+    ],
+    "residual": [
+      "R-028",
+      "R-029",
+      "R-031",
+      "R-032",
+      "R-033",
+      "R-039",
+      "R-040",
+      "R-073",
+      "R-077",
+      "R-090"
+    ],
+    "skipped": [],
+    "not_applicable": [
+      "R-038",
+      "R-081"
+    ]
+  },
+  "summary": {
+    "claim": "Pramaan verification bundle emitted from recorded stage receipts.",
+    "evidence": [
+      "claim_scope: passed",
+      "differential_fuzz: passed",
+      "oracle_integrity: passed",
+      "sandbox_setup: passed",
+      "static_python_compileall: passed",
+      "static_python_mypy: not_applicable",
+      "static_python_pyright: not_applicable",
+      "static_python_ruff: not_applicable",
+      "static_rust_cargo_check: passed",
+      "static_rust_cargo_clippy: passed",
+      "static_rust_cargo_test_no_run: passed",
+      "static_typescript_lint: not_applicable",
+      "static_typescript_tsc: not_applicable"
+    ],
+    "residual_risk_note": "Included receipts report residual risk IDs: R-028, R-029, R-031, R-032, R-033, R-039, R-040, R-073, R-077, R-090."
+  },
+  "integrity": {
+    "manifest_digest": {
+      "algorithm": "sha256",
+      "value": "3cae6f3ca2d09c46526d2668df23ce1ba9f19419b8311d3b3aea790ced37a28b"
+    },
+    "signing": {
+      "mode": "local_dev",
+      "status": "signable",
+      "dev_mode": true,
+      "signable_digest": {
+        "algorithm": "sha256",
+        "value": "51591f6b4ddfd0426a3bbd4cd654aa64a73898cad897bc4348844f971a9862ba"
+      },
+      "note": "Local dev signing metadata only; this is not CI-backed provenance."
+    },
+    "artifact_attestation": {
+      "provider": "slsa",
+      "status": "present",
+      "attestation_path": "attestations/bundle.in-toto.json",
+      "subject": "bundle.manifest.json",
+      "transparency_mode": "none"
+    }
+  },
+  "plugin_identities": [
+    {
+      "name": "pramaan-core",
+      "version": "0.1.0",
+      "provenance": "workspace",
+      "sandbox_boundary": "in_process"
+    }
+  ],
+  "redaction_manifest": {
+    "profile": "internal-full",
+    "redacted_fields": [],
+    "hashed_fields": [],
+    "policy": "pramaan-redaction-v0"
+  },
+  "policy_decision": {
+    "decision": "informational",
+    "policy_id": "pramaan-default-v0",
+    "hard_failures": [],
+    "warnings": [
+      "synthetic_evidence_only"
+    ],
+    "waived": []
+  },
+  "stage_budgets": [
+    {
+      "target_ms": 30000,
+      "max_ms": 60000,
+      "consumed_ms": 0,
+      "exhausted": false,
+      "partial_evidence": true
+    }
+  ]
+}

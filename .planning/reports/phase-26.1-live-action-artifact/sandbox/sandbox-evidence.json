@@ -1,0 +1,95 @@
+{
+  "schema_version": "pramaan.sandbox_evidence.v1",
+  "mode": "isolated_worktree",
+  "base": {
+    "requested_ref": "HEAD~1",
+    "commit_sha": "704fb9e5e0df7b97150e893b7b2539b2ec4fa16f",
+    "path": "target/pramaan/sandbox/worktrees-3216-1779371108593954747/base",
+    "dirty_state": {
+      "is_dirty": false,
+      "entries": []
+    }
+  },
+  "head": {
+    "requested_ref": "3b089eedf6ec27d216351e2566839a7543008490",
+    "commit_sha": "3b089eedf6ec27d216351e2566839a7543008490",
+    "path": "target/pramaan/sandbox/worktrees-3216-1779371108593954747/head",
+    "dirty_state": {
+      "is_dirty": false,
+      "entries": []
+    }
+  },
+  "source_dirty_state": {
+    "is_dirty": false,
+    "entries": []
+  },
+  "source_after_setup_dirty_state": {
+    "is_dirty": false,
+    "entries": []
+  },
+  "source_changed_after_setup": false,
+  "repository": {
+    "lockfiles": [
+      {
+        "path": "Cargo.lock",
+        "digest": "git-blob:d717b45099cb431a1172177a07e849aaecd95c8e"
+      }
+    ],
+    "missing_lockfiles": [],
+    "lockfile_drift": [
+      {
+        "path": "Cargo.lock",
+        "base_digest": "git-blob:d717b45099cb431a1172177a07e849aaecd95c8e",
+        "head_digest": "git-blob:d717b45099cb431a1172177a07e849aaecd95c8e",
+        "changed": false
+      }
+    ],
+    "config_files": [
+      {
+        "path": "Cargo.toml",
+        "digest": "git-blob:c95482cf8693db61bad48981aa2aac4d20d96a47"
+      }
+    ]
+  },
+  "environment": {
+    "os": "linux",
+    "arch": "x86_64",
+    "family": "unix",
+    "shell": "/bin/bash",
+    "timezone": null,
+    "locale": "C.UTF-8",
+    "git_version": "git version 2.54.0",
+    "rustc_version": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo_version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node_version": "v22.22.3",
+    "npm_version": "10.9.8",
+    "python_version": "Python 3.12.3"
+  },
+  "network_policy": {
+    "policy": "unknown",
+    "source": "default_unknown"
+  },
+  "hermetic": false,
+  "limitations": [
+    "No container or VM image digest was supplied; host runtime may affect results.",
+    "Sandbox worktrees isolate Git refs, but this run is not fully hermetic."
+  ],
+  "mitigated_risks": [
+    "R-021",
+    "R-022",
+    "R-023",
+    "R-024",
+    "R-025",
+    "R-026",
+    "R-027",
+    "R-030"
+  ],
+  "residual_risks": [
+    "R-028",
+    "R-029",
+    "R-033",
+    "R-031",
+    "R-032"
+  ],
+  "not_applicable_risks": []
+}

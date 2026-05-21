@@ -1,0 +1,89 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "differential_fuzz",
+  "status": "passed",
+  "tool": {
+    "name": "pramaan-differential-fuzz",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-21T13:45:36Z",
+  "ended_at": "2026-05-21T13:45:36Z",
+  "exit_code": 0,
+  "inputs": [
+    {
+      "name": "base_repo",
+      "value": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/base"
+    },
+    {
+      "name": "head_repo",
+      "value": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/head"
+    },
+    {
+      "name": "claim_scope",
+      "value": "target/pramaan/claim_scope.synthetic.json"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "fuzz_evidence",
+      "path": "differential-fuzz.json",
+      "digest": "sha256:d1141b8071c860afe27800c9f204398517f2e6db3d252ae66627fd446d1e5632"
+    },
+    {
+      "name": "fuzz_replay",
+      "path": "fuzz-replay.json",
+      "digest": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "differential_fuzz_json",
+      "path": "differential-fuzz.json",
+      "media_type": "application/json",
+      "digest": "sha256:d1141b8071c860afe27800c9f204398517f2e6db3d252ae66627fd446d1e5632"
+    },
+    {
+      "name": "replay_artifact",
+      "path": "fuzz-replay.json",
+      "media_type": "application/json",
+      "digest": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  ],
+  "summary": {
+    "title": "Differential fuzz completed",
+    "details": "Adapter=deterministic_simulated, seed=1337, generated_inputs=7, corpus_hash=sha256:bd8eda09b1c984e28550b8cc9eb0ebfe9ef0534c57d455b49a3bc44c382f82e7, divergences=0, unexpected=0, needs_review=0."
+  },
+  "limitations": [
+    "Pure-function discovery is intentionally conservative; functions with side effects, calls, imports, async/yield, or complex bodies are marked not applicable.",
+    "When Hypothesis or fast-check project wiring is unavailable or not yet safely generated, Pramaan emits deterministic differential evidence with the same seed/replay/corpus receipt fields and labels it non-tool-backed."
+  ],
+  "mitigated_risks": [
+    "R-073",
+    "R-074",
+    "R-075",
+    "R-076",
+    "R-077",
+    "R-078",
+    "R-079",
+    "R-080"
+  ],
+  "residual_risks": [
+    "R-073",
+    "R-077"
+  ],
+  "not_applicable_risks": [],
+  "metadata": {
+    "adapter": "deterministic_simulated",
+    "corpus_hash": "sha256:bd8eda09b1c984e28550b8cc9eb0ebfe9ef0534c57d455b49a3bc44c382f82e7",
+    "divergences": "0",
+    "duration_ms": "127",
+    "fast_check_available": "false",
+    "generated_input_count": "7",
+    "hypothesis_available": "false",
+    "needs_review": "0",
+    "replay_path": "target/pramaan/fuzz-replay.json",
+    "seed": "1337",
+    "tool_backed": "false",
+    "unexpected": "0"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "schema_version": "pramaan.receipt.v1",
+  "stage": "static_rust_cargo_check",
+  "status": "passed",
+  "tool": {
+    "name": "pramaan-rust-static",
+    "version": "0.1.0"
+  },
+  "started_at": "2026-05-21T13:45:10Z",
+  "ended_at": "2026-05-21T13:45:19Z",
+  "exit_code": 0,
+  "inputs": [
+    {
+      "name": "repository",
+      "value": "."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "static_receipt",
+      "path": "receipts/static/rust-cargo-check.receipt.json"
+    }
+  ],
+  "artifacts": [],
+  "summary": {
+    "title": "Rust cargo check passed",
+    "details": "\u001b[1m\u001b[92m   Compiling\u001b[0m proc-macro2 v1.0.106\n\u001b[1m\u001b[92m   Compiling\u001b[0m unicode-ident v1.0.24\n\u001b[1m\u001b[92m   Compiling\u001b[0m quote v1.0.45\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_core v1.0.228\n\u001b[1m\u001b[92m   Compiling\u001b[0m version_check v0.9.5\n\u001b[1m\u001b[92m    Checking\u001b[0m typenum v1.20.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m autocfg v1.5.0"
+  },
+  "limitations": [
+    "Static checks are command evidence only; they do not prove semantic correctness."
+  ],
+  "mitigated_risks": [
+    "R-031",
+    "R-032",
+    "R-038"
+  ],
+  "residual_risks": [
+    "R-039",
+    "R-040"
+  ],
+  "not_applicable_risks": [],
+  "metadata": {
+    "command": "cargo check",
+    "config_path": "/home/runner/work/pramaan/pramaan/target/pramaan/sandbox/worktrees-3216-1779371108593954747/head/Cargo.toml",
+    "configured": "true",
+    "duration_ms": "8999",
+    "language": "rust",
+    "relaxed_static_config": "clippy_allows,eslint_disable,mypy_ignore_errors,typescript_skip_lib_check,typescript_strict_false",
+    "security_sensitive_categories": "auth,crypto,deserialization,filesystem,network,secrets,sql,subprocess",
+    "tool_executed": "cargo",
+    "tool_executed_version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)"
+  }
+}
