@@ -21,15 +21,18 @@ Phases 1-12 and the Phase 16a schema-impact subset are implemented and
 validated. Phases 13-17 remain the broader Serious v1 execution path. Phases
 18-25 completed the focused P0/P1 track and ended in a public-Alpha no-go until
 external pilots are measured. Phases 26-40 now map the remaining task families:
-external pilots, parser-backed oracles, real property/fuzz harnesses,
-attestations, redaction, plugin trust, SARIF/policy integration, corpus growth,
-calibration, adoption docs, language depth, forge support, multi-agent
-provenance, adapter certification, and the Serious v1 gate.
+external pilots, parser-backed oracles, real property/fuzz harnesses, an
+auditable confidence vote, attestations, redaction, plugin trust, SARIF/policy
+integration, corpus growth, calibration, adoption docs, language depth, forge
+support, multi-agent provenance, adapter certification, and the Serious v1
+gate.
 
 ## Open Questions
 
 - Exact external pilot repositories for Phase 26.
 - Whether Phase 29 should use cosign subprocess first or a Rust Sigstore crate.
+- Initial deterministic reliability weights for Phase 28.5 before Phase 34 has
+  enough pilot data for calibration.
 - Whether Phase 31 isolation starts with subprocess/container boundaries or a WASM boundary.
 - Whether Phase 32 should implement OPA export first or policy parity tests first.
 - Which storage shape Phase 34 should use for baselines before a hosted dashboard exists.
@@ -74,3 +77,4 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Completed Phase 24 with honest adapter evidence. | Missing mutation tools no longer count as mitigated evidence, mutation receipts include execution mode and raw-output digests, and fuzz receipts record adapter availability plus `tool_backed=false` for deterministic replay. |
 | 2026-05-21 | Completed Phase 25 as no-go for public Alpha. | Internal fixture pilots ran quickly and produced useful evidence, but three external real-repository pilots and the claim-audit gate remain blockers before public Alpha. |
 | 2026-05-21 | Added research-driven GSD continuation track for Phases 26-40. | Current benchmark, supply-chain, CI security, policy, SARIF, attestation, plugin-security, and AI-code-security research now maps every remaining `TASKS.md` family to an executable phase instead of more open-ended research. |
+| 2026-05-21 | Inserted Phase 28.5 for auditable confidence voting. | Pramaan needs a signed, decomposed evidence vote based on hard gates, weak-signal aggregation, Wilson intervals, fuzz residual-risk bounds, and later calibration rather than an opaque confidence percentage. |

@@ -16,6 +16,7 @@ GitHub attestations, and SLSA Verification Summary Attestation-style output.
 - Sigstore keyless or cosign-backed signing.
 - GitHub artifact attestation integration.
 - in-toto/SLSA-compatible predicate mapping.
+- Signed or attested reference to the Phase 28.5 confidence artifact.
 - Offline verification for downloaded bundles.
 - Public/private repository trust-model documentation.
 
@@ -34,7 +35,8 @@ GitHub attestations, and SLSA Verification Summary Attestation-style output.
 1. Start with cosign blob signing unless the Rust Sigstore path is clearly
    mature enough for this repo.
 2. Emit an in-toto statement for the bundle manifest.
-3. Emit a SLSA VSA-style summary for the final policy decision.
+3. Emit a SLSA VSA-style summary for the final policy decision and confidence
+   artifact digest.
 4. Add GitHub Action support for artifact attestation when permissions allow.
 5. Implement offline verification for local bundle, signature, certificate, and
    attestation files.

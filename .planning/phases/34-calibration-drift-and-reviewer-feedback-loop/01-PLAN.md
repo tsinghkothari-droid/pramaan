@@ -2,8 +2,8 @@
 
 ## Goal
 
-Prevent alert fatigue by recording repo baselines, reviewer overrides, and
-quality drift over time.
+Prevent alert fatigue by recording repo baselines, reviewer overrides, quality
+drift, and confidence-model calibration over time.
 
 ## Research Drivers
 
@@ -16,6 +16,7 @@ quality drift over time.
 - Reviewer override persistence.
 - Per-repo baselines for mutation survival, oracle warnings, skipped stages,
   runtime, and static findings.
+- Confidence-model calibration against observed outcomes.
 - Trend export for agent-code quality drift.
 - Agent-author attribution analysis.
 
@@ -34,15 +35,19 @@ quality drift over time.
 1. Define local baseline storage and export format.
 2. Add reviewer override import/capture command or receipt path.
 3. Compare current bundle metrics to repo baseline.
-4. Emit drift warnings for mutation survivors, oracle risks, skipped stages,
-   runtime, and agent-author clusters.
-5. Keep dashboards optional by exporting JSON/CSV first.
+4. Evaluate confidence predictions with Brier score, log loss, reliability
+   diagrams, and expected calibration error where labeled outcomes exist.
+5. Emit drift warnings for mutation survivors, oracle risks, skipped stages,
+   runtime, confidence buckets, and agent-author clusters.
+6. Keep dashboards optional by exporting JSON/CSV first.
 
 ## Verification
 
 - Baseline fixtures cover no-baseline, healthy baseline, noisy baseline, and
   drift cases.
 - Override decisions persist with accepted risk IDs and rationale.
+- Confidence calibration fixtures show overconfident, underconfident, and
+  well-calibrated cases.
 - Trend export is deterministic and redaction-compatible.
 
 ## Exit Criteria

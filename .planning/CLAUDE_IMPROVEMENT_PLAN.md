@@ -448,3 +448,15 @@ calibration, adoption docs, language depth, forge support, multi-agent
 provenance, bounded adapter certification, and a Serious v1 release gate. This
 keeps research attached to files, fixtures, policies, schemas, reports, or
 release decisions.
+
+## Phase 28.5 Confidence-Vote Insert - 2026-05-21
+
+Inserted Phase 28.5 between tool-backed property/fuzz replay and
+attestation/VSA work. This phase owns the auditable confidence-vote algorithm:
+hard gates that cannot be averaged away, weak-signal aggregation, dependency
+discounts for correlated checks, Wilson lower bounds for mutation confidence,
+rule-of-three residual-risk bounds for zero-failure fuzz/property campaigns,
+`schemas/confidence.schema.json`, and signed `confidence.json` / `confidence.md`
+artifacts. Phase 34 remains responsible for later calibration against pilot
+outcomes using Brier score, log loss, and reliability diagrams / expected
+calibration error.

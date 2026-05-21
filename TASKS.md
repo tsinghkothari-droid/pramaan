@@ -106,6 +106,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 26 | Alpha gate | Three external real-repository pilots, live GitHub Action proof, runtime/noise metrics, and a public-Alpha go/no-go update. |
 | Phase 27 | P1 hardening | Full parser-backed oracle extractors for Python, TypeScript, and Rust with negative fixtures and dependency justifications. |
 | Phase 28 | P1 hardening | Safe real Hypothesis and fast-check generated-harness execution, replay CLI contracts, and budget/timeout evidence. |
+| Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
 | Phase 29 | P2 trust | Sigstore/cosign bundle signing, GitHub artifact attestation, SLSA VSA-style output, and offline bundle verification. |
 | Phase 30 | P2 trust | Redaction profiles and public-demo bundle export tests for secrets, private paths, internal hosts, and CI metadata. |
 | Phase 31 | P2 security | Plugin protocol, plugin identity/provenance, least-privilege receipt permissions, and isolated plugin execution threat model. |
@@ -123,7 +124,9 @@ Execution rule: **Phase 26 comes next.** Do not market public Alpha until Phase
 26 has real external pilot evidence. Do not expand the plugin ecosystem until
 Phase 31 defines plugin trust and isolation. Do not claim public-safe bundle
 sharing until Phase 30 redaction tests pass. Do not claim Serious v1 until
-Phase 40 closes the 100-scenario corpus and final release gate.
+Phase 40 closes the 100-scenario corpus and final release gate. Phase 28.5 must
+land before Phase 29 so any confidence vote is signed and auditable instead of
+being an unsigned UI-only score.
 
 Unfinished task-family mapping:
 
@@ -132,6 +135,7 @@ Unfinished task-family mapping:
 | Public Alpha blockers | 26, 27, 28, 29 |
 | Full AST/parser oracle integrations | 27 |
 | Real Hypothesis/fast-check campaigns | 28 |
+| Auditable confidence vote and scoring schema | 28.5, 34 |
 | Attestation and signing | 29 |
 | Redaction profiles | 30 |
 | Plugin trust and verifier security | 31 |
@@ -172,6 +176,8 @@ Public Alpha blockers:
   explicitly planned.
 - [ ] Prove the GitHub Action on a live PR, not only through local Action
   summary tests.
+- [ ] Add an auditable confidence-vote schema and receipt, or keep all
+  confidence-score claims explicitly absent from public Alpha copy.
 
 ### P0: Assertion Truth Audit Gate
 
@@ -293,6 +299,35 @@ AI-authored PRs to prove theirs.
 - [x] Classify divergences as expected, unexpected, or needs-review.
 - [x] Add replay artifacts for every failing generated case.
 
+## P1/P2: Auditable Confidence Vote
+
+- [ ] Add a `pramaan-confidence` module or equivalent core subsystem that
+  emits a confidence artifact without claiming correctness proof.
+- [ ] Add `schemas/confidence.schema.json` with algorithm version,
+  hard-gate outcomes, weak-signal votes, stage reliability inputs, dependency
+  clusters, statistical intervals, top risk drivers, top confidence drivers,
+  calibration metadata, and residual-risk explanation.
+- [ ] Implement hard gates that cannot be averaged away: weakened/deleted
+  tests, skipped-test additions, bundle tamper, invalid attestation,
+  untrusted plugin, and unsupported critical evidence paths.
+- [ ] Implement weak-signal aggregation inspired by weak supervision:
+  `risky`, `safe`, or `abstain` votes from oracle, mutation, fuzz/property,
+  static, claim scope, sandbox, policy, and optional critic stages.
+- [ ] Add dependency discounts so correlated stages such as oracle, mutation,
+  and property/fuzz do not get counted as independent proof.
+- [ ] Use Wilson lower bounds for mutation kill confidence instead of raw
+  mutation score alone.
+- [ ] Use the rule-of-three upper bound for zero-failure fuzz/property
+  campaigns and store the generated-case count.
+- [ ] Penalize skipped or missing tools as uncertainty, never as pass evidence.
+- [ ] Emit `confidence.json` and `confidence.md` with decomposed risk drivers,
+  not just a single percentage.
+- [ ] Keep initial weights deterministic and documented until Phase 34 has
+  enough pilot data for calibration.
+- [ ] In Phase 34, evaluate calibration using Brier score, log loss, and
+  reliability diagrams / expected calibration error where labeled outcomes
+  exist.
+
 ## P2: Attestation and Signing
 
 - [ ] Add Sigstore keyless signing path for local and CI runs.
@@ -398,6 +433,8 @@ public-Alpha-ready until those are complete.
 - [ ] Mutation and property/fuzz stages run within practical CI budgets.
 - [ ] At least 75 adversarial scenarios exist.
 - [ ] Documentation is good enough for an external maintainer to install and inspect a bundle.
+- [ ] Auditable confidence vote is decomposed, signed, and clearly labeled as
+  risk evidence rather than correctness proof.
 - [ ] Repo-level calibration prevents obvious alert fatigue.
 - [ ] Plugin trust model prevents untrusted plugins from poisoning receipts.
 - [x] CI hardening checks catch unsafe workflow patterns for untrusted PR code.
@@ -413,5 +450,7 @@ public-Alpha-ready until those are complete.
 - [ ] Security model and threat model complete.
 - [ ] Public demo proves "GitHub green, Pramaan red" in under 30 seconds.
 - [ ] Reviewer overrides, agent attribution, baseline calibration, and drift reporting are part of the proof-bundle lifecycle.
+- [ ] Confidence model is calibrated on pilot data and reports Brier/log-loss
+  or equivalent calibration evidence.
 - [ ] PII/secrets scrubbing is tested before enterprise bundle export.
 - [ ] Pramaan can emit a VSA-style verification summary attestation.

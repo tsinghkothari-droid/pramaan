@@ -442,6 +442,27 @@ remain public Alpha blockers.
 3. `pramaan replay` can reproduce recorded failing generated cases.
 4. Missing tools remain skipped evidence, not mitigated evidence.
 
+## Phase 28.5: Auditable Confidence Vote and Calibration Schema
+
+**Goal:** Add a deterministic, decomposable confidence-vote artifact that
+aggregates receipts without pretending to prove correctness.
+
+**Priority:** P1/P2 trust insert
+
+**Success Criteria:**
+
+1. `schemas/confidence.schema.json` defines algorithm version, hard gates,
+   weak-signal votes, stage reliability inputs, dependency clusters,
+   statistical intervals, top drivers, calibration metadata, and residual risk.
+2. Pramaan emits `confidence.json` and `confidence.md` from bundle receipts.
+3. Hard gates such as weakened tests, bundle tamper, invalid attestation, and
+   untrusted plugins cannot be averaged away by positive evidence elsewhere.
+4. Mutation confidence uses Wilson lower bounds; zero-failure fuzz/property
+   evidence records a rule-of-three residual-risk upper bound.
+5. Initial weights are deterministic and documented; Phase 34 owns later
+   calibration using pilot outcomes, Brier score, log loss, and reliability
+   diagrams / expected calibration error.
+
 ## Phase 29: Attestation, VSA, and Offline Verification
 
 **Goal:** Make bundles verifiable outside the original CI job with signing, artifact attestations, and VSA-style summaries.
@@ -452,7 +473,7 @@ remain public Alpha blockers.
 
 1. Bundle manifests can be signed through cosign or Sigstore-compatible flow.
 2. GitHub artifact attestation integration is documented and exercised where permissions allow.
-3. Pramaan emits an in-toto/SLSA-compatible VSA-style verification summary.
+3. Pramaan emits an in-toto/SLSA-compatible VSA-style verification summary that can reference the confidence artifact.
 4. Offline verification rejects tampered bundle, signature, manifest, and attestation fixtures.
 
 ## Phase 30: Redaction Profiles and Public Bundle Export
@@ -508,7 +529,7 @@ remain public Alpha blockers.
 
 ## Phase 34: Calibration, Drift, and Reviewer Feedback Loop
 
-**Goal:** Reduce alert fatigue by comparing findings to repo baselines and capturing human override outcomes.
+**Goal:** Reduce alert fatigue by comparing findings to repo baselines, capturing human override outcomes, and calibrating the confidence-vote model against real outcomes.
 
 **Priority:** P2 feedback
 
@@ -516,8 +537,9 @@ remain public Alpha blockers.
 
 1. Reviewer overrides persist with accepted risk IDs, reason, reviewer identity source, and merge outcome when available.
 2. Repo baselines track mutation survival, oracle warnings, skipped stages, runtime, and static findings.
-3. Trend exports show drift by repo, risk family, agent author, and time window.
-4. Dashboard data exists without making a dashboard required for CLI adoption.
+3. Confidence predictions are evaluated with Brier score, log loss, and reliability diagrams / expected calibration error when labels exist.
+4. Trend exports show drift by repo, risk family, agent author, confidence bucket, and time window.
+5. Dashboard data exists without making a dashboard required for CLI adoption.
 
 ## Phase 35: Operator Docs, Release Packaging, and Adoption
 
@@ -624,7 +646,8 @@ remain public Alpha blockers.
 the remaining P0/P1 tasks in `TASKS.md`; they do not change the original 111
 research-mapped requirement count.
 
-**Research-driven continuation track:** Phases 26-40 map the remaining
+**Research-driven continuation track:** Phases 26-40 plus the Phase 28.5 trust
+insert map the remaining
 unchecked P1/P2/P3 and Serious v1 task families to executable GSD plans after
 the 2026-05-21 internet research refresh. They are delivery phases, not a new
 requirement-counting scheme.
