@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.pramaan.dev/v0.1/receipt.schema.json",
+  "$id": "https://raw.githubusercontent.com/tsinghkothari-droid/pramaan/main/schemas/receipt.schema.json",
   "title": "Pramaan Stage Receipt v0.1",
   "description": "A versioned receipt describing one Pramaan stage, its evidence, and its mitigated/residual/not-applicable risks. It is audit evidence, not a correctness proof.",
   "type": "object",

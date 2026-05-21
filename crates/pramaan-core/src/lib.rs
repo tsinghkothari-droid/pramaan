@@ -5,6 +5,8 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+pub mod risks;
+
 pub const RECEIPT_SCHEMA_VERSION: &str = "pramaan.receipt.v1";
 pub const CLAIM_SCOPE_SCHEMA_VERSION: &str = "pramaan.claim_scope.v1";
 pub const CONFIDENCE_SCHEMA_VERSION: &str = "pramaan.confidence.v1";

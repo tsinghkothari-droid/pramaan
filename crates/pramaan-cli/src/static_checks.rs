@@ -1,6 +1,10 @@
 use anyhow::{Context, Result};
 use chrono::Utc;
 use pramaan_bundle::sha256_hex;
+use pramaan_core::risks::{
+    STATIC_CHECK_BASELINE_LINT, STATIC_CHECK_BASELINE_TYPE, STATIC_CHECK_FAILED,
+    STATIC_CHECK_RELAXED_CONFIG, STATIC_CHECK_SECURITY_SENSITIVE,
+};
 use pramaan_core::{
     classify_static_hallucinations, timestamp, ArtifactRef, InputRef, OutputRef, Receipt,
     ReceiptSummary, StageStatus, ToolIdentity, RECEIPT_SCHEMA_VERSION,
@@ -293,8 +297,11 @@ fn run_or_skip_check(repo: &Path, plan: &StaticCheckPlan) -> Result<Receipt> {
                     .unwrap_or_else(|| "check is not applicable to this repository".to_string()),
             },
             vec![],
-            vec!["R-031".to_string(), "R-032".to_string()],
-            vec!["R-038".to_string()],
+            vec![
+                STATIC_CHECK_BASELINE_TYPE.to_string(),
+                STATIC_CHECK_BASELINE_LINT.to_string(),
+            ],
+            vec![STATIC_CHECK_FAILED.to_string()],
             vec![format!(
                 "No static evidence was produced because {}.",
                 plan.skip_reason
@@ -305,7 +312,18 @@ fn run_or_skip_check(repo: &Path, plan: &StaticCheckPlan) -> Result<Receipt> {
         ));
     }
 
-    if !tool_available(&plan.tool) {
+    let tool_version = read_tool_version(&plan.tool);
+    metadata.insert("tool_executed".to_string(), plan.tool.clone());
+    if let Some(version) = tool_version.as_deref() {
+        metadata.insert("tool_executed_version".to_string(), version.to_string());
+    } else {
+        metadata.insert(
+            "tool_executed_version".to_string(),
+            "unavailable".to_string(),
+        );
+    }
+
+    if tool_version.is_none() {
         metadata.insert("missing_tool".to_string(), plan.tool.clone());
         return Ok(receipt(
             plan,
@@ -318,7 +336,10 @@ fn run_or_skip_check(repo: &Path, plan: &StaticCheckPlan) -> Result<Receipt> {
                 details: format!("tool `{}` was not available on PATH", plan.tool),
             },
             vec![],
-            vec!["R-031".to_string(), "R-032".to_string()],
+            vec![
+                STATIC_CHECK_BASELINE_TYPE.to_string(),
+                STATIC_CHECK_BASELINE_LINT.to_string(),
+            ],
             vec![],
             vec![format!(
                 "Configured static check could not run because `{}` was unavailable.",
@@ -357,13 +378,13 @@ fn run_or_skip_check(repo: &Path, plan: &StaticCheckPlan) -> Result<Receipt> {
     };
     let mut residual_risks = Vec::new();
     if status == StageStatus::Failed {
-        residual_risks.push("R-038".to_string());
+        residual_risks.push(STATIC_CHECK_FAILED.to_string());
     }
     if !security_categories.is_empty() {
-        residual_risks.push("R-039".to_string());
+        residual_risks.push(STATIC_CHECK_SECURITY_SENSITIVE.to_string());
     }
     if !relaxed_config.is_empty() {
-        residual_risks.push("R-040".to_string());
+        residual_risks.push(STATIC_CHECK_RELAXED_CONFIG.to_string());
     }
 
     Ok(receipt(
@@ -381,9 +402,9 @@ fn run_or_skip_check(repo: &Path, plan: &StaticCheckPlan) -> Result<Receipt> {
             details: summarize_output(&combined_output),
         },
         vec![
-            "R-031".to_string(),
-            "R-032".to_string(),
-            "R-038".to_string(),
+            STATIC_CHECK_BASELINE_TYPE.to_string(),
+            STATIC_CHECK_BASELINE_LINT.to_string(),
+            STATIC_CHECK_FAILED.to_string(),
         ],
         residual_risks,
         vec![],
@@ -460,12 +481,21 @@ fn receipt(
     }
 }
 
-fn tool_available(tool: &str) -> bool {
-    Command::new(tool)
-        .arg("--version")
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+fn read_tool_version(tool: &str) -> Option<String> {
+    let output = Command::new(tool).arg("--version").output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let combined = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    combined
+        .lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .map(|line| line.to_string())
 }
 
 fn scan_security_sensitive_categories(repo: &Path) -> Result<Vec<String>> {

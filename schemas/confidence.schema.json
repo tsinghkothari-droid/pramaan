@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.pramaan.dev/v1/confidence.schema.json",
+  "$id": "https://raw.githubusercontent.com/tsinghkothari-droid/pramaan/main/schemas/confidence.schema.json",
   "title": "Pramaan Confidence Vote Artifact",
   "description": "A decomposed, auditable residual-risk vote over Pramaan receipts. This is evidence for review prioritization, not a proof of correctness.",
   "type": "object",
