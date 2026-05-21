@@ -555,6 +555,12 @@ subprocess choices, parser-version evidence, and disagreement reporting.
 
 **Priority:** Parser hardening split
 
+**Status:** Completed 2026-05-21 as a scoped hardening slice with residual
+full-AST risk. Oracle evidence now records parser version, fallback reason,
+unsupported syntax, and disagreement count. `docs/oracle-parser-decision.md`
+documents why Python/TypeScript/Rust full compiler integrations stay deferred
+until subprocess protocols and dependency costs are justified.
+
 **Success Criteria:**
 
 1. Python, TypeScript, and Rust parser choices have dependency/runtime

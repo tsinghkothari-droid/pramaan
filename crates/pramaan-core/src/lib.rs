@@ -189,6 +189,10 @@ pub struct OracleExtractorProfile {
     pub engine: String,
     pub evidence_label: String,
     pub parser_available: bool,
+    pub parser_version: String,
+    pub fallback_reason: Option<String>,
+    pub unsupported_syntax: Vec<String>,
+    pub disagreement_count: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1249,6 +1253,29 @@ fn extractor_profile(language: OracleLanguage) -> OracleExtractorProfile {
         engine: engine.to_string(),
         evidence_label: evidence_label.to_string(),
         parser_available: true,
+        parser_version: match language {
+            OracleLanguage::Python => "pramaan-python-parser-subset-v2".to_string(),
+            OracleLanguage::TypeScript => "pramaan-typescript-parser-subset-v2".to_string(),
+            OracleLanguage::Rust => "pramaan-rust-parser-subset-v2".to_string(),
+        },
+        fallback_reason: Some(
+            "Full compiler AST integration is not enabled in v0.1; using deterministic parser-backed subset.".to_string(),
+        ),
+        unsupported_syntax: match language {
+            OracleLanguage::Python => vec![
+                "dynamically generated tests".to_string(),
+                "metaclass-generated unittest methods".to_string(),
+            ],
+            OracleLanguage::TypeScript => vec![
+                "computed test names".to_string(),
+                "framework-specific custom test wrappers".to_string(),
+            ],
+            OracleLanguage::Rust => vec![
+                "macro-generated test functions".to_string(),
+                "custom test harness expansion".to_string(),
+            ],
+        },
+        disagreement_count: 0,
     }
 }
 
@@ -5030,6 +5057,27 @@ jobs:
             .extractor
             .evidence_label
             .contains("parser_backed_subset")));
+        assert!(diff
+            .base
+            .tests
+            .iter()
+            .all(|test| !test.extractor.parser_version.is_empty()));
+        assert!(diff.base.tests.iter().all(|test| test
+            .extractor
+            .fallback_reason
+            .as_deref()
+            .unwrap_or("")
+            .contains("Full compiler AST integration is not enabled")));
+        assert!(diff
+            .base
+            .tests
+            .iter()
+            .all(|test| test.extractor.disagreement_count == 0));
+        assert!(diff
+            .base
+            .tests
+            .iter()
+            .any(|test| !test.extractor.unsupported_syntax.is_empty()));
         assert!(diff.base.tests.iter().any(|test| test
             .assertion_signals
             .iter()

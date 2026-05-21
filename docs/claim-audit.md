@@ -41,6 +41,7 @@ risk before Alpha.
 | CLAIM-ORACLE-001 | `docs/demo.md` | Weakened-test demo produces a failed oracle receipt. | executable-test | `crates/pramaan-cli/tests/smoke.rs`, `examples/vulnerable-python-pr/` | `cargo test --workspace` | pass | None. |
 | CLAIM-ORACLE-002 | `TASKS.md` | Python/TS/Rust oracle weakening patterns are detected. | executable-test | `examples/fixtures/oracle/`, `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core oracle_fixture` | pass | None. |
 | CLAIM-ORACLE-003 | `.planning/ROADMAP.md` | Full compiler AST extraction exists. | accepted-risk | `docs/receipt-model.md`, `docs/risk-taxonomy.md`, `docs/oracle-integrity.md` | `rg -n "full compiler AST|not yet|parser-backed subset" docs` | narrowed | Public language must say parser-backed subset evidence, not full AST proof. |
+| CLAIM-ORACLE-004 | `docs/oracle-integrity.md` | Oracle evidence records parser metadata and full-AST residual risk. | executable-test | `crates/pramaan-core/src/lib.rs`, `scripts/check-oracle-parser-metadata.mjs`, `docs/oracle-parser-decision.md` | `cargo test -p pramaan-core oracle_fixture && node scripts/check-oracle-parser-metadata.mjs target/pramaan-minimum-lovable/oracle-diff.json` | pass-with-risk | Metadata is not full compiler AST extraction. |
 | CLAIM-MUTATION-001 | `TASKS.md` | Mutation adapters run real tools when installed. | manual-proof | `crates/pramaan-cli/src/mutation.rs` | `cargo run -p pramaan-cli -- mutation --repo examples/fixtures/mutation --changed-file python/checkout.py --timeout-ms 1000 --out target/pramaan-pilot/mutation` | pass-with-risk | Needs CI image with tools installed for positive execution proof. |
 | CLAIM-MUTATION-002 | `docs/plugins.md` | Missing mutation tools do not mitigate risk. | executable-test | `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
 | CLAIM-FUZZ-001 | `TASKS.md` | Differential replay records seed, corpus hash, counterexamples, and divergence classes. | executable-test | `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
@@ -67,6 +68,7 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-011 | `STATUS.md` | STATUS: Static checks for Python, TypeScript, and Rust | executable-test | `crates/pramaan-cli/src/static_checks.rs`, `examples/fixtures/static/` | `cargo test -p pramaan-cli --test smoke` | pass | Tool availability remains explicit. |
 | CLAIM-STATUS-CAP-012 | `STATUS.md` | STATUS: Hallucination classification | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/risk-taxonomy.md` | `cargo test --workspace` | pass | Keep categories evidence-backed. |
 | CLAIM-STATUS-CAP-013 | `STATUS.md` | STATUS: Oracle integrity parser-backed subset extractors | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/oracle.rs`, `docs/oracle-integrity.md` | `cargo test --workspace` | pass | Full AST remains residual risk. |
+| CLAIM-STATUS-CAP-013A | `STATUS.md` | STATUS: Oracle parser metadata and full-AST residual reporting | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/oracle-parser-decision.md`, `scripts/check-oracle-parser-metadata.mjs` | `cargo test -p pramaan-core oracle_fixture` | pass-with-risk | Metadata keeps residual risk visible; it does not implement full AST extraction. |
 | CLAIM-STATUS-CAP-014 | `STATUS.md` | STATUS: Full compiler AST-backed oracle extractors | accepted-risk | `docs/receipt-model.md`, `docs/risk-taxonomy.md`, `docs/oracle-integrity.md` | `rg -n "full compiler AST|not yet|parser-backed subset" docs` | narrowed | Current wording must stay as parser-backed subset evidence, not full AST proof. |
 | CLAIM-STATUS-CAP-015 | `STATUS.md` | STATUS: Demo weakened-test / fixture / hallucination scenarios | checked-fixture | `examples/`, `docs/demo.md` | Demo commands in `docs/demo.md` | pass | Demos are not CI-attested proof bundles. |
 | CLAIM-STATUS-CAP-016 | `STATUS.md` | STATUS: Diff-scoped mutation wrappers | executable-test | `crates/pramaan-cli/src/mutation.rs` | `cargo test -p pramaan-cli --test smoke` | pass-with-risk | Positive tool-backed CI image still needed. |
@@ -88,9 +90,9 @@ risk before Alpha.
 
 | Bucket | Count |
 | --- | ---: |
-| Total claims audited | 60 |
-| `STATUS.md` capability rows covered | 29 |
-| Executable-test claims | 38 |
+| Total claims audited | 62 |
+| `STATUS.md` capability rows covered | 30 |
+| Executable-test claims | 40 |
 | Checked-fixture/manual-proof claims | 12 |
 | Partial/planned/accepted-risk claims | 10 |
 | False-or-stale claims left in public copy | 0 |

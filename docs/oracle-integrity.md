@@ -6,7 +6,8 @@ ordinary CI green by weakening the test oracle instead of fixing the behavior.
 ## Current Extractor Contract
 
 Phase 27 hardens the deterministic parser subset for Python, TypeScript, and
-Rust test files:
+Rust test files. Phase 27.1 adds parser metadata so unsupported full-AST cases
+remain visible instead of being implied away:
 
 | Language | Engine label | Covered subset |
 | --- | --- | --- |
@@ -28,6 +29,25 @@ Negative fixtures live under:
 examples/oracle-integrity/parser-negative-fixtures/
 ```
 
+Parser metadata fixtures live under:
+
+```text
+examples/oracle-integrity/full-parser-metadata-fixtures/
+```
+
+Every extracted test records:
+
+- `parser_version`;
+- `fallback_reason`;
+- `unsupported_syntax`;
+- `disagreement_count`.
+
+Validate metadata from an oracle run with:
+
+```powershell
+node scripts/check-oracle-parser-metadata.mjs target/pramaan-minimum-lovable/oracle-diff.json
+```
+
 ## Honest Limit
 
 This is parser-backed subset evidence, not a full compiler AST proof. Unsupported
@@ -38,5 +58,7 @@ Receipts should keep the wording precise:
 
 - say "parser-backed subset" for the current extractor;
 - keep "full compiler AST-backed oracle extractors" marked planned;
+- cite `docs/oracle-parser-decision.md` when explaining why the v0.1 path did
+  not add heavy parser dependencies yet;
 - preserve `R-011`, `R-014`, `R-020`, and `R-087` when weakened or changed
   oracle evidence remains for review.

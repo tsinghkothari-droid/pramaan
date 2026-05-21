@@ -72,7 +72,7 @@ This table is the quick answer for whether P0, P1, and P2 are complete.
 | Priority | Status | Meaning | Still blocking |
 | --- | --- | --- | --- |
 | P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, three external local pilots, and a live workflow-dispatch Action proof are done. | Public review still needs the remaining pre-36 readiness phases. |
-| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Phase 27.1 full compiler AST hardening and Phase 28 real Hypothesis/fast-check harnesses. |
+| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence with parser metadata, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Full compiler AST extraction remains split to a heavier Phase 27.2/36 path; Phase 28.1 real Hypothesis/fast-check harnesses remain open. |
 | P2 | Not complete | P2 is the trust/adoption layer after the core loop: signing, redaction, plugin trust, SARIF/policy integration, corpus, calibration, docs, and language depth. Phase 28.5 has started the trust bridge, but the rest remains open. | Phases 29-36. |
 | P3 | Not started as product scope | Multi-forge, multi-agent provenance, and adapter certification are later expansion tracks. | Phases 37-39. |
 
@@ -94,7 +94,7 @@ it can run in parallel.
 | 1.4 | Phase 26.4 | Minimum lovable verifier loop | One command, one report, one proof bundle, one killer demo should feel complete before expanding. | Real MVP wedge |
 | 1.5 | Phase 26.5 | Agent harness interface for Claude Code, Codex, Cursor-style agents, and custom harnesses | Agents should call Pramaan before claiming done. | Agent adoption |
 | 2 | Phase 27 | Parser-backed subset oracle extractors | Confidence and signing are weaker if oracle evidence is still parser-light. | Phase 28.5 confidence inputs |
-| 2.1 | Phase 27.1 | Full compiler AST oracle extractors | Full AST parser support needs dependency and runtime justification. | Public full-AST claims |
+| 2.1 | Phase 27.1 | Parser metadata and full-AST dependency decision | Full AST support needs dependency and runtime justification before public claims change. | Public full-AST claims |
 | 3 | Phase 28 | Recorded-case replay for differential fuzz evidence | Confidence needs replayable generated-case evidence, even before real harness execution. | Phase 28.5 confidence inputs |
 | 3.1 | Phase 28.1 | Safe Hypothesis/fast-check harness execution | Real tool-backed campaigns need sandboxed generated harnesses. | Public tool-backed property claims |
 | 3.25 | Phase 28.25 | AI evidence-seeking probe generator | AI should generate better probes, but only executed probes count. | Phase 28.5 confidence inputs |
@@ -203,7 +203,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 26.4 | Product wedge | Minimum lovable verifier loop: one command, one report, one proof bundle, one killer demo, and a 30-second reviewer pass. |
 | Phase 26.5 | Agent adoption | `pramaan agent done-gate`, agent decision schema, `AGENTS.md`, Claude Code hook/command templates, and blocked-agent fixtures. |
 | Phase 27 | P1 hardening | Parser-backed subset oracle extractors for Python, TypeScript, and Rust with negative fixtures and honest residual full-AST split. |
-| Phase 27.1 | P1 hardening split | Full compiler AST oracle extractors with dependency justifications, parser-version evidence, and disagreement reporting. |
+| Phase 27.1 | P1 hardening split | Parser-version evidence, unsupported-syntax metadata, disagreement reporting fields, and full-AST dependency decisions; full compiler integrations remain split. |
 | Phase 28 | P1 hardening | Recorded-case replay CLI contracts for differential fuzz evidence, with real harness execution split honestly. |
 | Phase 28.1 | P1 hardening split | Safe real Hypothesis and fast-check generated-harness execution with budget/timeout/tool-version evidence. |
 | Phase 28.25 | 10x evidence depth | AI-generated probes for tests, properties, differential inputs, and security checks; only sandbox-executed probes count. |
@@ -284,6 +284,9 @@ Public Alpha blockers:
   time-to-understand.
 - [ ] Add safe generated-harness execution for Hypothesis and fast-check, or
   keep those claims explicitly planned under Phase 28.1.
+- [x] Add parser-version evidence, unsupported-syntax metadata, disagreement
+  reporting fields, and dependency decision docs for Python, TypeScript, and
+  Rust.
 - [ ] Add full compiler/parser AST integrations for Python, TypeScript, and
   Rust, or keep those claims explicitly planned.
 - [x] Add local/offline VSA and in-toto attestation evidence, while keeping
@@ -533,7 +536,14 @@ AI-authored PRs to prove theirs.
 - [x] Detect removed boundary cases, error cases, and parameter values.
 - [x] Add reviewer-facing summaries that explain exactly which assertion or oracle artifact changed.
 - [x] Replace opaque heuristic oracle scanning with parser-backed subset extractor evidence for Python, TypeScript, and Rust: extractor labels, assertion-signal kinds, strength scores, signal hashes, skip markers, comment/string filtering, and multiline assertion grouping.
-- [ ] Add full compiler/parser AST integrations for Python, TypeScript, and Rust with dependency justifications and golden negative fixtures.
+- [x] Add parser metadata fields for parser version, fallback reason,
+  unsupported syntax, and disagreement count so full-AST residual risk is
+  visible in `oracle-diff.json`.
+- [x] Add dependency decision docs and metadata fixtures for decorators,
+  generated tests, TypeScript computed names, and Rust macro-generated tests.
+- [ ] Add full compiler/parser AST integrations for Python, TypeScript, and
+  Rust with subprocess/dependency pinning; current v0.1 remains a
+  parser-backed subset, not a full-AST proof.
 
 ## P1: Mutation Adapters
 

@@ -31,6 +31,7 @@ Status labels:
 | Static checks for Python, TypeScript, and Rust | Partial | `crates/pramaan-cli/src/static_checks.rs` | `pramaan static-checks --base <ref> --head <ref>` |
 | Hallucination classification | Partial | `crates/pramaan-cli/src/static_checks.rs`, `docs/risk-taxonomy.md` | Static-check fixture tests |
 | Oracle integrity parser-backed subset extractors | Partial | `crates/pramaan-cli/src/oracle.rs`, `crates/pramaan-core/src/lib.rs`, `docs/oracle-integrity.md` | `pramaan oracle --base-repo <base> --head-repo <head>` |
+| Oracle parser metadata and full-AST residual reporting | Partial | `crates/pramaan-core/src/lib.rs`, `docs/oracle-parser-decision.md`, `scripts/check-oracle-parser-metadata.mjs` | `node scripts/check-oracle-parser-metadata.mjs <oracle-diff.json>` |
 | Full compiler AST-backed oracle extractors | Planned | `docs/claim-audit.md`, Phase 23 residual risk | Not implemented yet |
 | Demo weakened-test / fixture / hallucination scenarios | Implemented | `examples/`, `docs/demo.md` | Demo commands in docs |
 | Diff-scoped mutation wrappers | Partial | `crates/pramaan-cli/src/mutation.rs` | Mutation tests and skipped receipts |

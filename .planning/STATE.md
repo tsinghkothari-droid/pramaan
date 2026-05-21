@@ -10,8 +10,9 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 are complete with explicit residual risk. Phase 28.5 now has a first
 implemented confidence-vote slice. Phase 26.1 live Action proof, Phase 26.2
 competitive benchmarking, and Phase 26.3 competitor-gap fixtures are complete.
-Phase 26.4 now provides the local minimum lovable verifier loop. Public review
-still depends on compiler/parser oracle hardening, real Hypothesis/fast-check
+Phase 26.4 now provides the local minimum lovable verifier loop. Phase 27.1
+adds parser metadata and dependency decisions while keeping full compiler AST
+claims deferred. Public review still depends on real Hypothesis/fast-check
 harnesses, sandboxed generated probes, anti-gaming hardening, and reviewer
 reports.
 
@@ -24,9 +25,8 @@ residual risk: Phase 26.3 competitor-gap fixtures and Phase 26.4 minimum
 lovable verifier loop.
 
 Phase 26.1 live Action proof is complete. Public review still depends on the
-remaining pre-36 readiness phases: full parser/AST oracle hardening, real
-Hypothesis/fast-check execution, sandboxed generated probes, anti-gaming
-hardening, and local reviewer reports.
+remaining pre-36 readiness phases: real Hypothesis/fast-check execution,
+sandboxed generated probes, anti-gaming hardening, and local reviewer reports.
 
 ## Status
 
@@ -54,8 +54,9 @@ provenance, adapter certification, and the Serious v1 gate.
   text/markdown reviewer loop first.
 - Whether the later agent harness should add MCP/hook integrations beyond the
   Phase 26.5 CLI JSON gate.
-- Whether Phase 27.1 should use subprocess parser tools first to avoid heavy
-  Rust parser dependencies in the core crate.
+- Phase 27.1 chose parser metadata plus a dependency-decision document first;
+  full compiler AST extraction remains a split follow-up rather than a relabel
+  of the current subset.
 - Whether Phase 28.1 should execute Hypothesis/fast-check through subprocess
   harnesses first or require plugin isolation before tool-backed campaigns.
 - Whether Phase 28.26 should execute generated probes through language-native
@@ -138,3 +139,4 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Completed Phase 26.2 competitive benchmark. | `docs/competitive-benchmark.md` now narrows Pramaan's differentiation against AI PR reviewers, quality aggregators, test-generation systems, mutation/property tools, and supply-chain attestation primitives without claiming superiority before executable gap fixtures. |
 | 2026-05-21 | Completed Phase 26.3 competitor-gap fixtures. | `corpus/competitor-gap-fixtures.v0.1.json` and `scripts/check-competitor-gap-fixtures.mjs` now validate seven category-level scenarios for weakened/skipped oracles, fixture drift, hallucinated code, false-green CI, unsigned reports, and hidden skipped stages. |
 | 2026-05-21 | Completed Phase 26.4 minimum lovable verifier loop. | `scripts/run-minimum-lovable-loop.ps1` now runs the weakened-test demo, emits an oracle bundle manifest, adds confidence and policy evidence, verifies the bundle, and writes a blockers-first Markdown report for 30-second reviewer inspection. |
+| 2026-05-21 | Completed Phase 27.1 scoped parser hardening. | Oracle test evidence now records parser version, fallback reason, unsupported syntax, and disagreement count; full compiler AST integrations remain explicit future work documented in `docs/oracle-parser-decision.md`. |
