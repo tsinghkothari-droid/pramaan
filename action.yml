@@ -1,5 +1,10 @@
 name: Pramaan
 description: Run Pramaan on pull requests and publish a risk-aware proof bundle summary.
+author: Pramaan
+
+branding:
+  icon: shield
+  color: blue
 
 inputs:
   base-ref:
