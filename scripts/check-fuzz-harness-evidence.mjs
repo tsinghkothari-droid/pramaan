@@ -30,8 +30,6 @@ if (!evidence.adapter_availability) {
   if (availability.tool_backed) {
     for (const token of [
       "safe generated harness executed",
-      "tool_version=",
-      "generated_cases=",
       "raw_output_digest=sha256:",
       "harness_path=",
       "raw_output_path=",
@@ -43,18 +41,37 @@ if (!evidence.adapter_availability) {
     if (!["hypothesis", "fast_check"].includes(evidence.adapter)) {
       fail(`tool-backed adapter must be hypothesis or fast_check, got ${evidence.adapter}`);
     }
-  } else {
-    if (!availability.reason.includes("deterministic replay evidence was selected")) {
-      fail("fallback evidence must explicitly say deterministic replay was selected");
+    if (typeof availability.tool_version !== "string" || availability.tool_version.length === 0) {
+      fail("tool-backed evidence must include structured tool_version");
     }
-    if (evidence.adapter !== "deterministic_simulated") {
-      fail(`fallback adapter should be deterministic_simulated, got ${evidence.adapter}`);
+    if (typeof availability.tool_generated_case_count !== "number" || availability.tool_generated_case_count <= 0) {
+      fail("tool-backed evidence must include positive tool_generated_case_count");
+    }
+    if (availability.execution_status !== "passed") {
+      fail(`tool-backed evidence must have passed execution_status, got ${availability.execution_status}`);
+    }
+  } else {
+    const status = availability.execution_status || "not_attempted";
+    if (
+      !availability.reason.includes("deterministic replay evidence was selected") &&
+      !["failed", "timeout", "error"].includes(status)
+    ) {
+      fail("fallback evidence must explicitly say deterministic replay was selected or carry failed/timeout/error status");
+    }
+    if (evidence.adapter !== "deterministic_simulated" && !["hypothesis", "fast_check"].includes(evidence.adapter)) {
+      fail(`fallback adapter should be deterministic_simulated or a failed tool adapter, got ${evidence.adapter}`);
     }
   }
 }
 
 if (typeof evidence.generated_input_count !== "number" || evidence.generated_input_count <= 0) {
   fail("generated_input_count must be positive");
+}
+if (typeof evidence.deterministic_input_count !== "number" || evidence.deterministic_input_count <= 0) {
+  fail("deterministic_input_count must be positive");
+}
+if (typeof evidence.tool_generated_case_count !== "number") {
+  fail("tool_generated_case_count must be numeric");
 }
 if (typeof evidence.corpus_hash !== "string" || !evidence.corpus_hash.startsWith("sha256:")) {
   fail("corpus_hash must be sha256-prefixed");

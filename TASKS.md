@@ -71,8 +71,8 @@ This table is the quick answer for whether P0, P1, and P2 are complete.
 
 | Priority | Status | Meaning | Still blocking |
 | --- | --- | --- | --- |
-| P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, three external local pilots, and a live workflow-dispatch Action proof are done. | Public review still needs the remaining pre-36 readiness phases. |
-| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence with parser metadata, bounded Hypothesis/fast-check harness execution when tools are installed, bounded AI-probe sandbox execution, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Phase 28.15 must still close review findings before public tool-backed property/fuzz claims; full compiler AST extraction remains split to a heavier Phase 27.2/36 path; production sandboxing for property tools and arbitrary generated code remains open. |
+| P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, three external local pilots, and a live workflow-dispatch Action proof are done. | Public review still needs the final readiness report and explicit risk wording, not more hidden green claims. |
+| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence with parser metadata, bounded Hypothesis/fast-check harness execution when tools are installed, bounded AI-probe sandbox execution, and the first auditable confidence artifact are usable with honest skipped-tool receipts. Phase 28.15 closes the review-found fuzz harness truthfulness gaps: tool-backed failures affect verdict evidence, timeouts are enforced, harness errors become receipts, dynamic JS evaluation is removed, and tool-generated counts are structured. | Full compiler AST extraction remains split to a heavier Phase 27.2/36 path; production sandboxing for property tools and arbitrary generated code remains open. |
 | P2 | Not complete | P2 is the trust/adoption layer after the core loop: signing, redaction, plugin trust, SARIF/policy integration, corpus, calibration, docs, and language depth. Phase 28.5 has started the trust bridge, but the rest remains open. | Phases 29-36. |
 | P3 | Not started as product scope | Multi-forge, multi-agent provenance, and adapter certification are later expansion tracks. | Phases 37-39. |
 
@@ -209,7 +209,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 27.1 | P1 hardening split | Parser-version evidence, unsupported-syntax metadata, disagreement reporting fields, and full-AST dependency decisions; full compiler integrations remain split. |
 | Phase 28 | P1 hardening | Recorded-case replay CLI contracts for differential fuzz evidence, with real harness execution split honestly. |
 | Phase 28.1 | P1 hardening split | First bounded Hypothesis and fast-check generated-harness execution path with tool-version/raw-output evidence; Phase 28.15 owns review-found verdict/timeout/truthfulness gaps. |
-| Phase 28.15 | P1 corrective review gate | Independent review follow-up for harness failure promotion, real timeout enforcement, structured harness-error receipts, JS evaluation safety, and clearer tool-generated count metadata. |
+| Phase 28.15 | P1 corrective review gate | Completed truthfulness repair for harness failure promotion, real timeout enforcement, structured harness-error receipts, JS evaluation safety, and clearer tool-generated count metadata. |
 | Phase 28.25 | 10x evidence depth | AI-generated probes for tests, properties, differential inputs, and security checks; only sandbox-executed probes count. |
 | Phase 28.26 | 10x evidence depth | Bounded generated-probe execution, rejected-probe preservation, and execution report validation. |
 | Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
@@ -230,13 +230,14 @@ unfinished task family below into an executable GSD phase.
 | Phase 39 | P3 adjacent | Keep adapter certification bounded, with proof-bundle examples and adapter risk taxonomy. |
 | Phase 40 | Serious v1 gate | 100-scenario corpus, benchmark-integrity checks, cross-platform CI, final claim audit, and Serious v1 go/no-go decision. |
 
-Execution rule: **Phase 26.1 live Action evidence now exists, but public review
-still depends on the remaining pre-36 readiness phases.** Do not expand the
-plugin ecosystem until Phase 31 defines plugin trust and isolation. Do not claim
-public-safe bundle sharing until Phase 30 redaction tests pass. Do not claim
-Serious v1 until Phase 40 closes the 100-scenario corpus and final release gate.
-Phase 28.5 must land before Phase 29 so any confidence vote is digest-linked
-and attestable instead of being an unsigned UI-only score.
+Execution rule: **Public review can only be described as "ready with risks" if
+the dated public-review readiness report says so after full verification.** Do
+not expand the plugin ecosystem until Phase 31 defines plugin trust and
+isolation. Do not claim production-safe bundle sharing until Phase 30 redaction
+tests pass. Do not claim Serious v1 until Phase 40 closes the 100-scenario
+corpus and final release gate. Phase 28.5 must land before Phase 29 so any
+confidence vote is digest-linked and attestable instead of being an unsigned
+UI-only score.
 
 Unfinished task-family mapping:
 
@@ -587,15 +588,15 @@ AI-authored PRs to prove theirs.
   Hypothesis is installed and eligible pure-function candidates exist.
 - [x] TypeScript: execute a first bounded fast-check subprocess harness when
   fast-check is installed and eligible pure-function candidates exist.
-- [ ] Promote Hypothesis/fast-check harness-discovered failures into canonical
+- [x] Promote Hypothesis/fast-check harness-discovered failures into canonical
   divergence, replay, counterexample, residual-risk, confidence, and policy
   evidence.
-- [ ] Enforce real subprocess timeouts for Python and Node tool harnesses.
-- [ ] Convert harness nonzero exits/timeouts into structured receipt evidence
+- [x] Enforce real subprocess timeouts for Python and Node tool harnesses.
+- [x] Convert harness nonzero exits/timeouts into structured receipt evidence
   instead of opaque command aborts.
-- [ ] Remove dynamic JavaScript `Function(...)` evaluation or isolate it behind
+- [x] Remove dynamic JavaScript `Function(...)` evaluation or isolate it behind
   a documented verifier-security boundary.
-- [ ] Store tool version, generated cases, timeout status, raw-output digest,
+- [x] Store tool version, generated cases, timeout status, raw-output digest,
   deterministic input count, and tool-generated case count as structured
   evidence fields.
 - [x] Record seeds, replay data, counterexamples, corpus hashes, generated input counts, and adapter availability.

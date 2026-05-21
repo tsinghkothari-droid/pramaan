@@ -37,7 +37,7 @@ Status labels:
 | Diff-scoped mutation wrappers | Partial | `crates/pramaan-cli/src/mutation.rs` | Mutation tests and skipped receipts |
 | Production-grade mutmut/StrykerJS/cargo-mutants integration | Partial | `crates/pramaan-cli/src/mutation.rs`, `docs/plugins.md` | Runs when tools are installed; missing tools emit skipped receipts |
 | Differential fuzz/property simulated mode | Experimental | `crates/pramaan-cli/src/fuzz.rs` | Fuzz tests and replay fixtures |
-| Real Hypothesis/fast-check adapters | Partial | `crates/pramaan-cli/src/fuzz.rs`, `scripts/check-fuzz-harness-evidence.mjs` | Runs bounded generated harnesses when tools are installed; missing tools fall back visibly |
+| Real Hypothesis/fast-check adapters | Partial | `crates/pramaan-cli/src/fuzz.rs`, `scripts/check-fuzz-harness-evidence.mjs` | Runs bounded generated harnesses when tools are installed; failures/timeouts become receipt evidence; missing tools fall back visibly |
 | Replay command for recorded generated cases | Partial | `crates/pramaan-cli/src/main.rs`, `docs/replay.md` | `pramaan replay <bundle> --case <id>` |
 | AI evidence-seeking probe plan and bounded execution | Partial | `crates/pramaan-cli/src/main.rs`, `schemas/probe.schema.json`, `docs/ai-probe-generator.md`, `scripts/check-ai-probe-execution.mjs` | `pramaan probe plan --bundle <bundle>` then `pramaan probe execute --plan <plan> --bundle <bundle>` |
 | GitHub Action wrapper | Partial | `action.yml`, `action/render-summary.mjs` | Node tests and example workflows |
@@ -82,9 +82,16 @@ It does **not** yet provide production-grade signed attestations, enforced
 container isolation, arbitrary generated-code execution, full compiler-AST
 oracle parsing, or calibrated confidence. Hypothesis/fast-check and AI-probe
 execution are bounded private-preview paths that run only when tools/markers
-permit and otherwise preserve residual risk. The confidence vote is implemented
-as decomposed residual-risk evidence, not as a calibrated probability or merge
-authority.
+permit; harness failures, timeouts, missing tools, and rejected probes preserve
+residual risk. The confidence vote is implemented as decomposed residual-risk
+evidence, not as a calibrated probability or merge authority.
+
+## Public Review Readiness
+
+Current decision: `READY_FOR_PUBLIC_REVIEW_WITH_RISKS`, contingent on the dated
+readiness report and verification commands passing. This means external
+reviewers can inspect and try to break the current evidence-bundle flow. It
+does not mean production-ready, Serious v1, or correctness-proof.
 
 ## First Target User
 

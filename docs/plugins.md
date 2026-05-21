@@ -30,6 +30,11 @@ The receipt also records adapter availability:
 - `fast_check_available`
 - `tool_backed`
 - `adapter`
+- `execution_status`
+- `tool_version`
+- `deterministic_input_count`
+- `tool_generated_case_count`
+- `raw_output_digest`
 
 `tool_backed=false` means Pramaan produced deterministic replay evidence, not a
 real Hypothesis or fast-check campaign. That distinction is part of the product
@@ -41,7 +46,12 @@ available and a conservative pure-function candidate exists:
 - Python uses a generated Hypothesis harness with bounded examples, deadline,
   deterministic settings, and a recorded raw-output digest.
 - TypeScript uses a generated fast-check harness with bounded runs, seed, and
-  a recorded raw-output digest.
+  a recorded raw-output digest. The generated JavaScript harness uses a small
+  arithmetic evaluator rather than dynamic `Function(...)` evaluation.
+- Harness-discovered failures are promoted into canonical divergences and
+  replay/counterexample artifacts.
+- Harness nonzero exits and timeouts are represented as structured evidence;
+  they do not disappear as a green pass.
 - If either tool is missing, the receipt remains deterministic replay evidence
   and `adapter_availability.reason` explains why.
 

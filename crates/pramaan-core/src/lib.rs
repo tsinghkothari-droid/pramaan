@@ -813,6 +813,20 @@ pub struct FuzzAdapterAvailability {
     pub selected_mode: FuzzAdapterMode,
     pub tool_backed: bool,
     pub reason: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_version: Option<String>,
+    #[serde(default)]
+    pub tool_generated_case_count: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raw_output_digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub harness_path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raw_output_path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub execution_status: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout_ms: Option<u64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -885,6 +899,10 @@ pub struct FuzzRunEvidence {
     pub adapter_availability: FuzzAdapterAvailability,
     pub seed: u64,
     pub generated_input_count: usize,
+    #[serde(default)]
+    pub deterministic_input_count: usize,
+    #[serde(default)]
+    pub tool_generated_case_count: usize,
     pub corpus_hash: String,
     pub replay_path: String,
     pub example_database_path: Option<String>,
@@ -5080,9 +5098,18 @@ jobs:
                 selected_mode: FuzzAdapterMode::DeterministicSimulated,
                 tool_backed: false,
                 reason: "fixture uses deterministic simulated adapter".to_string(),
+                tool_version: None,
+                tool_generated_case_count: 0,
+                raw_output_digest: None,
+                harness_path: None,
+                raw_output_path: None,
+                execution_status: None,
+                timeout_ms: None,
             },
             seed: 7,
             generated_input_count: 1,
+            deterministic_input_count: 1,
+            tool_generated_case_count: 0,
             corpus_hash: "sha256:abc".to_string(),
             replay_path: "target/pramaan/fuzz/fuzz-replay.json".to_string(),
             example_database_path: Some("target/pramaan/fuzz/examples".to_string()),

@@ -13,15 +13,14 @@ competitive benchmarking, and Phase 26.3 competitor-gap fixtures are complete.
 Phase 26.4 now provides the local minimum lovable verifier loop. Phase 27.1
 adds parser metadata and dependency decisions while keeping full compiler AST
 claims deferred. Phase 28.1 adds bounded Hypothesis/fast-check harness
-execution when tools are installed, but an independent local review found the
-tool-backed fuzz path is not yet claim-truthful enough because harness failures
-do not affect the final fuzz verdict and subprocess timeout enforcement is not
-implemented. Phase 28.15 is now the corrective gate before public tool-backed
-property/fuzz claims. Phase 28.26 adds bounded sandbox execution for safe-marker
-generated probes. Phase 32.75 adds verifier-abuse surface detection. Public
-review readiness track now has a local reviewer report path; remaining public
-launch work should focus on Phase 28.15 correctness repairs and fresh external
-review feedback.
+execution when tools are installed, and Phase 28.15 has repaired the
+review-found truthfulness gaps so harness failures affect fuzz evidence,
+timeouts are enforced, harness errors become receipts, dynamic JavaScript
+evaluation is removed, and deterministic versus tool-generated case counts are
+separated. Phase 28.26 adds bounded sandbox execution for safe-marker generated
+probes. Phase 32.75 adds verifier-abuse surface detection. Public review
+readiness now depends on the dated readiness report and explicit residual-risk
+wording, not on any claim of production readiness.
 
 ## Current Phase
 
@@ -31,10 +30,11 @@ Optional pre-alpha proof phases can run in parallel if they do not hide
 residual risk: Phase 26.3 competitor-gap fixtures and Phase 26.4 minimum
 lovable verifier loop.
 
-Phase 26.1 live Action proof, Phase 28.26 sandboxed probes, Phase 32.75
-anti-gaming hardening, and Phase 35.5 local reports are complete. Public review
-still needs a final claim audit after Phase 28.15 repairs, because the current
-tool-backed fuzz path has known review findings.
+Phase 26.1 live Action proof, Phase 28.15 fuzz harness truthfulness repairs,
+Phase 28.26 sandboxed probes, Phase 32.75 anti-gaming hardening, and Phase
+35.5 local reports are complete. Public review may proceed only as
+READY_FOR_PUBLIC_REVIEW_WITH_RISKS if the final dated readiness report and
+verification commands pass.
 
 ## Status
 
@@ -72,9 +72,9 @@ provenance, adapter certification, and the Serious v1 gate.
   unmarked/dangerous candidates are rejected, accepted probes must bind to
   changed behavior, and production arbitrary generated-code execution remains
   out of scope.
-- Whether Phase 28.15 should keep generated JavaScript evaluation at all, or
-  replace it with a shared safe arithmetic evaluator before any broader
-  TypeScript property claim.
+- Phase 28.15 removed dynamic generated JavaScript `Function(...)` evaluation
+  and kept a small safe arithmetic evaluator before any broader TypeScript
+  property claim.
 - Which production identity path should follow Phase 29's local/offline VSA:
   cosign subprocess, Rust Sigstore crate, or GitHub artifact attestations first.
 - Whether the Phase 28.5 deterministic starter weights should be adjusted after
@@ -160,3 +160,4 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Completed Phase 32.75 anti-gaming hardening. | Claim scope now flags verifier-surface path changes as `R-094`/`R-095`, security-sensitive policy profiles hard-fail those risks, and `corpus/verifier-abuse-fixtures.v0.1.json` validates six anti-gaming scenarios. |
 | 2026-05-21 | Completed Phase 35.5 local reviewer reports. | `pramaan report markdown` and `pramaan report html` now render blocker-first bundle reports with ran/skipped stages, oracle test-change evidence, replay commands, human override fields, examples, docs, and matching Action summary sections. |
 | 2026-05-21 | Added Phase 35.6 license-safe reviewer interface patterns. | Pramaan can learn from category-level pull-request tooling ergonomics while keeping all names, copy, command design, configuration, screenshots, and implementation original to this MIT-licensed repo. |
+| 2026-05-21 | Completed Phase 28.15 fuzz harness truthfulness gate. | Tool-backed Hypothesis/fast-check failures now affect canonical fuzz evidence, harness timeouts are enforced, harness nonzero exits become receipts, unsafe dynamic JavaScript evaluation is removed, and tool/deterministic case counts are separated. |

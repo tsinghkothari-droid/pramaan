@@ -624,7 +624,12 @@ reports, or public claims.
 
 **Priority:** P1 corrective review gate
 
-**Status:** Planned from independent local review on 2026-05-21.
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Harness failures now
+affect fuzz verdict evidence, subprocess timeouts are enforced, harness errors
+become structured evidence, generated JavaScript no longer uses dynamic
+`Function(...)`, and tool/deterministic case counts are separated. Residual
+risk remains: tool-backed coverage depends on installed Hypothesis/fast-check
+and the private-preview harness only targets bounded pure-function candidates.
 
 **Success Criteria:**
 

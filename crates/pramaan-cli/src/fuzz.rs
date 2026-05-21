@@ -52,11 +52,25 @@ pub fn run_fuzz(
     let corpus_hash = digest_file(&corpus_path)?;
 
     let mut divergences = compare_discoveries(&base_discovery, &head_discovery, &corpus, &scope);
-    divergences.sort_by(|left, right| {
-        left.stable_id
-            .cmp(&right.stable_id)
-            .then_with(|| left.input.index.cmp(&right.input.index))
-    });
+    let tool_run = run_tool_backed_harness_if_available(
+        &base_discovery,
+        &head_discovery,
+        &head_repo,
+        &out,
+        seed,
+        scope.as_ref(),
+        corpus.len(),
+    )?;
+    if let Some(tool_run) = &tool_run {
+        divergences.extend(tool_run.divergences.iter().cloned());
+        dedupe_and_sort_divergences(&mut divergences);
+    } else {
+        divergences.sort_by(|left, right| {
+            left.stable_id
+                .cmp(&right.stable_id)
+                .then_with(|| left.input.index.cmp(&right.input.index))
+        });
+    }
 
     write_json(&replay_path, &divergences)?;
     let counterexample_path = if divergences.is_empty() {
@@ -66,14 +80,6 @@ pub fn run_fuzz(
         write_json(&path, &divergences)?;
         Some(portable_path(&path))
     };
-
-    let tool_run = run_tool_backed_harness_if_available(
-        &base_discovery,
-        &head_discovery,
-        &head_repo,
-        &out,
-        seed,
-    )?;
     let adapter_availability =
         adapter_availability(&base_discovery, &head_discovery, &head_repo, &tool_run);
     let adapter = adapter_availability.selected_mode;
@@ -85,6 +91,8 @@ pub fn run_fuzz(
         adapter_availability,
         seed,
         generated_input_count: corpus.len(),
+        deterministic_input_count: corpus.len(),
+        tool_generated_case_count: tool_run.as_ref().map(|run| run.generated_cases).unwrap_or(0),
         corpus_hash: corpus_hash.clone(),
         replay_path: portable_path(&replay_path),
         example_database_path: Some(portable_path(&out.join("hypothesis-example-db-or-fast-check-path.txt"))),
@@ -147,9 +155,16 @@ fn fuzz_receipt(
         .iter()
         .filter(|item| item.classification == DivergenceClassification::NeedsReview)
         .count();
+    let tool_status = evidence
+        .adapter_availability
+        .execution_status
+        .as_deref()
+        .unwrap_or("not_attempted");
     let status = if not_applicable {
         StageStatus::NotApplicable
-    } else if unexpected > 0 {
+    } else if tool_status == "timeout" {
+        StageStatus::TimedOut
+    } else if matches!(tool_status, "failed" | "error") || unexpected > 0 {
         StageStatus::Failed
     } else {
         StageStatus::Passed
@@ -216,10 +231,12 @@ fn fuzz_receipt(
                 _ => "Differential fuzz completed".to_string(),
             },
             details: format!(
-                "Adapter={}, seed={}, generated_inputs={}, corpus_hash={}, divergences={}, unexpected={}, needs_review={}.",
+                "Adapter={}, seed={}, deterministic_inputs={}, tool_generated_cases={}, tool_status={}, corpus_hash={}, divergences={}, unexpected={}, needs_review={}.",
                 evidence.adapter.as_str(),
                 evidence.seed,
-                evidence.generated_input_count,
+                evidence.deterministic_input_count,
+                evidence.tool_generated_case_count,
+                tool_status,
                 evidence.corpus_hash,
                 evidence.divergences.len(),
                 unexpected,
@@ -272,21 +289,27 @@ fn fuzz_receipt(
                 "generated_input_count".to_string(),
                 evidence.generated_input_count.to_string(),
             ),
+            (
+                "deterministic_input_count".to_string(),
+                evidence.deterministic_input_count.to_string(),
+            ),
+            (
+                "tool_generated_case_count".to_string(),
+                evidence.tool_generated_case_count.to_string(),
+            ),
             ("corpus_hash".to_string(), evidence.corpus_hash.clone()),
             ("replay_path".to_string(), evidence.replay_path.clone()),
             ("divergences".to_string(), evidence.divergences.len().to_string()),
             ("unexpected".to_string(), unexpected.to_string()),
-        ("needs_review".to_string(), needs_review.to_string()),
+            ("needs_review".to_string(), needs_review.to_string()),
+            ("tool_execution_status".to_string(), tool_status.to_string()),
             (
                 "tool_version".to_string(),
                 evidence
                     .adapter_availability
-                    .reason
-                    .split(" tool_version=")
-                    .nth(1)
-                    .and_then(|rest| rest.split(';').next())
-                    .unwrap_or("unavailable")
-                    .to_string(),
+                    .tool_version
+                    .clone()
+                    .unwrap_or_else(|| "unavailable".to_string()),
             ),
             (
                 "duration_ms".to_string(),
@@ -314,6 +337,17 @@ fn residual_risks(evidence: &FuzzRunEvidence) -> Vec<String> {
     }
     if evidence.adapter == FuzzAdapterMode::DeterministicSimulated {
         risks.insert(FUZZ_DETERMINISTIC_SIMULATED.to_string());
+        risks.insert(FUZZ_NO_TOOL_BACKED_ADAPTER.to_string());
+    }
+    if !matches!(
+        evidence
+            .adapter_availability
+            .execution_status
+            .as_deref()
+            .unwrap_or("not_attempted"),
+        "not_attempted" | "passed"
+    ) {
+        risks.insert(FUZZ_DIVERGENCE_NEEDS_REVIEW.to_string());
         risks.insert(FUZZ_NO_TOOL_BACKED_ADAPTER.to_string());
     }
     risks.into_iter().collect()
@@ -613,6 +647,19 @@ fn compare_discoveries(
     divergences
 }
 
+fn dedupe_and_sort_divergences(divergences: &mut Vec<FuzzDivergence>) {
+    let mut seen = BTreeSet::new();
+    divergences.retain(|item| {
+        let key = format!("{}#{}", item.stable_id, item.input.index);
+        seen.insert(key)
+    });
+    divergences.sort_by(|left, right| {
+        left.stable_id
+            .cmp(&right.stable_id)
+            .then_with(|| left.input.index.cmp(&right.input.index))
+    });
+}
+
 fn candidate_key(candidate: &PureFunctionCandidate) -> String {
     format!("{}::{}", candidate.path, candidate.name)
 }
@@ -838,19 +885,28 @@ fn adapter_availability(
         && has_language(head, FuzzLanguage::TypeScript)
         && fast_check_available(repo);
     if let Some(run) = tool_run {
+        let tool_backed = run.execution_status == "passed";
         return FuzzAdapterAvailability {
             hypothesis_available,
             fast_check_available,
             selected_mode: run.mode,
-            tool_backed: true,
+            tool_backed,
             reason: format!(
-                "safe generated harness executed; tool_version={}; generated_cases={}; raw_output_digest={}; harness_path={}; raw_output_path={}",
+                "safe generated harness executed; status={}; tool_version={}; generated_cases={}; raw_output_digest={}; harness_path={}; raw_output_path={}",
+                run.execution_status,
                 run.tool_version,
                 run.generated_cases,
                 run.raw_output_digest,
                 run.harness_path,
                 run.raw_output_path
             ),
+            tool_version: Some(run.tool_version.clone()),
+            tool_generated_case_count: run.generated_cases,
+            raw_output_digest: Some(run.raw_output_digest.clone()),
+            harness_path: Some(run.harness_path.clone()),
+            raw_output_path: Some(run.raw_output_path.clone()),
+            execution_status: Some(run.execution_status.clone()),
+            timeout_ms: Some(run.timeout_ms),
         };
     }
 
@@ -866,6 +922,13 @@ fn adapter_availability(
             "no supported external property-testing adapter was available for the discovered pure-function candidates; deterministic replay evidence was selected"
                 .to_string()
         },
+        tool_version: None,
+        tool_generated_case_count: 0,
+        raw_output_digest: None,
+        harness_path: None,
+        raw_output_path: None,
+        execution_status: Some("not_attempted".to_string()),
+        timeout_ms: None,
     }
 }
 
@@ -877,6 +940,9 @@ struct ToolHarnessRun {
     harness_path: String,
     raw_output_path: String,
     raw_output_digest: String,
+    execution_status: String,
+    timeout_ms: u64,
+    divergences: Vec<FuzzDivergence>,
 }
 
 fn run_tool_backed_harness_if_available(
@@ -885,18 +951,21 @@ fn run_tool_backed_harness_if_available(
     repo: &Path,
     out: &Path,
     seed: u64,
+    scope: Option<&ClaimScopeClassifier>,
+    deterministic_count: usize,
 ) -> Result<Option<ToolHarnessRun>> {
     if has_language(base, FuzzLanguage::Python)
         && has_language(head, FuzzLanguage::Python)
         && hypothesis_available()
     {
-        return run_hypothesis_harness(base, head, out, seed).map(Some);
+        return run_hypothesis_harness(base, head, out, seed, scope, deterministic_count).map(Some);
     }
     if has_language(base, FuzzLanguage::TypeScript)
         && has_language(head, FuzzLanguage::TypeScript)
         && fast_check_available(repo)
     {
-        return run_fast_check_harness(base, head, repo, out, seed).map(Some);
+        return run_fast_check_harness(base, head, repo, out, seed, scope, deterministic_count)
+            .map(Some);
     }
     Ok(None)
 }
@@ -906,7 +975,10 @@ fn run_hypothesis_harness(
     head: &FuzzDiscovery,
     out: &Path,
     seed: u64,
+    scope: Option<&ClaimScopeClassifier>,
+    deterministic_count: usize,
 ) -> Result<ToolHarnessRun> {
+    const TIMEOUT: Duration = Duration::from_secs(10);
     let harness_dir = out.join("tool-harness");
     fs::create_dir_all(&harness_dir)
         .with_context(|| format!("creating {}", harness_dir.display()))?;
@@ -923,29 +995,29 @@ fn run_hypothesis_harness(
     )
     .with_context(|| format!("writing {}", harness_path.display()))?;
 
-    let output = run_with_timeout(
-        Command::new("python").arg(&harness_path),
-        Duration::from_secs(10),
-    )
-    .context("running Hypothesis harness")?;
-    if !output.status.success() {
-        anyhow::bail!(
-            "Hypothesis harness failed\nstdout:\n{}\nstderr:\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
+    let output = run_with_timeout(Command::new("python").arg(&harness_path), TIMEOUT)
+        .context("running Hypothesis harness")?;
 
-    let value: Value = serde_json::from_slice(
-        &fs::read(&output_path).with_context(|| format!("reading {}", output_path.display()))?,
-    )
-    .with_context(|| format!("parsing {}", output_path.display()))?;
+    let value = read_or_write_harness_output(&output_path, "hypothesis", "unknown", seed, &output)?;
     let tool_version = value["tool_version"]
         .as_str()
         .unwrap_or("unknown")
         .to_string();
     let generated_cases = value["generated_cases"].as_u64().unwrap_or(0) as usize;
     let raw_output_digest = digest_file(&output_path)?;
+    let execution_status = harness_execution_status(&output);
+    let divergences = if output.status_success && !output.timed_out {
+        tool_failures_to_divergences(
+            &value,
+            base,
+            head,
+            FuzzLanguage::Python,
+            scope,
+            deterministic_count,
+        )
+    } else {
+        Vec::new()
+    };
     Ok(ToolHarnessRun {
         mode: FuzzAdapterMode::Hypothesis,
         tool_version,
@@ -953,6 +1025,9 @@ fn run_hypothesis_harness(
         harness_path: portable_path(&harness_path),
         raw_output_path: portable_path(&output_path),
         raw_output_digest,
+        execution_status,
+        timeout_ms: TIMEOUT.as_millis() as u64,
+        divergences,
     })
 }
 
@@ -962,7 +1037,10 @@ fn run_fast_check_harness(
     repo: &Path,
     out: &Path,
     seed: u64,
+    scope: Option<&ClaimScopeClassifier>,
+    deterministic_count: usize,
 ) -> Result<ToolHarnessRun> {
+    const TIMEOUT: Duration = Duration::from_secs(10);
     let harness_dir = out.join("tool-harness");
     fs::create_dir_all(&harness_dir)
         .with_context(|| format!("creating {}", harness_dir.display()))?;
@@ -981,27 +1059,30 @@ fn run_fast_check_harness(
 
     let output = run_with_timeout(
         Command::new("node").current_dir(repo).arg(&harness_path),
-        Duration::from_secs(10),
+        TIMEOUT,
     )
     .context("running fast-check harness")?;
-    if !output.status.success() {
-        anyhow::bail!(
-            "fast-check harness failed\nstdout:\n{}\nstderr:\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
 
-    let value: Value = serde_json::from_slice(
-        &fs::read(&output_path).with_context(|| format!("reading {}", output_path.display()))?,
-    )
-    .with_context(|| format!("parsing {}", output_path.display()))?;
+    let value = read_or_write_harness_output(&output_path, "fast-check", "unknown", seed, &output)?;
     let tool_version = value["tool_version"]
         .as_str()
         .unwrap_or("unknown")
         .to_string();
     let generated_cases = value["generated_cases"].as_u64().unwrap_or(0) as usize;
     let raw_output_digest = digest_file(&output_path)?;
+    let execution_status = harness_execution_status(&output);
+    let divergences = if output.status_success && !output.timed_out {
+        tool_failures_to_divergences(
+            &value,
+            base,
+            head,
+            FuzzLanguage::TypeScript,
+            scope,
+            deterministic_count,
+        )
+    } else {
+        Vec::new()
+    };
     Ok(ToolHarnessRun {
         mode: FuzzAdapterMode::FastCheck,
         tool_version,
@@ -1009,7 +1090,124 @@ fn run_fast_check_harness(
         harness_path: portable_path(&harness_path),
         raw_output_path: portable_path(&output_path),
         raw_output_digest,
+        execution_status,
+        timeout_ms: TIMEOUT.as_millis() as u64,
+        divergences,
     })
+}
+
+#[derive(Debug)]
+struct HarnessOutput {
+    status_success: bool,
+    timed_out: bool,
+    exit_code: Option<i32>,
+    stdout: Vec<u8>,
+    stderr: Vec<u8>,
+}
+
+fn harness_execution_status(output: &HarnessOutput) -> String {
+    if output.timed_out {
+        "timeout".to_string()
+    } else if output.status_success {
+        "passed".to_string()
+    } else {
+        "failed".to_string()
+    }
+}
+
+fn read_or_write_harness_output(
+    output_path: &Path,
+    tool: &str,
+    tool_version: &str,
+    seed: u64,
+    output: &HarnessOutput,
+) -> Result<Value> {
+    if output_path.exists() {
+        return serde_json::from_slice(
+            &fs::read(output_path).with_context(|| format!("reading {}", output_path.display()))?,
+        )
+        .with_context(|| format!("parsing {}", output_path.display()));
+    }
+    let value = serde_json::json!({
+        "tool": tool,
+        "tool_version": tool_version,
+        "seed": seed,
+        "generated_cases": 0,
+        "failures": [],
+        "execution_status": harness_execution_status(output),
+        "exit_code": output.exit_code,
+        "timed_out": output.timed_out,
+        "stdout_digest": sha256_hex(&output.stdout),
+        "stderr_digest": sha256_hex(&output.stderr)
+    });
+    write_json(output_path, &value)?;
+    Ok(value)
+}
+
+fn tool_failures_to_divergences(
+    value: &Value,
+    base: &FuzzDiscovery,
+    head: &FuzzDiscovery,
+    language: FuzzLanguage,
+    scope: Option<&ClaimScopeClassifier>,
+    start_index: usize,
+) -> Vec<FuzzDivergence> {
+    let head_by_key = head
+        .safe_functions
+        .iter()
+        .filter(|candidate| candidate.language == language)
+        .map(|candidate| (candidate_key(candidate), candidate))
+        .collect::<BTreeMap<_, _>>();
+    let base_by_stable = base
+        .safe_functions
+        .iter()
+        .filter(|candidate| candidate.language == language)
+        .map(|candidate| (candidate.stable_id.clone(), candidate))
+        .collect::<BTreeMap<_, _>>();
+
+    value["failures"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .enumerate()
+        .filter_map(|(offset, failure)| {
+            let stable_id = failure["stable_id"].as_str()?.to_string();
+            let base_candidate = base_by_stable.get(&stable_id)?;
+            let head_candidate = head_by_key
+                .get(&candidate_key(base_candidate))
+                .copied()
+                .unwrap_or(base_candidate);
+            let mut values = BTreeMap::new();
+            if let Some(input) = failure["input"].as_object() {
+                for (key, value) in input {
+                    if let Some(number) = value.as_i64() {
+                        values.insert(key.clone(), number);
+                    }
+                }
+            }
+            let (classification, mut rationale) = classify_divergence(head_candidate, scope);
+            let classification = if classification == DivergenceClassification::Expected {
+                classification
+            } else {
+                rationale =
+                    format!("tool-backed harness found a generated counterexample; {rationale}");
+                DivergenceClassification::Unexpected
+            };
+            Some(FuzzDivergence {
+                stable_id,
+                function_name: base_candidate.name.clone(),
+                path: base_candidate.path.clone(),
+                input: FuzzInputCase {
+                    index: start_index + offset,
+                    values,
+                },
+                base_output: failure["base"].as_str().unwrap_or("unknown").to_string(),
+                head_output: failure["head"].as_str().unwrap_or("unknown").to_string(),
+                classification,
+                rationale,
+            })
+        })
+        .collect()
 }
 
 fn tool_harness_cases(
@@ -1091,9 +1289,45 @@ const generated = new Set();
 const failures = [];
 
 function evalExpr(expr, env) {{
-  const names = Object.keys(env);
-  const values = names.map((name) => env[name]);
-  return Function(...names, `return (${{expr}});`)(...values);
+  const tokens = expr.match(/[A-Za-z_][A-Za-z0-9_]*|-?\\d+|[()+\\-*/%]/g) || [];
+  let index = 0;
+  function peek() {{ return tokens[index]; }}
+  function take() {{ return tokens[index++]; }}
+  function factor() {{
+    const token = take();
+    if (token === "(") {{
+      const value = expression();
+      if (take() !== ")") throw new Error("unbalanced expression");
+      return value;
+    }}
+    if (/^-?\\d+$/.test(token)) return Number(token);
+    if (Object.prototype.hasOwnProperty.call(env, token)) return env[token];
+    throw new Error(`unknown identifier ${{token}}`);
+  }}
+  function term() {{
+    let value = factor();
+    while (["*", "/", "%"].includes(peek())) {{
+      const op = take();
+      const rhs = factor();
+      if ((op === "/" || op === "%") && rhs === 0) throw new Error("division by zero");
+      if (op === "*") value *= rhs;
+      if (op === "/") value = Math.trunc(value / rhs);
+      if (op === "%") value %= rhs;
+    }}
+    return value;
+  }}
+  function expression() {{
+    let value = term();
+    while (["+", "-"].includes(peek())) {{
+      const op = take();
+      const rhs = term();
+      value = op === "+" ? value + rhs : value - rhs;
+    }}
+    return value;
+  }}
+  const value = expression();
+  if (index !== tokens.length) throw new Error("trailing tokens");
+  return value;
 }}
 
 fc.assert(
@@ -1124,8 +1358,52 @@ fs.writeFileSync("{output_path}", JSON.stringify({{
     )
 }
 
-fn run_with_timeout(command: &mut Command, _timeout: Duration) -> Result<std::process::Output> {
-    command.output().context("running generated harness")
+fn run_with_timeout(command: &mut Command, timeout: Duration) -> Result<HarnessOutput> {
+    command
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
+    let started = Instant::now();
+    let mut child = match command.spawn() {
+        Ok(child) => child,
+        Err(error) => {
+            return Ok(HarnessOutput {
+                status_success: false,
+                timed_out: false,
+                exit_code: None,
+                stdout: Vec::new(),
+                stderr: format!("spawn_error:{error}").into_bytes(),
+            });
+        }
+    };
+    loop {
+        if let Some(status) = child.try_wait().context("polling generated harness")? {
+            let output = child
+                .wait_with_output()
+                .context("collecting generated harness output")?;
+            return Ok(HarnessOutput {
+                status_success: status.success(),
+                timed_out: false,
+                exit_code: status.code(),
+                stdout: output.stdout,
+                stderr: output.stderr,
+            });
+        }
+        if started.elapsed() >= timeout {
+            let _ = child.kill();
+            let output = child
+                .wait_with_output()
+                .context("collecting timed-out generated harness output")?;
+            return Ok(HarnessOutput {
+                status_success: false,
+                timed_out: true,
+                exit_code: output.status.code(),
+                stdout: output.stdout,
+                stderr: output.stderr,
+            });
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
 }
 
 fn has_language(discovery: &FuzzDiscovery, language: FuzzLanguage) -> bool {
@@ -1246,5 +1524,114 @@ fn render_fuzz_summary(
                 divergence.path
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn candidate(language: FuzzLanguage, expression: &str) -> PureFunctionCandidate {
+        PureFunctionCandidate {
+            language,
+            path: match language {
+                FuzzLanguage::Python => "math_ops.py".to_string(),
+                FuzzLanguage::TypeScript => "math_ops.ts".to_string(),
+            },
+            name: "adjust".to_string(),
+            stable_id: match language {
+                FuzzLanguage::Python => "math_ops.py::adjust".to_string(),
+                FuzzLanguage::TypeScript => "math_ops.ts::adjust".to_string(),
+            },
+            parameters: vec!["x".to_string()],
+            return_expression: expression.to_string(),
+            safety_notes: vec!["test".to_string()],
+        }
+    }
+
+    #[test]
+    fn tool_failures_become_unexpected_divergences() {
+        let base_candidate = candidate(FuzzLanguage::Python, "x + 1");
+        let head_candidate = candidate(FuzzLanguage::Python, "x + 2");
+        let base = FuzzDiscovery {
+            root: "base".to_string(),
+            safe_functions: vec![base_candidate],
+            unsafe_functions: vec![],
+            not_applicable_reason: None,
+        };
+        let head = FuzzDiscovery {
+            root: "head".to_string(),
+            safe_functions: vec![head_candidate],
+            unsafe_functions: vec![],
+            not_applicable_reason: None,
+        };
+        let value = serde_json::json!({
+            "failures": [{
+                "stable_id": "math_ops.py::adjust",
+                "input": { "x": 4 },
+                "base": "5",
+                "head": "6"
+            }]
+        });
+
+        let divergences =
+            tool_failures_to_divergences(&value, &base, &head, FuzzLanguage::Python, None, 7);
+
+        assert_eq!(divergences.len(), 1);
+        assert_eq!(
+            divergences[0].classification,
+            DivergenceClassification::Unexpected
+        );
+        assert_eq!(divergences[0].input.index, 7);
+        assert!(divergences[0]
+            .rationale
+            .contains("tool-backed harness found"));
+    }
+
+    #[test]
+    fn run_with_timeout_kills_long_running_processes() {
+        let mut command = if cfg!(windows) {
+            let mut command = Command::new("powershell");
+            command.args(["-NoProfile", "-Command", "Start-Sleep -Seconds 5"]);
+            command
+        } else {
+            let mut command = Command::new("sh");
+            command.args(["-c", "sleep 5"]);
+            command
+        };
+        let output = run_with_timeout(&mut command, Duration::from_millis(50))
+            .expect("timeout command should produce structured output");
+        assert!(output.timed_out);
+        assert!(!output.status_success);
+    }
+
+    #[test]
+    fn harness_failure_writes_structured_output() {
+        let path = std::env::temp_dir().join(format!(
+            "pramaan-fuzz-harness-failure-{}.json",
+            std::process::id()
+        ));
+        let _ = fs::remove_file(&path);
+        let output = HarnessOutput {
+            status_success: false,
+            timed_out: false,
+            exit_code: Some(2),
+            stdout: b"hello".to_vec(),
+            stderr: b"boom".to_vec(),
+        };
+        let value = read_or_write_harness_output(&path, "fixture", "0", 1, &output)
+            .expect("structured failure output");
+        assert_eq!(value["execution_status"], "failed");
+        assert_eq!(value["generated_cases"], 0);
+        assert_eq!(value["exit_code"], 2);
+        let _ = fs::remove_file(&path);
+    }
+
+    #[test]
+    fn fast_check_harness_uses_safe_evaluator_not_dynamic_function() {
+        let source = fast_check_harness_source(Path::new("cases.json"), Path::new("out.json"), 7);
+        assert!(!source.contains("Function("));
+        assert!(source.contains("function evalExpr"));
+        assert!(source.contains("unknown identifier"));
     }
 }
