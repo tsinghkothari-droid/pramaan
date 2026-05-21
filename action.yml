@@ -39,6 +39,10 @@ inputs:
     description: "Failure policy: failed, actionable, or never."
     required: false
     default: failed
+  policy-profile:
+    description: "Built-in Pramaan policy profile for summary explanation."
+    required: false
+    default: private-preview
   attest:
     description: Create a GitHub artifact attestation for the uploaded bundle. Requires id-token: write and attestations: write.
     required: false
@@ -136,6 +140,7 @@ runs:
         set -euo pipefail
         summary_path="${{ steps.config.outputs.out_dir }}/github-step-summary.md"
         target/debug/pramaan policy explain "${{ steps.config.outputs.out_dir }}" \
+          --profile "${{ inputs.policy-profile }}" \
           | tee "${{ steps.config.outputs.out_dir }}/policy.log"
         cat "${{ steps.config.outputs.out_dir }}/policy.log" >> "${{ steps.config.outputs.out_dir }}/pramaan.log"
         node "$GITHUB_ACTION_PATH/render-summary.mjs" \

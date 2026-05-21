@@ -119,10 +119,46 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     );
     let policy_stdout = String::from_utf8_lossy(&policy_output.stdout);
     assert!(policy_stdout.contains("Pramaan policy explanation"));
-    assert!(policy_stdout.contains("policy: pramaan-default-v0"));
+    assert!(policy_stdout.contains("policy: pramaan-private-preview-v0"));
     assert!(policy_stdout.contains("decision: warning"));
     assert!(policy_stdout.contains("required_stages: claim_scope, sandbox_setup"));
     assert!(policy_stdout.contains("partial_evidence:claim_scope"));
+
+    let policy_list_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args(["policy", "list"])
+        .output()
+        .expect("run pramaan policy list");
+    assert!(
+        policy_list_output.status.success(),
+        "policy list failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&policy_list_output.stdout),
+        String::from_utf8_lossy(&policy_list_output.stderr)
+    );
+    let policy_list_stdout = String::from_utf8_lossy(&policy_list_output.stdout);
+    assert!(policy_list_stdout.contains("pramaan-startup-fast-v0"));
+    assert!(policy_list_stdout.contains("pramaan-fintech-strict-v0"));
+
+    let strict_policy_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "policy",
+            "explain",
+            out.to_str().expect("utf-8 output path"),
+            "--profile",
+            "security-sensitive",
+        ])
+        .output()
+        .expect("run pramaan policy explain with profile");
+    assert!(
+        strict_policy_output.status.success(),
+        "strict policy explain failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&strict_policy_output.stdout),
+        String::from_utf8_lossy(&strict_policy_output.stderr)
+    );
+    let strict_policy_stdout = String::from_utf8_lossy(&strict_policy_output.stdout);
+    assert!(strict_policy_stdout.contains("policy: pramaan-security-sensitive-v0"));
+    assert!(strict_policy_stdout.contains("missing_required_stage:static_checks"));
 
     let agent_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
         .current_dir(&workspace)

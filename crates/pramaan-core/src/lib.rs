@@ -2487,6 +2487,7 @@ pub struct PolicyProfile {
     pub required_stages: Vec<String>,
     pub hard_gate_statuses: Vec<String>,
     pub warning_statuses: Vec<String>,
+    pub hard_gate_risk_ids: Vec<String>,
     pub security_sensitive_paths: Vec<String>,
     pub sla_classes: Vec<PerformanceSlaClass>,
 }
@@ -2555,6 +2556,37 @@ pub struct AgentDecision {
 }
 
 pub fn default_policy_profile() -> PolicyProfile {
+    policy_profile_by_id("private-preview").unwrap_or_else(base_policy_profile)
+}
+
+pub fn builtin_policy_profiles() -> Vec<PolicyProfile> {
+    vec![
+        startup_fast_policy_profile(),
+        open_source_maintainer_policy_profile(),
+        security_sensitive_policy_profile(),
+        fintech_strict_policy_profile(),
+        private_preview_policy_profile(),
+    ]
+}
+
+pub fn policy_profile_by_id(id: &str) -> Option<PolicyProfile> {
+    match id {
+        "startup-fast" | "pramaan-startup-fast-v0" => Some(startup_fast_policy_profile()),
+        "open-source-maintainer" | "pramaan-open-source-maintainer-v0" => {
+            Some(open_source_maintainer_policy_profile())
+        }
+        "security-sensitive" | "pramaan-security-sensitive-v0" => {
+            Some(security_sensitive_policy_profile())
+        }
+        "fintech-strict" | "pramaan-fintech-strict-v0" => Some(fintech_strict_policy_profile()),
+        "private-preview" | "pramaan-default-v0" | "pramaan-private-preview-v0" => {
+            Some(private_preview_policy_profile())
+        }
+        _ => None,
+    }
+}
+
+fn base_policy_profile() -> PolicyProfile {
     PolicyProfile {
         policy_id: "pramaan-default-v0".to_string(),
         required_stages: vec!["claim_scope".to_string(), "sandbox_setup".to_string()],
@@ -2564,6 +2596,7 @@ pub fn default_policy_profile() -> PolicyProfile {
             "timed_out".to_string(),
         ],
         warning_statuses: vec!["skipped".to_string(), "not_applicable".to_string()],
+        hard_gate_risk_ids: Vec::new(),
         security_sensitive_paths: vec![
             "auth".to_string(),
             "authorization".to_string(),
@@ -2594,6 +2627,76 @@ pub fn default_policy_profile() -> PolicyProfile {
             },
         ],
     }
+}
+
+fn private_preview_policy_profile() -> PolicyProfile {
+    let mut profile = base_policy_profile();
+    profile.policy_id = "pramaan-private-preview-v0".to_string();
+    profile
+}
+
+fn startup_fast_policy_profile() -> PolicyProfile {
+    let mut profile = base_policy_profile();
+    profile.policy_id = "pramaan-startup-fast-v0".to_string();
+    profile.hard_gate_statuses = vec!["failed".to_string(), "error".to_string()];
+    profile.sla_classes = vec![
+        PerformanceSlaClass {
+            name: "small".to_string(),
+            changed_lines_max: 200,
+            target_ms: 120_000,
+            max_ms: 300_000,
+        },
+        PerformanceSlaClass {
+            name: "medium".to_string(),
+            changed_lines_max: 800,
+            target_ms: 300_000,
+            max_ms: 600_000,
+        },
+    ];
+    profile
+}
+
+fn open_source_maintainer_policy_profile() -> PolicyProfile {
+    let mut profile = base_policy_profile();
+    profile.policy_id = "pramaan-open-source-maintainer-v0".to_string();
+    profile.warning_statuses = vec![
+        "skipped".to_string(),
+        "not_applicable".to_string(),
+        "timed_out".to_string(),
+    ];
+    profile
+}
+
+fn security_sensitive_policy_profile() -> PolicyProfile {
+    let mut profile = base_policy_profile();
+    profile.policy_id = "pramaan-security-sensitive-v0".to_string();
+    profile
+        .required_stages
+        .extend(["static_checks".to_string(), "oracle_integrity".to_string()]);
+    profile.hard_gate_risk_ids = vec![
+        risks::STATIC_CHECK_SECURITY_SENSITIVE.to_string(),
+        risks::AGENTIC_WORKFLOW_INJECTION.to_string(),
+    ];
+    profile
+}
+
+fn fintech_strict_policy_profile() -> PolicyProfile {
+    let mut profile = security_sensitive_policy_profile();
+    profile.policy_id = "pramaan-fintech-strict-v0".to_string();
+    profile.required_stages.extend([
+        "differential_fuzz".to_string(),
+        "mutation_python_mutmut".to_string(),
+    ]);
+    profile
+        .hard_gate_statuses
+        .extend(["skipped".to_string(), "not_applicable".to_string()]);
+    profile.hard_gate_risk_ids.extend([
+        risks::FUZZ_UNEXPECTED_DIVERGENCE.to_string(),
+        risks::MUTATION_BELOW_KILL_THRESHOLD.to_string(),
+    ]);
+    profile.hard_gate_risk_ids.sort();
+    profile.hard_gate_risk_ids.dedup();
+    profile
 }
 
 pub fn evaluate_default_policy(stages: &[PolicyStageEvidence]) -> PolicyEvaluation {
@@ -2767,6 +2870,15 @@ pub fn evaluate_policy(
                 stage.id,
                 stage.residual_risks.join(",")
             ));
+            for risk_id in &stage.residual_risks {
+                if profile
+                    .hard_gate_risk_ids
+                    .iter()
+                    .any(|hard_gate_risk_id| hard_gate_risk_id == risk_id)
+                {
+                    hard_failures.push(format!("hard_gate_risk:{}:{}", stage.id, risk_id));
+                }
+            }
         }
         if !stage.not_applicable_risks.is_empty() {
             warnings.push(format!(
@@ -4120,6 +4232,46 @@ mod tests {
             .decision
             .hard_failures
             .contains(&"stage_budget_exhausted:mutation_python_mutmut".to_string()));
+    }
+
+    #[test]
+    fn built_in_policy_profiles_are_selectable_and_deterministic() {
+        let ids = builtin_policy_profiles()
+            .into_iter()
+            .map(|profile| profile.policy_id)
+            .collect::<BTreeSet<_>>();
+        assert!(ids.contains("pramaan-startup-fast-v0"));
+        assert!(ids.contains("pramaan-open-source-maintainer-v0"));
+        assert!(ids.contains("pramaan-security-sensitive-v0"));
+        assert!(ids.contains("pramaan-fintech-strict-v0"));
+        assert!(ids.contains("pramaan-private-preview-v0"));
+        assert!(policy_profile_by_id("security-sensitive").is_some());
+        assert!(policy_profile_by_id("missing-profile").is_none());
+    }
+
+    #[test]
+    fn security_sensitive_policy_escalates_agentic_workflow_risk() {
+        let profile = policy_profile_by_id("security-sensitive").expect("policy profile");
+        let evaluation = evaluate_policy(
+            &profile,
+            &[
+                policy_stage(
+                    "claim_scope",
+                    "passed",
+                    vec![risks::AGENTIC_WORKFLOW_INJECTION],
+                    vec![],
+                    None,
+                ),
+                policy_stage("sandbox_setup", "passed", vec![], vec![], None),
+                policy_stage("static_checks", "passed", vec![], vec![], None),
+                policy_stage("oracle_integrity", "passed", vec![], vec![], None),
+            ],
+        );
+        assert_eq!(evaluation.outcome, PolicyOutcome::Failed);
+        assert!(evaluation
+            .decision
+            .hard_failures
+            .contains(&"hard_gate_risk:claim_scope:R-093".to_string()));
     }
 
     #[test]

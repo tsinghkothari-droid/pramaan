@@ -1,0 +1,13 @@
+{
+  "policy_id": "pramaan-open-source-maintainer-v0",
+  "required_stages": ["claim_scope", "sandbox_setup"],
+  "hard_gate_statuses": ["failed", "error", "timed_out"],
+  "warning_statuses": ["skipped", "not_applicable", "timed_out"],
+  "hard_gate_risk_ids": [],
+  "security_sensitive_paths": ["auth", "authorization", "crypto", "secrets", "subprocess", "network", "deserialization"],
+  "sla_classes": [
+    { "name": "small", "changed_lines_max": 200, "target_ms": 240000, "max_ms": 480000 },
+    { "name": "medium", "changed_lines_max": 800, "target_ms": 480000, "max_ms": 900000 },
+    { "name": "large", "changed_lines_max": 2000, "target_ms": 900000, "max_ms": 1500000 }
+  ]
+}

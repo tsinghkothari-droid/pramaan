@@ -14,7 +14,7 @@ Phase 28 real Hypothesis/fast-check harnesses.
 
 ## Current Phase
 
-Phase 32.5: Policy Pack Library and Enterprise Profiles
+Phase 33: Adversarial Corpus 25 and Secure-Code Scenarios
 
 Public Alpha gate still open: Phase 26.1 Live GitHub Action Proof.
 
@@ -107,3 +107,4 @@ gate.
 | 2026-05-21 | Executed Phase 30 redacted bundle export. | `pramaan bundle export-redacted` now supports named profiles, scrubs text/JSON bundle copies, removes stale attestations, rebuilds manifests, and verifies public-demo exports without hand-editing JSON. |
 | 2026-05-21 | Executed Phase 31 plugin trust hardening. | Plugin receipts now have a protocol schema, trust validator, bundle-time rejection for dangerous permissions/path escapes/untrusted unsigned provenance, and a malicious-plugin corpus fixture. |
 | 2026-05-21 | Executed Phase 32 SARIF and workflow security. | `pramaan export sarif` and `pramaan export rego` now produce review/policy artifacts, claim scope flags agentic workflow injection as R-093, and docs show GitHub code-scanning upload guidance. |
+| 2026-05-21 | Executed Phase 32.5 policy packs. | Built-in policy profiles now cover startup-fast, open-source-maintainer, security-sensitive, fintech-strict, and private-preview with CLI listing/explanation, fixtures, schema, and Action profile input. |

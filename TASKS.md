@@ -95,7 +95,7 @@ it can run in parallel.
 | 6 | Phase 30 | Redaction profiles and public-safe bundle export landed; summary-only artifact minimization remains later hardening. | External pilots and demos need shareable bundles. | Public bundle sharing |
 | 7 | Phase 31 | Plugin protocol schema, trust validator, dangerous-permission rejection, and malicious-plugin fixture landed. | Plugin expansion is dangerous before verifier supply-chain trust exists. | Third-party plugin work |
 | 8 | Phase 32 | SARIF export, Rego policy export, and agentic workflow-injection checks landed. | Findings should appear in existing security review surfaces. | Enterprise/security adoption |
-| 8.5 | Phase 32.5 | Policy pack library and enterprise profiles | Teams need risk-tuned policies without editing code. | Enterprise/security adoption |
+| 8.5 | Phase 32.5 | Built-in policy packs, profile CLI, fixtures, and Action profile input landed. | Teams need risk-tuned policies without editing code. | Enterprise/security adoption |
 | 9 | Phase 33 | 25-scenario adversarial and secure-code corpus | Real MVP needs broader failure-mode proof before scale claims. | Phase 40 corpus 100 |
 | 10 | Phase 34 | Reviewer overrides, baselines, drift, and confidence calibration | Prevent alert fatigue and make confidence less hand-tuned. | Real MVP calibration gate |
 | 11 | Phase 35 | Operator docs, screenshots, troubleshooting, and release packaging | External maintainers need to install and inspect bundles unaided. | Real MVP adoption gate |
@@ -193,7 +193,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 30 | P2 trust | Redaction profiles, redacted bundle export, manifest rebuild, and public-demo scrub tests for secrets, private paths, internal hosts, and CI metadata. |
 | Phase 31 | P2 security | Plugin protocol schema, plugin identity/provenance validation, least-privilege receipt permissions, and malicious plugin rejection. |
 | Phase 32 | P2 security | SARIF export, Rego policy export, claim-scope workflow-injection checks, and GitHub code-scanning guidance. |
-| Phase 32.5 | Enterprise adoption | Built-in policy packs for startup-fast, open-source-maintainer, security-sensitive, fintech-strict, and private-preview. |
+| Phase 32.5 | Enterprise adoption | Built-in policy packs, profile fixtures, `policy list`, `policy explain --profile`, and GitHub Action `policy-profile`. |
 | Phase 33 | P2 evals | Adversarial corpus expansion to 25 scenarios, including secure-code and malicious-verifier cases. |
 | Phase 34 | P2 feedback | Reviewer override persistence, repo baselines, calibration, drift exports, and agent-author trend metrics. |
 | Phase 35 | P2 adoption | Operator guide, plugin-author guide, security model, troubleshooting docs, screenshots, and release packaging. |
@@ -319,7 +319,7 @@ AI coding agents and real reviewers. They are planned, not complete.
 #### Phase 32.5: Policy Pack Library and Enterprise Profiles
 
 - [ ] Add `schemas/policy_profile.schema.json`.
-- [ ] Create `policy/startup-fast.json`, `policy/open-source-maintainer.json`,
+- [x] Create `policy/startup-fast.json`, `policy/open-source-maintainer.json`,
   `policy/security-sensitive.json`, `policy/fintech-strict.json`, and
   `policy/private-preview.json`.
 - [ ] Add `pramaan policy list`.
@@ -329,8 +329,8 @@ AI coding agents and real reviewers. They are planned, not complete.
   security-sensitive escalation.
 - [ ] Add parity tests between default Rust policy behavior and exported policy
   fixtures.
-- [ ] Document when each policy pack should be used.
-- [ ] Keep policy packs as deterministic gates; no LLM judge can override hard
+- [x] Document when each policy pack should be used.
+- [x] Keep policy packs as deterministic gates; no LLM judge can override hard
   gates.
 
 #### Phase 35.5: Reviewer UX and Local HTML Report

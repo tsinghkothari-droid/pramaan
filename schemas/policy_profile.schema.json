@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.pramaan.dev/v1/policy_profile.schema.json",
+  "title": "Pramaan Policy Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "required_stages",
+    "hard_gate_statuses",
+    "warning_statuses",
+    "hard_gate_risk_ids",
+    "security_sensitive_paths",
+    "sla_classes"
+  ],
+  "properties": {
+    "policy_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "required_stages": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "hard_gate_statuses": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "warning_statuses": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "hard_gate_risk_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^R-[0-9]{3}$" }
+    },
+    "security_sensitive_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "sla_classes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "changed_lines_max", "target_ms", "max_ms"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "changed_lines_max": { "type": "integer", "minimum": 0 },
+          "target_ms": { "type": "integer", "minimum": 0 },
+          "max_ms": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

@@ -672,6 +672,11 @@ without changing Pramaan code.
 
 **Priority:** Enterprise adoption
 
+**Status:** Completed 2026-05-21 for built-in profiles, checked-in policy
+fixtures, `policy list`, `policy explain --profile`, schema coverage, and
+GitHub Action `policy-profile` input. External policy-file loading remains
+future hardening.
+
 **Success Criteria:**
 
 1. Built-in policy profiles exist for `startup-fast`, `open-source-maintainer`,

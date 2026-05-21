@@ -2,6 +2,8 @@
 
 Pramaan keeps its default policy in Rust for v0.1, but Phase 32 adds portable
 exports so security teams can inspect the same evidence in familiar systems.
+Phase 32.5 adds named built-in policy packs; see
+[Policy Packs](policy-packs.md) for adoption guidance.
 
 ## SARIF
 

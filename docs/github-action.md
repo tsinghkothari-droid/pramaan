@@ -69,6 +69,7 @@ downloadable tamper evidence, not proof of GitHub runner identity.
 | `upload-bundle` | `true` | Set to `false` to skip `actions/upload-artifact`. |
 | `upload-artifact` | empty | Deprecated alias for `upload-bundle`. |
 | `fail-on` | `failed` | `failed`, `actionable`, or `never`. |
+| `policy-profile` | `private-preview` | Built-in policy profile used for `policy explain`. |
 | `attest` | `false` | Set to `true` to invoke GitHub artifact attestation. |
 | `pramaan-args` | empty | Extra arguments appended to `pramaan verify`. |
 
@@ -157,8 +158,8 @@ It also groups risk IDs by family across `mitigated`, `residual`, `skipped`, and
 `not_applicable` buckets. This keeps open risk visible without turning Pramaan
 into a single trust score.
 
-The summary also shows the manifest policy decision when present. Phase 20's
-default policy profile uses:
+The summary also shows the manifest policy decision when present. The default
+`private-preview` policy profile uses:
 
 - required stages: `claim_scope`, `sandbox_setup`;
 - hard statuses: `failed`, `error`, `timed_out`;

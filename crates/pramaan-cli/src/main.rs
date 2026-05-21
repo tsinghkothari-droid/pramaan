@@ -11,14 +11,15 @@ use pramaan_core::risks::{
     CLAIM_SCOPE_PUBLIC_API_DETECTION_FAILED,
 };
 use pramaan_core::{
-    build_agent_decision, build_confidence_artifact, canonical_json_bytes, default_policy_profile,
-    detect_agentic_workflow_injection, evaluate_default_policy, render_confidence_markdown,
-    risk_family, timestamp, AgentAttribution, ArtifactRef, AttributionConfidence, ClaimScope,
-    ConfidenceDecision, EvidenceSensitivity, FuzzDivergence, FuzzRunEvidence, OutputRef,
-    PluginIdentity, PluginPermissions, PolicyDecision, PolicyStageEvidence, ProbeCandidate,
-    ProbeDecision, ProbeKind, ProbeLanguage, ProbePlanArtifact, ProbeProvider, ProbeSandboxStatus,
-    Receipt, ReceiptSummary, RedactionManifest, RiskRefs, StageBudget, StageStatus, ToolIdentity,
-    PROBE_SCHEMA_VERSION, RECEIPT_SCHEMA_VERSION,
+    build_agent_decision, build_confidence_artifact, builtin_policy_profiles, canonical_json_bytes,
+    detect_agentic_workflow_injection, evaluate_policy, policy_profile_by_id,
+    render_confidence_markdown, risk_family, timestamp, AgentAttribution, ArtifactRef,
+    AttributionConfidence, ClaimScope, ConfidenceDecision, EvidenceSensitivity, FuzzDivergence,
+    FuzzRunEvidence, OutputRef, PluginIdentity, PluginPermissions, PolicyDecision,
+    PolicyStageEvidence, ProbeCandidate, ProbeDecision, ProbeKind, ProbeLanguage,
+    ProbePlanArtifact, ProbeProvider, ProbeSandboxStatus, Receipt, ReceiptSummary,
+    RedactionManifest, RiskRefs, StageBudget, StageStatus, ToolIdentity, PROBE_SCHEMA_VERSION,
+    RECEIPT_SCHEMA_VERSION,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use std::collections::{BTreeMap, BTreeSet};
@@ -148,11 +149,14 @@ struct PolicyArgs {
 #[derive(Debug, Subcommand)]
 enum PolicyCommands {
     Explain(PolicyExplainArgs),
+    List,
 }
 
 #[derive(Debug, Parser)]
 struct PolicyExplainArgs {
     bundle: PathBuf,
+    #[arg(long, default_value = "private-preview")]
+    profile: String,
 }
 
 #[derive(Debug, Parser)]
@@ -1008,11 +1012,17 @@ fn confidence_mitigated_risks(artifact: &pramaan_core::ConfidenceArtifact) -> Ve
 
 fn run_policy(args: PolicyArgs) -> Result<()> {
     match args.command {
-        PolicyCommands::Explain(args) => run_policy_explain(args.bundle),
+        PolicyCommands::Explain(args) => run_policy_explain(args.bundle, args.profile),
+        PolicyCommands::List => {
+            for profile in builtin_policy_profiles() {
+                println!("{}", profile.policy_id);
+            }
+            Ok(())
+        }
     }
 }
 
-fn run_policy_explain(bundle: PathBuf) -> Result<()> {
+fn run_policy_explain(bundle: PathBuf, profile_id: String) -> Result<()> {
     let manifest_path = if bundle.is_dir() {
         bundle.join(MANIFEST_FILE_NAME)
     } else {
@@ -1020,8 +1030,9 @@ fn run_policy_explain(bundle: PathBuf) -> Result<()> {
     };
     let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
     let stages = policy_stage_evidence_from_manifest(&manifest);
-    let profile = default_policy_profile();
-    let evaluation = evaluate_default_policy(&stages);
+    let profile = policy_profile_by_id(&profile_id)
+        .with_context(|| format!("unknown policy profile {profile_id}"))?;
+    let evaluation = evaluate_policy(&profile, &stages);
 
     println!("Pramaan policy explanation");
     println!("manifest: {}", manifest_path.display());
@@ -1033,6 +1044,10 @@ fn run_policy_explain(bundle: PathBuf) -> Result<()> {
         profile.hard_gate_statuses.join(", ")
     );
     println!("warning_statuses: {}", profile.warning_statuses.join(", "));
+    println!(
+        "hard_gate_risk_ids: {}",
+        profile.hard_gate_risk_ids.join(", ")
+    );
     println!("sla_classes:");
     for class in &profile.sla_classes {
         println!(

@@ -1,0 +1,12 @@
+{
+  "policy_id": "pramaan-startup-fast-v0",
+  "required_stages": ["claim_scope", "sandbox_setup"],
+  "hard_gate_statuses": ["failed", "error"],
+  "warning_statuses": ["skipped", "not_applicable"],
+  "hard_gate_risk_ids": [],
+  "security_sensitive_paths": ["auth", "authorization", "crypto", "secrets", "subprocess", "network", "deserialization"],
+  "sla_classes": [
+    { "name": "small", "changed_lines_max": 200, "target_ms": 120000, "max_ms": 300000 },
+    { "name": "medium", "changed_lines_max": 800, "target_ms": 300000, "max_ms": 600000 }
+  ]
+}
