@@ -54,6 +54,10 @@ plugin trust, SARIF/policy integration, anti-gaming hardening, corpus growth,
 calibration, adoption docs, language depth, forge support, multi-agent
 provenance, adapter certification, and the Serious v1 gate.
 
+Phase 36 is now complete as private-preview language-depth documentation and
+evidence checks. Go and Java remain blocked until Python, TypeScript, and Rust
+have deeper production-grade coverage.
+
 ## Open Questions
 
 - Whether Phase 26.1 should use this repository, a throwaway public fixture
@@ -128,6 +132,7 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Completed Phase 15 documentation, language gates, and bounded adapter evidence. | Adoption docs, rendered examples, Python/TypeScript/Rust readiness gates, and bounded adapter-certification schema/fixture checks are present; full language depth and adapter product work remain later phases. |
 | 2026-05-21 | Completed Phase 16 attribution, feedback, calibration, and verifier-security trust layer. | Receipt and bundle schemas carry attribution, reviewer overrides, multi-agent hooks, plugin identity, redaction, and budgets; local feedback/calibration and plugin-trust checks exist, while hosted analytics and non-GitHub CI remain future work. |
 | 2026-05-21 | Completed Phase 17 policy, CI hardening, and evaluation intelligence. | Policy profiles, policy explanation, CI hardening, VSA schemas, redaction profiles, SARIF/Rego exports, corpus taxonomy, and benchmark report templates are verified; empirical benchmark-integrity mutation and non-GitHub execution remain future work. |
+| 2026-05-21 | Completed Phase 36 language plugin depth. | Python, TypeScript/JavaScript, and Rust support matrices and plugin docs are now checked against current code; full compiler AST, Rust property/fuzz parity, stronger sandboxing, and Go/Java remain future work. |
 | 2026-05-21 | Added P0/P1 GSD completion track for Phases 18-25. | Remaining P0/P1 tasks are now mapped to execution phases, with a Phase 25 pilot gate before P2/P3 expansion. |
 | 2026-05-21 | Completed Phase 18 product honesty and direction. | `STATUS.md`, README status language, non-goals, ICP, killer workflow, research sufficiency, and pivot criteria now keep the public surface ambitious but honest. |
 | 2026-05-21 | Completed Phase 19 receipt golden tests and canonical evidence. | Generated claim-scope receipts now have a normalized golden contract test, bundle manifest digests use canonical JSON bytes, and receipt docs explain fixture update discipline. |

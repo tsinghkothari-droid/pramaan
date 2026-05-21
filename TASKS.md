@@ -800,12 +800,12 @@ Phase 28.5 acceptance criteria:
 
 ## P2: Language Expansion
 
-- [ ] Deepen Python plugin quality before adding more languages.
-- [ ] Deepen TypeScript plugin quality before adding more languages.
-- [ ] Deepen Rust plugin quality before adding more languages.
+- [x] Deepen Python plugin quality before adding more languages.
+- [x] Deepen TypeScript plugin quality before adding more languages.
+- [x] Deepen Rust plugin quality before adding more languages.
 - [ ] Add Go support after plugin protocol stability.
 - [ ] Add Java support after plugin protocol stability.
-- [ ] Keep each language plugin accountable for static checks, oracle integrity, mutation, fuzz/property, and fixture coverage.
+- [x] Keep each language plugin accountable for static checks, oracle integrity, mutation, fuzz/property, and fixture coverage.
 
 ## P3: Adapter Certification
 

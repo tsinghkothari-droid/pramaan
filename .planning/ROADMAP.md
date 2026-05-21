@@ -999,6 +999,12 @@ phase-level `HUMAN_SIGNOFF.md`.
 
 ## Phase 36: Language Plugin Depth for Python, TypeScript, and Rust
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Python,
+TypeScript/JavaScript, and Rust now have a checked support matrix and plugin
+readiness docs tied to current static, oracle, mutation, and property/fuzz
+evidence. Full compiler AST, Rust property/fuzz parity, stronger sandboxing,
+and Go/Java expansion remain future work.
+
 **Goal:** Deepen the first three supported language paths before expanding language count.
 
 **Priority:** P2 language depth
