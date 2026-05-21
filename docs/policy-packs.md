@@ -9,7 +9,7 @@ and they cannot override hard evidence such as weakened tests or bundle tamper.
 | --- | --- |
 | `startup-fast` | Fast feedback for small teams. Failed/error stages block; timeouts are easier to treat as follow-up. |
 | `open-source-maintainer` | Public OSS review where skipped tools must be visible but not every missing local tool should block. |
-| `security-sensitive` | Auth, crypto, secrets, workflow, parser, and oracle-sensitive changes. Escalates security-sensitive and agentic workflow-injection risks. |
+| `security-sensitive` | Auth, crypto, secrets, workflow, parser, oracle-sensitive, and verifier-surface changes. Escalates security-sensitive, agentic workflow-injection, and verifier-abuse risks. |
 | `fintech-strict` | Regulated/high-risk code paths. Requires deeper fuzz/mutation evidence and hard-fails skipped/not-applicable stages. |
 | `private-preview` | Honest early-pilot mode. This is the default because Pramaan is still pre-Alpha. |
 

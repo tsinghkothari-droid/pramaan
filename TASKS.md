@@ -89,7 +89,7 @@ it can run in parallel.
 | --- | --- | --- | --- | --- |
 | 1 | Phase 26 | External local pilot reports for Python, TypeScript, and Rust repositories | Public Alpha needed real-repo evidence beyond internal fixtures. | Public Alpha evidence |
 | 1.1 | Phase 26.1 | Live GitHub Action proof on a real PR or PR-like branch | Live workflow-dispatch evidence exists; a PR-event demo remains useful in Phase 26.4. | Public Alpha claims |
-| 1.2 | Phase 26.2 | Competitive benchmark and prior-art matrix | The repo should prove where Pramaan is different from AI reviewers, test monitors, and attestation tools. | Positioning and scope discipline |
+| 1.2 | Phase 26.2 | Competitive benchmark and prior-art matrix | The repo should prove where Pramaan is different from review assistants, test monitors, and attestation tools. | Positioning and scope discipline |
 | 1.3 | Phase 26.3 | Competitor-gap fixtures | "Pramaan catches what X misses" must be executable evidence, not a marketing sentence. | Demo credibility |
 | 1.4 | Phase 26.4 | Minimum lovable verifier loop | One command, one report, one proof bundle, one killer demo should feel complete before expanding. | Real MVP wedge |
 | 1.5 | Phase 26.5 | Agent harness interface for Claude Code, Codex, Cursor-style agents, and custom harnesses | Agents should call Pramaan before claiming done. | Agent adoption |
@@ -97,7 +97,7 @@ it can run in parallel.
 | 2.1 | Phase 27.1 | Parser metadata and full-AST dependency decision | Full AST support needs dependency and runtime justification before public claims change. | Public full-AST claims |
 | 3 | Phase 28 | Recorded-case replay for differential fuzz evidence | Confidence needs replayable generated-case evidence, even before real harness execution. | Phase 28.5 confidence inputs |
 | 3.1 | Phase 28.1 | Safe Hypothesis/fast-check harness execution | Real tool-backed campaigns need sandboxed generated harnesses. | Public tool-backed property claims |
-| 3.15 | Phase 28.15 | PR-Agent-style fuzz harness review gate | Tool-backed failures must affect verdicts, timeouts must be real, and harness errors must become receipts before public claims. | Public tool-backed property claims |
+| 3.15 | Phase 28.15 | Fuzz harness truthfulness review gate | Tool-backed failures must affect verdicts, timeouts must be real, and harness errors must become receipts before public claims. | Public tool-backed property claims |
 | 3.25 | Phase 28.25 | AI evidence-seeking probe generator | AI should generate better probes, but only executed probes count. | Phase 28.26 execution |
 | 3.26 | Phase 28.26 | Sandbox execution for generated probes | Safe-marker bounded probes now compile/run before they can be kept; rejected probes preserve failure reasons. | Public-review probe honesty |
 | 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
@@ -111,6 +111,7 @@ it can run in parallel.
 | 10 | Phase 34 | Reviewer overrides, baselines, drift, and confidence calibration | Prevent alert fatigue and make confidence less hand-tuned. | Real MVP calibration gate |
 | 11 | Phase 35 | Operator docs, screenshots, troubleshooting, and release packaging | External maintainers need to install and inspect bundles unaided. | Real MVP adoption gate |
 | 11.5 | Phase 35.5 | Reviewer UX and local HTML report | A bundle must be understood in 30 seconds without a hosted dashboard. | Real MVP adoption gate |
+| 11.6 | Phase 35.6 | License-safe reviewer interface patterns | Borrow mature pull-request tooling ergonomics without importing names, text, prompts, configuration, screenshots, or source code. | Real MVP adoption gate |
 | 12 | Phase 36 | Python/TypeScript/Rust plugin depth | Depth beats adding shallow Go/Java too early. | Language expansion |
 | 13 | Phase 37 | Provider-neutral forge design and GitLab support plan | Avoid hard-coding GitHub before enterprise pilots. | GitLab/Gitea/Bitbucket work |
 | 14 | Phase 38 | Multi-agent provenance and handoff tracking | Agent chains need attribution before trend analysis becomes serious. | Serious v1 provenance |
@@ -122,7 +123,7 @@ Execution guardrails:
 - Start with Phase 26 unless the user explicitly asks for a narrower phase.
 - Do not market public Alpha from live Action evidence alone; Phase 26.1 is
   complete, but public review still needs the remaining pre-36 readiness phases.
-- Do not claim Pramaan is better than AI reviewers before Phase 26.2 and Phase
+- Do not claim Pramaan is better than adjacent review assistants before Phase 26.2 and Phase
   26.3 create a benchmark matrix and executable competitor-gap fixtures.
 - Do not broaden engines before Phase 26.4 proves the minimum lovable verifier
   loop is coherent end to end.
@@ -200,7 +201,7 @@ unfinished task family below into an executable GSD phase.
 | --- | --- | --- |
 | Phase 26 | Alpha gate | Three external real-repository local pilots, runtime/noise metrics, and a public-Alpha no-go update. |
 | Phase 26.1 | Alpha gate | Live GitHub Action proof, uploaded bundle artifact, job summary evidence, and a public-Alpha go/no-go update. |
-| Phase 26.2 | Positioning | Competitive benchmark matrix against PR-Agent, OpenReview, inspect, Testomatio, quality-monitor, and actions/attest. |
+| Phase 26.2 | Positioning | Competitive benchmark matrix against adjacent review-assistant, quality-reporting, test-monitoring, and attestation tool categories. |
 | Phase 26.3 | Demo credibility | Executable "Pramaan catches what X misses" fixtures for weakened assertions, skipped tests, fixture drift, false-green CI, and unsigned aggregate reports. |
 | Phase 26.4 | Product wedge | Minimum lovable verifier loop: one command, one report, one proof bundle, one killer demo, and a 30-second reviewer pass. |
 | Phase 26.5 | Agent adoption | `pramaan agent done-gate`, agent decision schema, `AGENTS.md`, Claude Code hook/command templates, and blocked-agent fixtures. |
@@ -208,7 +209,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 27.1 | P1 hardening split | Parser-version evidence, unsupported-syntax metadata, disagreement reporting fields, and full-AST dependency decisions; full compiler integrations remain split. |
 | Phase 28 | P1 hardening | Recorded-case replay CLI contracts for differential fuzz evidence, with real harness execution split honestly. |
 | Phase 28.1 | P1 hardening split | First bounded Hypothesis and fast-check generated-harness execution path with tool-version/raw-output evidence; Phase 28.15 owns review-found verdict/timeout/truthfulness gaps. |
-| Phase 28.15 | P1 corrective review gate | PR-Agent-style review follow-up for harness failure promotion, real timeout enforcement, structured harness-error receipts, JS evaluation safety, and clearer tool-generated count metadata. |
+| Phase 28.15 | P1 corrective review gate | Independent review follow-up for harness failure promotion, real timeout enforcement, structured harness-error receipts, JS evaluation safety, and clearer tool-generated count metadata. |
 | Phase 28.25 | 10x evidence depth | AI-generated probes for tests, properties, differential inputs, and security checks; only sandbox-executed probes count. |
 | Phase 28.26 | 10x evidence depth | Bounded generated-probe execution, rejected-probe preservation, and execution report validation. |
 | Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
@@ -222,6 +223,7 @@ unfinished task family below into an executable GSD phase.
 | Phase 34 | P2 feedback | Reviewer override persistence, repo baselines, calibration, drift exports, and agent-author trend metrics. |
 | Phase 35 | P2 adoption | Operator guide, plugin-author guide, security model, troubleshooting docs, screenshots, and release packaging. |
 | Phase 35.5 | Adoption UX | Local HTML report and PR markdown report with blockers, warnings, ran/skipped stages, oracle changes, replay commands, and override fields. |
+| Phase 35.6 | Adoption UX and license hygiene | PR URL entrypoint, original reviewer commands, `.pramaan.toml`, persistent summaries, and public docs that avoid named adjacent-project references. |
 | Phase 36 | P2 language depth | Deep Python, TypeScript, and Rust plugin quality before Go/Java expansion. |
 | Phase 37 | P3 enterprise | Provider-neutral forge abstraction, GitLab attestation/OIDC design, and Gitea/Bitbucket notes. |
 | Phase 38 | P3 provenance | Multi-agent provenance chains, intermediate commit attribution, and handoff metadata. |
@@ -309,10 +311,9 @@ AI coding agents and real reviewers. They are planned, not complete.
 #### Phase 26.2: Competitive Benchmark and Prior-Art Matrix
 
 - [x] Add `docs/competitive-benchmark.md`.
-- [x] Compare Pramaan against PR-Agent, reviewdog-style quality reporters,
-  test-change monitors, Pynguin/EvoSuite-style test generators, mutation and
-  property/fuzz tools, GitHub artifact attestations, SLSA VSA, Sigstore, and
-  in-toto primitives.
+- [x] Compare Pramaan against adjacent review-assistant, quality-reporting,
+  test-change monitoring, test-generation, mutation, property/fuzz, and
+  supply-chain attestation categories.
 - [x] For each tool category, record overlap, what Pramaan should reuse, what Pramaan
   should not duplicate, and what evidence gap remains.
 - [x] Add a "not a competitor" section for tools that are primitives rather
@@ -417,18 +418,19 @@ AI coding agents and real reviewers. They are planned, not complete.
 
 #### Phase 32.75: Anti-Gaming and Verifier-Abuse Hardening
 
-- [ ] Add malicious PR fixtures for relaxed config, removed hooks, skipped
-  tests, altered fixtures, poisoned snapshots, and changed verification scripts.
-- [ ] Add verifier-abuse fixtures for artifact path escape, receipt tampering,
-  hidden skipped stages, fake tool output, timeout laundering, and benchmark
+- [x] Add malicious PR fixtures for workflow bypass, action wrapper weakening,
+  altered fixtures, changed verification scripts, schema weakening, and corpus
   overfitting.
-- [ ] Add policy rules that make suspicious verifier-surface changes
+- [x] Add verifier-abuse fixture coverage for hidden skipped stages, forged
+  script output, schema weakening, poisoned examples, and benchmark overfitting.
+- [x] Add policy rules that make suspicious verifier-surface changes
   warning-or-blocking depending on policy profile.
-- [ ] Ensure skipped required stages cannot silently improve confidence.
-- [ ] Ensure generated receipts cannot be overwritten by plugins or PR code.
-- [ ] Add docs explaining Pramaan's adversary model: careless AI, overfitted AI,
+- [x] Ensure skipped required stages cannot silently improve confidence.
+- [x] Ensure generated receipts cannot be overwritten by plugins or PR code.
+- [x] Add docs explaining Pramaan's adversary model: careless AI, overfitted AI,
   malicious contributor, and compromised verification plugin.
-- [ ] Feed accepted scenarios into Phase 33 and Phase 40 corpus counts.
+- [x] Feed accepted scenarios into Phase 33 and Phase 40 corpus counts through
+  `corpus/verifier-abuse-fixtures.v0.1.json`.
 
 #### Phase 35.5: Reviewer UX and Local HTML Report
 
@@ -444,6 +446,22 @@ AI coding agents and real reviewers. They are planned, not complete.
   finding, and replay or inspection paths.
 - [ ] Add docs that the local report is the first UX surface; hosted dashboard
   is later.
+
+#### Phase 35.6: License-Safe Reviewer Interface Patterns
+
+- [ ] Add or stage `pramaan verify-pr --url <pull-request-url>` as the clean
+  PR URL entrypoint.
+- [ ] Define original reviewer commands: `/pramaan verify`,
+  `/pramaan explain`, `/pramaan replay`, and `/pramaan policy <profile>`.
+- [ ] Add `.pramaan.toml` documentation for policy profile, stage budgets,
+  redaction, mutation opt-in, report behavior, and summary update behavior.
+- [ ] Update the Action/report plan so repeated runs update one persistent
+  summary instead of creating noisy repeated comments.
+- [ ] Keep all public docs category-level: no copied prompts, config keys,
+  command names, screenshots, text, or branded terminology from adjacent
+  projects.
+- [ ] Add a verification check that risky adjacent-project names do not appear
+  in public docs or planning files.
 
 ### P0: Assertion Truth Audit Gate
 

@@ -49,7 +49,8 @@ evidence, static-check adapters that record the real underlying tool versions,
 structured oracle-integrity checks, demo fixtures, mutation adapters that run
 when tools are installed, deterministic differential replay evidence, an
 AI evidence-seeking probe plan with bounded sandbox execution, an uncalibrated
-auditable confidence vote, and a GitHub Action wrapper.
+auditable confidence vote, verifier-abuse surface detection, and a GitHub
+Action wrapper.
 
 `pramaan verify` now orchestrates the real stages by default (claim scope,
 sandbox setup, static checks, oracle integrity, differential fuzz). Mutation
@@ -82,8 +83,8 @@ See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
 - [Rendered Examples](docs/rendered-examples/README.md): pass, warning, fail,
   and bundle-inspection examples.
 - [Competitive Benchmark](docs/competitive-benchmark.md): what Pramaan
-  overlaps, reuses, and does differently from AI PR reviewers, quality
-  aggregators, test generators, and attestation primitives.
+  overlaps, reuses, and does differently from review assistants,
+  quality-report aggregators, test generators, and attestation primitives.
 - [Pre-Phase-36 GSD Prompt](.planning/AUTONOMOUS_GSD_BEFORE_PHASE_36_PROMPT.md):
   paste-ready autonomous prompt for finishing all remaining GSD phases before
   language-depth expansion.
@@ -118,7 +119,7 @@ Pramaan is not another vague AI critic. It is execution-grounded verification
 infrastructure.
 
 It should also be understood as a complement to existing tools, not a blanket
-replacement. AI PR reviewers, reviewdog-style aggregators, test-generation
+replacement. Review assistants, quality-report aggregators, test-generation
 systems, and SLSA/Sigstore/in-toto attestations are all useful adjacent tools.
 Pramaan's differentiator is the auditable PR evidence bundle around those
 signals. See the [competitive benchmark](docs/competitive-benchmark.md) for the

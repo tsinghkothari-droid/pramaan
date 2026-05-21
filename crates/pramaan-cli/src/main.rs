@@ -12,16 +12,16 @@ use pramaan_core::risks::{
 };
 use pramaan_core::{
     build_agent_decision, build_confidence_artifact, builtin_policy_profiles, canonical_json_bytes,
-    compare_to_baseline, detect_agentic_workflow_injection, evaluate_calibration, evaluate_policy,
-    policy_profile_by_id, render_confidence_markdown, risk_family, timestamp, AgentAttribution,
-    ArtifactRef, AttributionConfidence, BundleFeedbackMetrics, CalibrationObservation, ClaimScope,
-    ConfidenceDecision, EvidenceSensitivity, FeedbackReport, FuzzDivergence, FuzzRunEvidence,
-    OutputRef, OverrideDecision, PluginIdentity, PluginPermissions, PolicyDecision,
-    PolicyStageEvidence, ProbeCandidate, ProbeDecision, ProbeKind, ProbeLanguage,
-    ProbePlanArtifact, ProbeProvider, ProbeSandboxStatus, Receipt, ReceiptSummary,
-    RedactionManifest, RepoBaseline, ReviewerOverride, ReviewerOverrideEvidence, RiskRefs,
-    StageBudget, StageStatus, ToolIdentity, FEEDBACK_SCHEMA_VERSION, PROBE_SCHEMA_VERSION,
-    RECEIPT_SCHEMA_VERSION,
+    compare_to_baseline, detect_agentic_workflow_injection, detect_verifier_abuse_paths,
+    evaluate_calibration, evaluate_policy, policy_profile_by_id, render_confidence_markdown,
+    risk_family, timestamp, AgentAttribution, ArtifactRef, AttributionConfidence,
+    BundleFeedbackMetrics, CalibrationObservation, ClaimScope, ConfidenceDecision,
+    EvidenceSensitivity, FeedbackReport, FuzzDivergence, FuzzRunEvidence, OutputRef,
+    OverrideDecision, PluginIdentity, PluginPermissions, PolicyDecision, PolicyStageEvidence,
+    ProbeCandidate, ProbeDecision, ProbeKind, ProbeLanguage, ProbePlanArtifact, ProbeProvider,
+    ProbeSandboxStatus, Receipt, ReceiptSummary, RedactionManifest, RepoBaseline, ReviewerOverride,
+    ReviewerOverrideEvidence, RiskRefs, StageBudget, StageStatus, ToolIdentity,
+    FEEDBACK_SCHEMA_VERSION, PROBE_SCHEMA_VERSION, RECEIPT_SCHEMA_VERSION,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use serde::{Deserialize, Serialize};
@@ -2386,6 +2386,20 @@ fn claim_scope_from_context(base_ref: &str, head_ref: &str) -> Result<ClaimScope
             risk_refs.push(finding.risk_id);
         }
     }
+    match changed_files_between_refs(base_ref, head_ref) {
+        Ok(paths) => {
+            for finding in detect_verifier_abuse_paths(paths) {
+                limitations.push(format!(
+                    "Verifier-abuse surface signal {} at {}: {}",
+                    finding.id, finding.path, finding.message
+                ));
+                risk_refs.push(finding.risk_id);
+            }
+        }
+        Err(error) => {
+            limitations.push(format!("Verifier-surface change detection failed: {error}"));
+        }
+    }
 
     if !expected_behavior.is_empty() {
         scope.expected_behavior = expected_behavior;
@@ -2532,6 +2546,25 @@ fn changed_public_apis(base_ref: &str, head_ref: &str) -> Result<Vec<String>> {
     apis.sort();
     apis.dedup();
     Ok(apis)
+}
+
+fn changed_files_between_refs(base_ref: &str, head_ref: &str) -> Result<Vec<String>> {
+    let output = Command::new("git")
+        .args(["diff", "--name-only", base_ref, head_ref])
+        .output()
+        .with_context(|| format!("running git diff --name-only {base_ref} {head_ref}"))?;
+    if !output.status.success() {
+        anyhow::bail!(
+            "git diff --name-only failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
+    }
+    Ok(String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(ToOwned::to_owned)
+        .collect())
 }
 
 fn public_symbols_in_file(relative: &str, path: &Path) -> Vec<String> {

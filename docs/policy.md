@@ -44,3 +44,20 @@ injection patterns, including:
 
 Those signals map to risk `R-093` and are recorded as claim-scope limitations.
 They are warnings for human review, not an LLM judge.
+
+## Verifier-Abuse Surface Changes
+
+Phase 32.75 adds a path-based detector for changes that touch Pramaan's own
+gate surface:
+
+- `.github/workflows/*`
+- `action.yml` / `action.yaml`
+- verifier scripts under `scripts/`
+- receipt/bundle schemas under `schemas/`
+- checked fixtures and corpus examples under `examples/` and `corpus/`
+- GSD readiness evidence under `.planning/`
+
+These changes map to `R-094` or `R-095`. The private-preview policy treats them
+as warnings because maintainers often legitimately update fixtures and docs.
+The `security-sensitive` and `fintech-strict` profiles hard-fail these risks so
+teams must explicitly review and override verifier-surface changes.

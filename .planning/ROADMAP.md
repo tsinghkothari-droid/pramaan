@@ -810,6 +810,11 @@ future hardening.
 
 ## Phase 32.75: Anti-Gaming and Verifier-Abuse Hardening
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Verifier-surface path
+detection, policy escalation for `R-094`/`R-095`, and a validated
+verifier-abuse fixture corpus landed. Deeper executable exploit fixtures remain
+Phase 40 hardening.
+
 **Goal:** Make Pramaan resistant to PRs or plugins that try to game the
 verification surface itself.
 

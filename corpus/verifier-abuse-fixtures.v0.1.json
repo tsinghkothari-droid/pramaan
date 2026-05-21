@@ -1,0 +1,72 @@
+{
+  "schema_version": "pramaan.verifier_abuse_fixtures.v0.1",
+  "description": "Concrete anti-gaming scenarios for PRs or plugins that try to weaken Pramaan itself.",
+  "scenarios": [
+    {
+      "id": "VAB-FIX-001",
+      "name": "GitHub workflow hides required stages",
+      "changed_paths": [".github/workflows/pramaan.yml"],
+      "attack": "PR changes the workflow to run Pramaan with --skip-stage oracle on agent-authored changes.",
+      "expected_risks": ["R-095"],
+      "expected_policy": {
+        "private-preview": "warning",
+        "security-sensitive": "fail"
+      }
+    },
+    {
+      "id": "VAB-FIX-002",
+      "name": "Composite action wrapper weakens artifact upload",
+      "changed_paths": ["action.yml"],
+      "attack": "Action change stops uploading the proof bundle before failing the job.",
+      "expected_risks": ["R-094"],
+      "expected_policy": {
+        "private-preview": "warning",
+        "security-sensitive": "fail"
+      }
+    },
+    {
+      "id": "VAB-FIX-003",
+      "name": "Claim-audit script forged",
+      "changed_paths": ["scripts/check-claim-audit.mjs"],
+      "attack": "Script always exits zero so public README claims can drift.",
+      "expected_risks": ["R-094"],
+      "expected_policy": {
+        "private-preview": "warning",
+        "security-sensitive": "fail"
+      }
+    },
+    {
+      "id": "VAB-FIX-004",
+      "name": "Receipt schema weakens required evidence",
+      "changed_paths": ["schemas/receipt.schema.json"],
+      "attack": "Schema removes required digest or risk fields so tampered receipts still validate.",
+      "expected_risks": ["R-094"],
+      "expected_policy": {
+        "private-preview": "warning",
+        "security-sensitive": "fail"
+      }
+    },
+    {
+      "id": "VAB-FIX-005",
+      "name": "Oracle fixture poisoned",
+      "changed_paths": ["examples/fixtures/oracle/head/tests/test_checkout.py"],
+      "attack": "Fixture changes expected weakened-test proof so benchmark appears cleaner than reality.",
+      "expected_risks": ["R-094"],
+      "expected_policy": {
+        "private-preview": "warning",
+        "security-sensitive": "fail"
+      }
+    },
+    {
+      "id": "VAB-FIX-006",
+      "name": "Corpus benchmark overfitting",
+      "changed_paths": ["corpus/adversarial-scenarios-v0.1.json"],
+      "attack": "Scenario wording is changed to match the detector rather than the real failure mode.",
+      "expected_risks": ["R-094"],
+      "expected_policy": {
+        "private-preview": "warning",
+        "security-sensitive": "fail"
+      }
+    }
+  ]
+}

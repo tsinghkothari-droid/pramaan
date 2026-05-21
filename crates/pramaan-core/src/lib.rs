@@ -2050,6 +2050,15 @@ pub struct AgenticWorkflowFinding {
     pub message: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct VerifierAbuseFinding {
+    pub id: String,
+    pub risk_id: String,
+    pub severity: String,
+    pub path: String,
+    pub message: String,
+}
+
 pub fn redact_sensitive_text(input: &str) -> String {
     let mut output = input.replace('\\', "/");
     for key in [
@@ -2298,6 +2307,91 @@ pub fn detect_agentic_workflow_injection(
         });
     }
     findings
+}
+
+pub fn detect_verifier_abuse_paths<I, S>(paths: I) -> Vec<VerifierAbuseFinding>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let mut findings = Vec::new();
+    for raw_path in paths {
+        let path = raw_path.as_ref().replace('\\', "/");
+        let lowered = path.to_ascii_lowercase();
+        let Some((id, risk_id, severity, message)) = verifier_abuse_path_rule(&lowered) else {
+            continue;
+        };
+        findings.push(VerifierAbuseFinding {
+            id: id.to_string(),
+            risk_id: risk_id.to_string(),
+            severity: severity.to_string(),
+            path,
+            message: message.to_string(),
+        });
+    }
+    findings
+}
+
+fn verifier_abuse_path_rule(
+    path: &str,
+) -> Option<(&'static str, &'static str, &'static str, &'static str)> {
+    if path == "action.yml" || path == "action.yaml" {
+        return Some((
+            "VAB-001",
+            risks::VERIFIER_SURFACE_CHANGED,
+            "high",
+            "GitHub Action wrapper changed; review whether Pramaan invocation or artifact upload was weakened.",
+        ));
+    }
+    if path.starts_with(".github/workflows/") {
+        return Some((
+            "VAB-002",
+            risks::VERIFIER_STAGE_LAUNDERING,
+            "high",
+            "CI workflow changed; review skipped stages, permissions, and hidden verifier bypasses.",
+        ));
+    }
+    if path.starts_with("scripts/")
+        && (path.contains("check-")
+            || path.contains("verify")
+            || path.contains("claim")
+            || path.contains("pramaan"))
+    {
+        return Some((
+            "VAB-003",
+            risks::VERIFIER_SURFACE_CHANGED,
+            "medium",
+            "Verifier support script changed; review for forged summaries or disabled checks.",
+        ));
+    }
+    if path.starts_with("schemas/") {
+        return Some((
+            "VAB-004",
+            risks::VERIFIER_SURFACE_CHANGED,
+            "medium",
+            "Receipt or bundle schema changed; review compatibility and required-field weakening.",
+        ));
+    }
+    if path.starts_with("corpus/")
+        || path.starts_with("examples/")
+        || path.starts_with("docs/rendered-examples/")
+    {
+        return Some((
+            "VAB-005",
+            risks::VERIFIER_SURFACE_CHANGED,
+            "medium",
+            "Fixture or corpus evidence changed; review for benchmark overfitting or poisoned examples.",
+        ));
+    }
+    if path.starts_with(".planning/") {
+        return Some((
+            "VAB-006",
+            risks::VERIFIER_SURFACE_CHANGED,
+            "low",
+            "Planning evidence changed; review whether readiness state was overstated.",
+        ));
+    }
+    None
 }
 
 fn redact_assignment_values(input: &str, key: &str, separator: char) -> String {
@@ -2704,6 +2798,8 @@ fn security_sensitive_policy_profile() -> PolicyProfile {
     profile.hard_gate_risk_ids = vec![
         risks::STATIC_CHECK_SECURITY_SENSITIVE.to_string(),
         risks::AGENTIC_WORKFLOW_INJECTION.to_string(),
+        risks::VERIFIER_SURFACE_CHANGED.to_string(),
+        risks::VERIFIER_STAGE_LAUNDERING.to_string(),
     ];
     profile
 }
@@ -4898,6 +4994,35 @@ jobs:
         assert!(findings
             .iter()
             .all(|finding| finding.risk_id == risks::AGENTIC_WORKFLOW_INJECTION));
+    }
+
+    #[test]
+    fn verifier_abuse_detector_flags_gate_surface_paths() {
+        let findings = detect_verifier_abuse_paths([
+            ".github/workflows/pramaan.yml",
+            "action.yml",
+            "scripts/check-claim-audit.mjs",
+            "schemas/receipt.schema.json",
+            "examples/proof-bundles/fixture.json",
+            "src/lib.rs",
+        ]);
+        let ids = findings
+            .iter()
+            .map(|finding| finding.id.as_str())
+            .collect::<BTreeSet<_>>();
+
+        assert!(ids.contains("VAB-001"));
+        assert!(ids.contains("VAB-002"));
+        assert!(ids.contains("VAB-003"));
+        assert!(ids.contains("VAB-004"));
+        assert!(ids.contains("VAB-005"));
+        assert!(!findings.iter().any(|finding| finding.path == "src/lib.rs"));
+        assert!(findings
+            .iter()
+            .any(|finding| finding.risk_id == risks::VERIFIER_STAGE_LAUNDERING));
+        assert!(findings
+            .iter()
+            .any(|finding| finding.risk_id == risks::VERIFIER_SURFACE_CHANGED));
     }
 
     #[test]

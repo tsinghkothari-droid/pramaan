@@ -76,6 +76,13 @@ GitHub environment mutation, and privileged workflow names. These map to
 `R-093` claim-scope risk so reviewers see the prompt/tooling hazard before an
 agent or workflow copies the text into a privileged sink.
 
+Phase 32.75 also treats verifier-surface file changes as an attack surface.
+Changes to `.github/workflows/`, `action.yml`, verifier scripts, schemas,
+fixtures, corpus files, and GSD readiness evidence now produce claim-scope
+limitations mapped to `R-094` or `R-095`. This does not prove the change is
+malicious; it prevents a PR from silently weakening the very evidence gate that
+would review it.
+
 ## Plugin Boundary
 
 Plugins must not be allowed to edit prior receipts or bundle manifests directly.

@@ -64,6 +64,8 @@ pub const FUZZ_DIVERGENCE_NEEDS_REVIEW: &str = "R-080";
 // CI / agentic workflow supply chain (R-091..R-095)
 // ---------------------------------------------------------------------------
 pub const AGENTIC_WORKFLOW_INJECTION: &str = "R-093";
+pub const VERIFIER_SURFACE_CHANGED: &str = "R-094";
+pub const VERIFIER_STAGE_LAUNDERING: &str = "R-095";
 
 #[cfg(test)]
 mod tests {
@@ -112,6 +114,8 @@ mod tests {
             FUZZ_NO_TOOL_BACKED_ADAPTER,
             FUZZ_DIVERGENCE_NEEDS_REVIEW,
             AGENTIC_WORKFLOW_INJECTION,
+            VERIFIER_SURFACE_CHANGED,
+            VERIFIER_STAGE_LAUNDERING,
         ] {
             assert!(
                 is_known_risk_id(id),

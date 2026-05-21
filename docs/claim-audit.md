@@ -82,17 +82,18 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-023 | `STATUS.md` | STATUS: Auditable confidence vote | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/confidence.schema.json`, `docs/confidence.md` | `cargo test --workspace` | pass | Keep status Partial until calibration and broader fixtures land. |
 | CLAIM-STATUS-CAP-024 | `STATUS.md` | STATUS: Agent completion gate | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/agent_decision.schema.json`, `docs/agent-harness.md` | `cargo test --workspace` | pass | Keep status Partial until richer IDE/MCP integrations exist. |
 | CLAIM-STATUS-CAP-025 | `STATUS.md` | STATUS: Threat model for malicious PRs/verifier plugins | manual-proof | `docs/threat-model.md` | `Get-Content docs/threat-model.md` | pass | Documentation is not enforcement. |
-| CLAIM-STATUS-CAP-026 | `STATUS.md` | STATUS: Redaction helpers for shareable evidence | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` | pass | Redaction profiles remain broader future work. |
-| CLAIM-STATUS-CAP-027 | `STATUS.md` | STATUS: Adapter certification mode | checked-fixture | `docs/adapter-certification.md`, `examples/fixtures/adapter_certification.synthetic.json` | Fixture/manual inspection | pass | Keep adjacent, not core v0.1 path. |
-| CLAIM-STATUS-CAP-028 | `STATUS.md` | STATUS: Public claim audit gate | executable-test | `docs/claim-audit.md`, `scripts/check-claim-audit.mjs` | `node scripts/check-claim-audit.mjs` | pass | Keep the ledger updated after every phase. |
+| CLAIM-STATUS-CAP-026 | `STATUS.md` | STATUS: Verifier-abuse surface detection | executable-test | `crates/pramaan-core/src/lib.rs`, `corpus/verifier-abuse-fixtures.v0.1.json`, `scripts/check-verifier-abuse-fixtures.mjs` | `cargo test -p pramaan-core verifier_abuse && node scripts/check-verifier-abuse-fixtures.mjs` | pass-with-risk | Detects verifier-surface path changes; deeper exploit fixtures remain Phase 40 work. |
+| CLAIM-STATUS-CAP-027 | `STATUS.md` | STATUS: Redaction helpers for shareable evidence | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` | pass | Redaction profiles remain broader future work. |
+| CLAIM-STATUS-CAP-028 | `STATUS.md` | STATUS: Adapter certification mode | checked-fixture | `docs/adapter-certification.md`, `examples/fixtures/adapter_certification.synthetic.json` | Fixture/manual inspection | pass | Keep adjacent, not core v0.1 path. |
+| CLAIM-STATUS-CAP-029 | `STATUS.md` | STATUS: Public claim audit gate | executable-test | `docs/claim-audit.md`, `scripts/check-claim-audit.mjs` | `node scripts/check-claim-audit.mjs` | pass | Keep the ledger updated after every phase. |
 
 ## Counts
 
 | Bucket | Count |
 | --- | ---: |
-| Total claims audited | 62 |
-| `STATUS.md` capability rows covered | 30 |
-| Executable-test claims | 42 |
+| Total claims audited | 63 |
+| `STATUS.md` capability rows covered | 31 |
+| Executable-test claims | 43 |
 | Checked-fixture/manual-proof claims | 12 |
 | Partial/planned/accepted-risk claims | 8 |
 | False-or-stale claims left in public copy | 0 |

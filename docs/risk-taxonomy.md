@@ -30,6 +30,13 @@ Risk IDs are grouped into families that line up with Pramaan stages:
 | R-091..R-095 | ci_supply_chain | CI and dependency trust |
 | R-096..R-100 | demo_corpus | demo and evaluation corpus |
 
+Phase 32.75 names two verifier-abuse risks inside the CI/supply-chain family:
+
+- `R-094`: verifier surface changed, such as action wrappers, schemas, scripts,
+  fixtures, corpus, or readiness evidence.
+- `R-095`: verifier stage laundering, such as workflow changes that can hide
+  skipped required stages or weaken bundle upload/failure behavior.
+
 The CLI and bundle summaries report these families in four buckets:
 
 - `mitigated`: the stage produced evidence that addresses the risk.
