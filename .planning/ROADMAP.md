@@ -186,6 +186,11 @@
 
 ## Phase 13: Mutation and Differential Fuzz Adapters
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. The runtime mutation and
+fuzz/property adapters now record changed-file scope, budgets, raw-output
+digests, seeds, corpus hashes, replay metadata, and skipped-tool evidence.
+Positive tool-backed mutation still depends on external tools being installed.
+
 **Goal:** Wrap real mutation and property-testing tools with budgets, replay metadata, and honest skipped/timeout receipts.
 
 **Requirements:** MUTN-06, MUTN-07, FUZZ-05, FUZZ-06
