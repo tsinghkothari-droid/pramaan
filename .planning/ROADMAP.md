@@ -732,6 +732,11 @@ reverts or defects remains future work.
 
 **Priority:** P2 adoption
 
+**Status:** Completed 2026-05-21. Operator, plugin-author, security-model,
+enterprise-deployment, troubleshooting, release-packaging, and rendered-example
+docs now exist. Release publication and Marketplace listing remain intentionally
+unclaimed until Phase 26.1 live Action proof and a tagged release happen.
+
 **Success Criteria:**
 
 1. Operator, plugin-author, security model, enterprise deployment, and troubleshooting docs exist.

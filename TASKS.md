@@ -600,15 +600,15 @@ Phase 28.5 acceptance criteria:
 
 ## P2: Documentation and Adoption
 
-- [ ] Write an operator guide for running Pramaan in CI.
-- [ ] Write a plugin-author guide.
-- [ ] Write a security model.
+- [x] Write an operator guide for running Pramaan in CI.
+- [x] Write a plugin-author guide.
+- [x] Write a security model.
 - [x] Write a threat model for malicious PR authors and compromised tools.
-- [ ] Write an enterprise deployment guide.
-- [ ] Add troubleshooting docs for slow mutation, missing tools, flaky tests, and forked PR permissions.
-- [ ] Add screenshots or rendered examples of PR summaries and bundle inspection.
-- [ ] Document non-GitHub roadmap and minimum abstraction layer for GitLab, Gitea, and Bitbucket support.
-- [ ] Document GitLab artifact, identity, and OIDC differences before implementing GitLab support.
+- [x] Write an enterprise deployment guide.
+- [x] Add troubleshooting docs for slow mutation, missing tools, flaky tests, and forked PR permissions.
+- [x] Add screenshots or rendered examples of PR summaries and bundle inspection.
+- [x] Document non-GitHub roadmap and minimum abstraction layer for GitLab, Gitea, and Bitbucket support.
+- [x] Document GitLab artifact, identity, and OIDC differences before implementing GitLab support.
 
 ## P2: Feedback, Calibration, and Drift
 
@@ -681,7 +681,7 @@ public-Alpha-ready until those are complete.
 - [x] Oracle integrity catches weakened assertions, skipped tests, and snapshot/fixture drift.
 - [ ] Mutation and property/fuzz stages run within practical CI budgets.
 - [ ] At least 75 adversarial scenarios exist.
-- [ ] Documentation is good enough for an external maintainer to install and inspect a bundle.
+- [x] Documentation is good enough for an external maintainer to install and inspect a bundle in private technical preview.
 - [ ] Auditable confidence vote is decomposed, signed, and clearly labeled as
   risk evidence rather than correctness proof.
 - [x] Repo-level calibration prevents obvious alert fatigue in local baseline JSON/CSV mode.
@@ -696,7 +696,7 @@ public-Alpha-ready until those are complete.
 - [ ] Sigstore/GitHub attestation support.
 - [ ] 100+ adversarial scenarios mapped to risk IDs.
 - [ ] Cross-platform CI.
-- [ ] Security model and threat model complete.
+- [x] Security model and threat model complete for current private-preview trust boundaries.
 - [ ] Public demo proves "GitHub green, Pramaan red" in under 30 seconds.
 - [x] Reviewer overrides, agent attribution, baseline calibration, and drift exports are part of the proof-bundle lifecycle.
 - [ ] Confidence model is calibrated on pilot data and reports Brier/log-loss

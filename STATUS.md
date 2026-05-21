@@ -58,7 +58,8 @@ recorded-case replay for differential fuzz evidence, an AI evidence-seeking
 probe plan that requires sandbox execution before mitigation, an uncalibrated
 auditable confidence vote, a deterministic agent completion gate, redaction
 helpers, threat-model documentation, a claim-audit ledger, and a GitHub Action
-wrapper.
+wrapper. Operator, security, enterprise, troubleshooting, rendered-example, and
+release-packaging docs exist for private technical preview adoption.
 
 `pramaan verify` orchestrates real stages end-to-end: claim scope, sandbox
 setup, static checks, oracle integrity, and differential fuzz run by default,

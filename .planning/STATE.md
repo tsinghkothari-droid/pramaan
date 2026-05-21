@@ -14,7 +14,7 @@ Phase 28 real Hypothesis/fast-check harnesses.
 
 ## Current Phase
 
-Phase 35: Operator Docs, Release Packaging, and Adoption
+Phase 35.5: Reviewer UX and Local HTML Report
 
 Public Alpha gate still open: Phase 26.1 Live GitHub Action Proof.
 
@@ -111,3 +111,4 @@ gate.
 | 2026-05-21 | Executed Phase 32.5 policy packs. | Built-in policy profiles now cover startup-fast, open-source-maintainer, security-sensitive, fintech-strict, and private-preview with CLI listing/explanation, fixtures, schema, and Action profile input. |
 | 2026-05-21 | Executed Phase 33 adversarial corpus expansion. | The v0.1 corpus now has 25 validated scenarios, secure-code categories, malicious verifier/CI cases, plugin poisoning, benchmark overfitting, and a validator script; most new entries are scenario specs until later executable fixtures land. |
 | 2026-05-21 | Executed Phase 34 calibration and feedback loop. | `pramaan feedback override` persists override evidence, while `pramaan feedback analyze` exports baseline drift, confidence calibration, and agent-attribution metrics as local JSON/CSV without claiming hosted analytics. |
+| 2026-05-21 | Executed Phase 35 operator docs and release packaging. | Private-preview adoption docs, plugin-author guidance, security model, enterprise deployment notes, troubleshooting, rendered examples, release checklist, and a docs link checker now exist while Marketplace publication remains unclaimed. |

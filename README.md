@@ -61,6 +61,20 @@ parsing, or calibrated confidence.
 
 See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
 
+## Operator Docs
+
+- [Operator Guide](docs/operator-guide.md): install, run, inspect, and rollout.
+- [GitHub Action](docs/github-action.md): CI wrapper inputs, permissions, and
+  summary behavior.
+- [Security Model](docs/security-model.md): trust boundaries and runner
+  guidance.
+- [Troubleshooting](docs/troubleshooting.md): slow mutation, missing tools,
+  flaky tests, forked PRs, and bundle verification.
+- [Release Packaging](docs/release.md): manual release gates and artifact
+  checklist.
+- [Rendered Examples](docs/rendered-examples/README.md): pass, warning, fail,
+  and bundle-inspection examples.
+
 ## The Pramaan Answer
 
 Pramaan is a receipt-first verification layer for code review. For each pull
