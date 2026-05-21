@@ -70,7 +70,7 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-017 | `STATUS.md` | STATUS: Production-grade mutmut/StrykerJS/cargo-mutants integration | accepted-risk | `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "mutation" .planning/research docs` | narrowed | Keep as private-preview residual risk. |
 | CLAIM-STATUS-CAP-018 | `STATUS.md` | STATUS: Differential fuzz/property simulated mode | executable-test | `crates/pramaan-cli/src/fuzz.rs`, `examples/fixtures/fuzz/` | `cargo test -p pramaan-cli --test smoke` | pass | Keep `tool_backed=false` visible where simulated. |
 | CLAIM-STATUS-CAP-019 | `STATUS.md` | STATUS: Real Hypothesis/fast-check adapters | accepted-risk | `docs/plugins.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "Hypothesis|fast-check|tool_backed=false" docs .planning/research` | narrowed | Keep as follow-up until safe harnesses execute. |
-| CLAIM-STATUS-CAP-020 | `STATUS.md` | STATUS: Replay command for failing generated cases | planned | `TASKS.md`, `.planning/ROADMAP.md` | Not implemented yet | pass | Keep future-only. |
+| CLAIM-STATUS-CAP-020 | `STATUS.md` | STATUS: Replay command for recorded generated cases | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs`, `docs/replay.md` | `cargo test --workspace` | pass | Keep status Partial until replay can re-execute generated harnesses. |
 | CLAIM-STATUS-CAP-021 | `STATUS.md` | STATUS: GitHub Action wrapper | executable-test | `action.yml`, `action/render-summary.test.mjs` | `node --test action/render-summary.test.mjs` | pass | Live GitHub pilot remains required. |
 | CLAIM-STATUS-CAP-022 | `STATUS.md` | STATUS: Policy-as-code and `pramaan policy explain` | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs` | `cargo test --workspace` | pass | External policy-file loading remains future work. |
 | CLAIM-STATUS-CAP-023 | `STATUS.md` | STATUS: Auditable confidence vote | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/confidence.schema.json`, `docs/confidence.md` | `cargo test --workspace` | pass | Keep status Partial until calibration and broader fixtures land. |
@@ -86,9 +86,9 @@ risk before Alpha.
 | --- | ---: |
 | Total claims audited | 56 |
 | `STATUS.md` capability rows covered | 28 |
-| Executable-test claims | 36 |
+| Executable-test claims | 37 |
 | Checked-fixture/manual-proof claims | 9 |
-| Partial/planned/accepted-risk claims | 11 |
+| Partial/planned/accepted-risk claims | 10 |
 | False-or-stale claims left in public copy | 0 |
 | Public Alpha blockers | 3 |
 

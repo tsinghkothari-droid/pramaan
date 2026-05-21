@@ -35,6 +35,15 @@ The receipt also records adapter availability:
 real Hypothesis or fast-check campaign. That distinction is part of the product
 surface: absence of a tool is evidence the reviewer needs, not a pass.
 
+Recorded divergences can be inspected with:
+
+```powershell
+pramaan replay target/pramaan/fuzz --case "<stable-id>#<input-index>"
+```
+
+This is metadata replay of the recorded case. Real Hypothesis/fast-check
+re-execution remains split to the safe generated-harness phase.
+
 ## Trust Rules
 
 - Plugins should never edit prior receipts or bundle manifests.

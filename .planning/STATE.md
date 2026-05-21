@@ -14,7 +14,7 @@ Phase 28 real Hypothesis/fast-check harnesses.
 
 ## Current Phase
 
-Phase 28: Tool-Backed Property, Fuzz, and Replay
+Phase 28.25: AI Evidence-Seeking Probe Generator
 
 Public Alpha gate still open: Phase 26.1 Live GitHub Action Proof.
 
@@ -38,6 +38,8 @@ gate.
   Phase 26.5 CLI JSON gate.
 - Whether Phase 27.1 should use subprocess parser tools first to avoid heavy
   Rust parser dependencies in the core crate.
+- Whether Phase 28.1 should execute Hypothesis/fast-check through subprocess
+  harnesses first or require plugin isolation before tool-backed campaigns.
 - Which model/provider boundary Phase 28.25 should use for AI probe generation
   without making a vendor-specific dependency part of the evidence contract.
 - Whether Phase 29 should use cosign subprocess first or a Rust Sigstore crate.
@@ -97,3 +99,4 @@ gate.
 | 2026-05-21 | Executed Phase 26 external local pilots. | Pramaan ran against public Python, TypeScript, and Rust repositories with runtime/noise/residual-risk evidence recorded; live GitHub Action proof is split to Phase 26.1, so public Alpha remains no-go. |
 | 2026-05-21 | Executed Phase 26.5 agent harness interface. | Coding agents can now run `pramaan agent done-gate` or `pramaan agent explain` and receive deterministic pass/warn/block JSON with required actions; agents still cannot self-certify or override Pramaan. |
 | 2026-05-21 | Executed Phase 27 parser-backed subset oracle hardening. | Oracle extractors now strip comments/strings, group multiline assertions, label parser-backed subset engines, add negative fixtures, and split full compiler AST integrations to Phase 27.1. |
+| 2026-05-21 | Executed Phase 28 recorded-case replay. | `pramaan replay` now reads differential fuzz evidence, prints deterministic case details, and keeps real Hypothesis/fast-check execution split to Phase 28.1. |

@@ -9,9 +9,9 @@ use pramaan_core::{
     build_agent_decision, build_confidence_artifact, default_policy_profile,
     evaluate_default_policy, render_confidence_markdown, risk_family, timestamp, AgentAttribution,
     ArtifactRef, AttributionConfidence, ClaimScope, ConfidenceDecision, EvidenceSensitivity,
-    OutputRef, PluginIdentity, PluginPermissions, PolicyDecision, PolicyStageEvidence, Receipt,
-    ReceiptSummary, RedactionManifest, RiskRefs, StageBudget, StageStatus, ToolIdentity,
-    RECEIPT_SCHEMA_VERSION,
+    FuzzDivergence, FuzzRunEvidence, OutputRef, PluginIdentity, PluginPermissions, PolicyDecision,
+    PolicyStageEvidence, Receipt, ReceiptSummary, RedactionManifest, RiskRefs, StageBudget,
+    StageStatus, ToolIdentity, RECEIPT_SCHEMA_VERSION,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
 use std::collections::BTreeMap;
@@ -43,6 +43,7 @@ enum Commands {
     Policy(PolicyArgs),
     Confidence(ConfidenceArgs),
     Agent(AgentArgs),
+    Replay(ReplayArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -136,6 +137,13 @@ struct AgentExplainArgs {
 }
 
 #[derive(Debug, Parser)]
+struct ReplayArgs {
+    bundle: PathBuf,
+    #[arg(long)]
+    case: String,
+}
+
+#[derive(Debug, Parser)]
 struct StaticChecksArgs {
     #[arg(long, default_value = ".")]
     repo: PathBuf,
@@ -206,7 +214,73 @@ fn main() -> Result<()> {
         Commands::Policy(args) => run_policy(args),
         Commands::Confidence(args) => run_confidence(args),
         Commands::Agent(args) => run_agent(args),
+        Commands::Replay(args) => run_replay(args),
     }
+}
+
+fn run_replay(args: ReplayArgs) -> Result<()> {
+    let evidence_path = resolve_fuzz_evidence_path(&args.bundle)?;
+    let evidence: FuzzRunEvidence = serde_json::from_slice(
+        &fs::read(&evidence_path)
+            .with_context(|| format!("reading fuzz evidence {}", evidence_path.display()))?,
+    )
+    .with_context(|| format!("parsing fuzz evidence {}", evidence_path.display()))?;
+    let divergence = evidence
+        .divergences
+        .iter()
+        .find(|item| replay_case_matches(item, &args.case))
+        .with_context(|| {
+            format!(
+                "case {} not found in {}",
+                args.case,
+                evidence_path.display()
+            )
+        })?;
+
+    println!("Pramaan replay case");
+    println!("evidence: {}", evidence_path.display());
+    println!("case_id: {}", replay_case_id(divergence));
+    println!("stable_id: {}", divergence.stable_id);
+    println!("classification: {}", divergence.classification.as_str());
+    println!("function: {}", divergence.function_name);
+    println!("path: {}", divergence.path);
+    println!(
+        "input: {}",
+        serde_json::to_string(&divergence.input).context("serializing replay input")?
+    );
+    println!("base_output: {}", divergence.base_output);
+    println!("head_output: {}", divergence.head_output);
+    println!("rationale: {}", divergence.rationale);
+    println!("mode: metadata_replay");
+    Ok(())
+}
+
+fn resolve_fuzz_evidence_path(bundle: &Path) -> Result<PathBuf> {
+    if bundle.is_file() {
+        return Ok(bundle.to_path_buf());
+    }
+    let direct = bundle.join("differential-fuzz.json");
+    if direct.exists() {
+        return Ok(direct);
+    }
+    let nested = bundle.join("fuzz").join("differential-fuzz.json");
+    if nested.exists() {
+        return Ok(nested);
+    }
+    anyhow::bail!(
+        "could not find differential-fuzz.json in {}",
+        bundle.display()
+    )
+}
+
+fn replay_case_matches(divergence: &FuzzDivergence, requested: &str) -> bool {
+    requested == replay_case_id(divergence)
+        || requested == divergence.stable_id
+        || requested == divergence.function_name
+}
+
+fn replay_case_id(divergence: &FuzzDivergence) -> String {
+    format!("{}#{}", divergence.stable_id, divergence.input.index)
 }
 
 fn run_agent(args: AgentArgs) -> Result<()> {

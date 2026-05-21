@@ -87,7 +87,8 @@ it can run in parallel.
 | 1.5 | Phase 26.5 | Agent harness interface for Claude Code, Codex, Cursor-style agents, and custom harnesses | Agents should call Pramaan before claiming done. | Agent adoption |
 | 2 | Phase 27 | Parser-backed subset oracle extractors | Confidence and signing are weaker if oracle evidence is still parser-light. | Phase 28.5 confidence inputs |
 | 2.1 | Phase 27.1 | Full compiler AST oracle extractors | Full AST parser support needs dependency and runtime justification. | Public full-AST claims |
-| 3 | Phase 28 | Real Hypothesis/fast-check harnesses and replay | Confidence needs real executed evidence, not only deterministic fallback. | Phase 28.5 confidence inputs |
+| 3 | Phase 28 | Recorded-case replay for differential fuzz evidence | Confidence needs replayable generated-case evidence, even before real harness execution. | Phase 28.5 confidence inputs |
+| 3.1 | Phase 28.1 | Safe Hypothesis/fast-check harness execution | Real tool-backed campaigns need sandboxed generated harnesses. | Public tool-backed property claims |
 | 3.25 | Phase 28.25 | AI evidence-seeking probe generator | AI should generate better probes, but only executed probes count. | Phase 28.5 confidence inputs |
 | 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
 | 5 | Phase 29 | Sigstore/cosign, GitHub attestations, in-toto/SLSA VSA, offline verify | Trust evidence must leave CI as a verifiable artifact. | Real MVP trust gate |
@@ -184,7 +185,8 @@ unfinished task family below into an executable GSD phase.
 | Phase 26.5 | Agent adoption | `pramaan agent done-gate`, agent decision schema, `AGENTS.md`, Claude Code hook/command templates, and blocked-agent fixtures. |
 | Phase 27 | P1 hardening | Parser-backed subset oracle extractors for Python, TypeScript, and Rust with negative fixtures and honest residual full-AST split. |
 | Phase 27.1 | P1 hardening split | Full compiler AST oracle extractors with dependency justifications, parser-version evidence, and disagreement reporting. |
-| Phase 28 | P1 hardening | Safe real Hypothesis and fast-check generated-harness execution, replay CLI contracts, and budget/timeout evidence. |
+| Phase 28 | P1 hardening | Recorded-case replay CLI contracts for differential fuzz evidence, with real harness execution split honestly. |
+| Phase 28.1 | P1 hardening split | Safe real Hypothesis and fast-check generated-harness execution with budget/timeout/tool-version evidence. |
 | Phase 28.25 | 10x evidence depth | AI-generated probes for tests, properties, differential inputs, and security checks; only sandbox-executed probes count. |
 | Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
 | Phase 29 | P2 trust | Sigstore/cosign bundle signing, GitHub artifact attestation, SLSA VSA-style output, and offline bundle verification. |
@@ -217,7 +219,7 @@ Unfinished task-family mapping:
 | Public Alpha blockers | 26, 27, 28, 29 |
 | Agent harness for coding agents | 26.5 |
 | Full AST/parser oracle integrations | 27.1 |
-| Real Hypothesis/fast-check campaigns | 28 |
+| Real Hypothesis/fast-check campaigns | 28.1 |
 | AI evidence-seeking probe generation | 28.25 |
 | Auditable confidence vote and scoring schema | 28.5, 34 |
 | Attestation and signing | 29 |
@@ -257,7 +259,7 @@ Public Alpha blockers:
   skipped stages, false positives, false negatives, and reviewer
   time-to-understand.
 - [ ] Add safe generated-harness execution for Hypothesis and fast-check, or
-  keep those claims explicitly planned.
+  keep those claims explicitly planned under Phase 28.1.
 - [ ] Add full compiler/parser AST integrations for Python, TypeScript, and
   Rust, or keep those claims explicitly planned.
 - [ ] Add production signing/attestation path, or keep Sigstore/in-toto claims
@@ -461,7 +463,8 @@ AI-authored PRs to prove theirs.
 - [x] Record seeds, replay data, counterexamples, corpus hashes, generated input counts, and adapter availability.
 - [x] Compare base/head outputs on identical generated inputs.
 - [x] Classify divergences as expected, unexpected, or needs-review.
-- [x] Add replay artifacts for every failing generated case.
+- [x] Add replay artifacts and `pramaan replay` metadata inspection for every
+  failing generated case.
 
 ## P1/P2: Auditable Confidence Vote
 

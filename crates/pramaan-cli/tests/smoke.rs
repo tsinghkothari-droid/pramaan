@@ -828,6 +828,39 @@ fn fuzz_emits_replayable_divergence_receipt_for_python_fixture_pair() {
         .unwrap()
         .iter()
         .any(|item| item["classification"] == "unexpected"));
+    let first_divergence = evidence["divergences"]
+        .as_array()
+        .unwrap()
+        .first()
+        .expect("at least one divergence");
+    let case_id = format!(
+        "{}#{}",
+        first_divergence["stable_id"].as_str().expect("stable id"),
+        first_divergence["input"]["index"]
+            .as_u64()
+            .expect("input index")
+    );
+
+    let replay_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "replay",
+            out.to_str().expect("utf-8 output path"),
+            "--case",
+            &case_id,
+        ])
+        .output()
+        .expect("run pramaan replay");
+    assert!(
+        replay_output.status.success(),
+        "replay failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&replay_output.stdout),
+        String::from_utf8_lossy(&replay_output.stderr)
+    );
+    let replay_stdout = String::from_utf8_lossy(&replay_output.stdout);
+    assert!(replay_stdout.contains("Pramaan replay case"));
+    assert!(replay_stdout.contains(&case_id));
+    assert!(replay_stdout.contains("mode: metadata_replay"));
 
     let receipt: serde_json::Value =
         serde_json::from_slice(&fs::read(receipt_path).expect("read fuzz receipt"))

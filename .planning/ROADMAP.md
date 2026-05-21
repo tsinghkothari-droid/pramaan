@@ -490,6 +490,10 @@ subprocess choices, parser-version evidence, and disagreement reporting.
    executable fixtures pass.
 ## Phase 28: Tool-Backed Property, Fuzz, and Replay
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Recorded-case replay CLI
+landed; safe Hypothesis/fast-check generated harness execution is split to
+Phase 28.1.
+
 **Goal:** Execute real Hypothesis and fast-check campaigns safely where eligible code exists, with replayable evidence.
 
 **Priority:** P1 hardening
@@ -501,6 +505,21 @@ subprocess choices, parser-version evidence, and disagreement reporting.
 3. `pramaan replay` can reproduce recorded failing generated cases.
 4. Missing tools remain skipped evidence, not mitigated evidence.
 
+## Phase 28.1: Safe Hypothesis and fast-check Harness Execution
+
+**Goal:** Execute real Hypothesis and fast-check campaigns from generated
+harnesses where eligible pure functions and project dependencies make that safe.
+
+**Priority:** Property/fuzz hardening split
+
+**Success Criteria:**
+
+1. Generated harnesses are limited to safe pure-function candidates.
+2. Python Hypothesis records bounded examples, deadlines, seeds, tool versions,
+   example databases, and counterexamples.
+3. TypeScript fast-check records bounded runs, seeds, timeouts, tool versions,
+   shrink data, and counterexamples.
+4. Missing tools or unsafe candidates remain visible residual/skipped evidence.
 ## Phase 28.25: AI Evidence-Seeking Probe Generator
 
 **Goal:** Use AI to generate candidate tests, properties, differential inputs,
