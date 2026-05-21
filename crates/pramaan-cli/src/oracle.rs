@@ -110,7 +110,7 @@ fn oracle_receipt(
             ),
         },
         limitations: vec![
-            "Oracle weakening detection uses deterministic heuristics for Python and JS/TS test syntax; it is conservative and review-oriented.".to_string(),
+            "Oracle weakening detection uses deterministic structured extractors for Python, TypeScript, and Rust; current extractors are not full compiler ASTs and are labeled in oracle-diff evidence.".to_string(),
             "Claim-vs-oracle scope mismatch risks are covered by risk IDs but require claim-scope evidence from adjacent stages for final judgment.".to_string(),
         ],
         mitigated_risks: oracle_mitigated_risks(),
@@ -133,8 +133,39 @@ fn oracle_receipt(
                 "sensitive_artifact_findings".to_string(),
                 changed_artifacts.to_string(),
             ),
+            (
+                "extractor_engines".to_string(),
+                extractor_engines(diff).join(","),
+            ),
+            (
+                "assertion_signal_count".to_string(),
+                assertion_signal_count(diff).to_string(),
+            ),
         ]),
     }
+}
+
+fn extractor_engines(diff: &OracleDiff) -> Vec<String> {
+    let mut engines = diff
+        .base
+        .tests
+        .iter()
+        .chain(diff.head.tests.iter())
+        .map(|test| test.extractor.engine.clone())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    engines.sort();
+    engines
+}
+
+fn assertion_signal_count(diff: &OracleDiff) -> usize {
+    diff.base
+        .tests
+        .iter()
+        .chain(diff.head.tests.iter())
+        .map(|test| test.assertion_signals.len())
+        .sum()
 }
 
 fn render_oracle_summary(

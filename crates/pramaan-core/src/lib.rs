@@ -167,11 +167,28 @@ pub struct OracleTestCase {
     pub name: String,
     pub stable_id: String,
     pub fingerprint: String,
+    pub extractor: OracleExtractorProfile,
     pub assertion_count: usize,
+    pub assertion_signals: Vec<OracleAssertionSignal>,
     pub parametrized_case_count: usize,
     pub skipped: bool,
     pub skip_reason: Option<String>,
+    pub skip_markers: Vec<String>,
     pub signal_tokens: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OracleExtractorProfile {
+    pub engine: String,
+    pub evidence_label: String,
+    pub parser_available: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OracleAssertionSignal {
+    pub kind: String,
+    pub strength: u8,
+    pub text_hash: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -734,6 +751,15 @@ impl FuzzAdapterMode {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FuzzAdapterAvailability {
+    pub hypothesis_available: bool,
+    pub fast_check_available: bool,
+    pub selected_mode: FuzzAdapterMode,
+    pub tool_backed: bool,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PureFunctionCandidate {
     pub language: FuzzLanguage,
     pub path: String,
@@ -800,6 +826,7 @@ pub struct FuzzDivergence {
 pub struct FuzzRunEvidence {
     pub schema_version: String,
     pub adapter: FuzzAdapterMode,
+    pub adapter_availability: FuzzAdapterAvailability,
     pub seed: u64,
     pub generated_input_count: usize,
     pub corpus_hash: String,
@@ -830,6 +857,12 @@ fn assertion_weakened(base: &OracleTestCase, head: &OracleTestCase) -> bool {
         return true;
     }
 
+    if max_assertion_strength(&head.assertion_signals)
+        < max_assertion_strength(&base.assertion_signals)
+    {
+        return true;
+    }
+
     let base_tokens = base.signal_tokens.iter().cloned().collect::<BTreeSet<_>>();
     let head_tokens = head.signal_tokens.iter().cloned().collect::<BTreeSet<_>>();
     let strong_tokens = [
@@ -847,6 +880,14 @@ fn assertion_weakened(base: &OracleTestCase, head: &OracleTestCase) -> bool {
         .any(|token| base_tokens.contains(*token) && !head_tokens.contains(*token))
         || (!base_tokens.contains("truthy") && head_tokens.contains("truthy"))
         || (!base_tokens.contains("always_true") && head_tokens.contains("always_true"))
+}
+
+fn max_assertion_strength(signals: &[OracleAssertionSignal]) -> u8 {
+    signals
+        .iter()
+        .map(|signal| signal.strength)
+        .max()
+        .unwrap_or(0)
 }
 
 fn removed_tokens(
@@ -983,6 +1024,7 @@ fn build_test_case(
 ) -> OracleTestCase {
     let normalized = normalize_test_block(block);
     let skipped = skipped_test(language, block);
+    let assertion_signals = assertion_signals(language, block);
 
     OracleTestCase {
         language,
@@ -994,11 +1036,37 @@ fn build_test_case(
             normalize_test_body_for_fingerprint(language, &normalized)
         )),
         name,
-        assertion_count: assertion_count(language, block),
+        extractor: extractor_profile(language),
+        assertion_count: assertion_signals.len(),
+        assertion_signals,
         parametrized_case_count: parametrized_case_count(language, block),
         skipped,
         skip_reason: skipped.then(|| skip_reason(language, block)),
+        skip_markers: skip_markers(language, block),
         signal_tokens: signal_tokens(language, block),
+    }
+}
+
+fn extractor_profile(language: OracleLanguage) -> OracleExtractorProfile {
+    let (engine, evidence_label) = match language {
+        OracleLanguage::Python => (
+            "python_structured_def_block_parser",
+            "structured_test_block_not_full_python_ast",
+        ),
+        OracleLanguage::TypeScript => (
+            "typescript_balanced_test_block_parser",
+            "structured_test_block_not_full_typescript_ast",
+        ),
+        OracleLanguage::Rust => (
+            "rust_attribute_block_parser",
+            "structured_test_block_not_full_rust_ast",
+        ),
+    };
+
+    OracleExtractorProfile {
+        engine: engine.to_string(),
+        evidence_label: evidence_label.to_string(),
+        parser_available: true,
     }
 }
 
@@ -1012,6 +1080,8 @@ fn python_test_name(line: &str) -> Option<String> {
 fn typescript_test_name(line: &str) -> Option<String> {
     let compact = line.trim_start();
     let prefixes = [
+        "test.each(",
+        "it.each(",
         "test.skip(",
         "it.skip(",
         "test.todo(",
@@ -1079,7 +1149,21 @@ fn normalize_test_body_for_fingerprint(language: OracleLanguage, normalized: &st
         .join("\n")
 }
 
-fn assertion_count(language: OracleLanguage, block: &str) -> usize {
+fn assertion_signals(language: OracleLanguage, block: &str) -> Vec<OracleAssertionSignal> {
+    assertion_statements(language, block)
+        .into_iter()
+        .map(|statement| {
+            let kind = assertion_kind(language, statement);
+            OracleAssertionSignal {
+                strength: assertion_strength(&kind),
+                text_hash: stable_hash_text(&normalize_assertion_text(statement)),
+                kind,
+            }
+        })
+        .collect()
+}
+
+fn assertion_statements(language: OracleLanguage, block: &str) -> Vec<&str> {
     match language {
         OracleLanguage::Python => block
             .lines()
@@ -1089,20 +1173,112 @@ fn assertion_count(language: OracleLanguage, block: &str) -> usize {
                     || trimmed.contains("pytest.raises(")
                     || trimmed.contains(".assert")
             })
-            .count(),
-        OracleLanguage::TypeScript => {
-            count_occurrences(block, "expect(")
-                + count_occurrences(block, "assert.")
-                + count_occurrences(block, "assert(")
-        }
-        OracleLanguage::Rust => {
-            count_occurrences(block, "assert!(")
-                + count_occurrences(block, "assert_eq!(")
-                + count_occurrences(block, "assert_ne!(")
-                + count_occurrences(block, "matches!(")
-                + count_occurrences(block, "panic!(")
-        }
+            .collect(),
+        OracleLanguage::TypeScript => block
+            .lines()
+            .filter(|line| {
+                let lower = line.to_lowercase();
+                lower.contains("expect(") || lower.contains("assert.")
+            })
+            .collect(),
+        OracleLanguage::Rust => block
+            .lines()
+            .filter(|line| {
+                let lower = line.to_lowercase();
+                lower.contains("assert!(")
+                    || lower.contains("assert_eq!(")
+                    || lower.contains("assert_ne!(")
+                    || lower.contains("matches!(")
+                    || lower.contains("panic!(")
+                    || lower.contains("should_panic")
+            })
+            .collect(),
     }
+}
+
+fn assertion_kind(language: OracleLanguage, statement: &str) -> String {
+    let lower = statement.to_lowercase();
+    if lower.contains("assert true")
+        || lower.contains("expect(true)")
+        || lower.contains("assert!(true)")
+    {
+        return "always_true".to_string();
+    }
+    if lower.contains("pytest.raises") || lower.contains("should_panic") {
+        return "error_path".to_string();
+    }
+    if lower.contains("tothrow") || lower.contains("assert.throws") || lower.contains("panic!(") {
+        return "throws".to_string();
+    }
+    if lower.contains(".tostrictequal(")
+        || lower.contains(".toequal(")
+        || lower.contains(".tomatchobject(")
+    {
+        return "deep_equality".to_string();
+    }
+    if lower.contains("==")
+        || lower.contains("!=")
+        || lower.contains("assertequal")
+        || lower.contains("assertnotequal")
+        || lower.contains(".tobe(")
+        || lower.contains("assert_eq!")
+        || lower.contains("assert_ne!")
+    {
+        return "equality".to_string();
+    }
+    if lower.contains("assertgreater")
+        || lower.contains("assertless")
+        || lower.contains("assertgreaterequal")
+        || lower.contains("assertlessequal")
+        || lower.contains(".tobegreater")
+        || lower.contains(".tobeless")
+        || lower.contains(" > ")
+        || lower.contains(" < ")
+    {
+        return "comparison".to_string();
+    }
+    if lower.contains(" in ")
+        || lower.contains(".tocontain")
+        || lower.contains(".tomatch(")
+        || lower.contains("matches!(")
+    {
+        return "contains".to_string();
+    }
+    if lower.contains("snapshot")
+        || lower.contains(".tomatchsnapshot(")
+        || lower.contains("assert_snapshot!")
+    {
+        return "snapshot".to_string();
+    }
+    if language == OracleLanguage::Python && lower.starts_with("assert ") {
+        return "truthy".to_string();
+    }
+    if lower.contains("tobetruthy")
+        || lower.contains("tobedefined")
+        || lower.contains("not.tobenull")
+    {
+        return "truthy".to_string();
+    }
+    "unknown_assertion".to_string()
+}
+
+fn assertion_strength(kind: &str) -> u8 {
+    match kind {
+        "always_true" => 0,
+        "truthy" | "unknown_assertion" => 1,
+        "contains" | "comparison" => 2,
+        "equality" => 3,
+        "deep_equality" | "error_path" | "snapshot" | "throws" => 4,
+        _ => 1,
+    }
+}
+
+fn normalize_assertion_text(statement: &str) -> String {
+    statement
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
 }
 
 fn parametrized_case_count(language: OracleLanguage, block: &str) -> usize {
@@ -1163,6 +1339,39 @@ fn skip_reason(language: OracleLanguage, block: &str) -> String {
         }
         OracleLanguage::Rust => "Rust #[ignore] marker added".to_string(),
     }
+}
+
+fn skip_markers(language: OracleLanguage, block: &str) -> Vec<String> {
+    let mut markers = BTreeSet::new();
+    match language {
+        OracleLanguage::Python => {
+            if block.contains("@pytest.mark.skip") {
+                markers.insert("pytest.mark.skip".to_string());
+            }
+            if block.contains("@pytest.mark.xfail") {
+                markers.insert("pytest.mark.xfail".to_string());
+            }
+            if block.contains("pytest.skip(") {
+                markers.insert("pytest.skip".to_string());
+            }
+        }
+        OracleLanguage::TypeScript => {
+            for marker in ["test.skip", "it.skip", "test.todo", "it.todo"] {
+                if block.contains(marker) {
+                    markers.insert(marker.to_string());
+                }
+            }
+        }
+        OracleLanguage::Rust => {
+            if block.contains("#[ignore]") {
+                markers.insert("#[ignore]".to_string());
+            }
+            if block.contains("#[should_panic]") {
+                markers.insert("#[should_panic]".to_string());
+            }
+        }
+    }
+    markers.into_iter().collect()
 }
 
 fn signal_tokens(language: OracleLanguage, block: &str) -> Vec<String> {
@@ -1360,10 +1569,6 @@ fn portable_relative_path(root: &Path, path: &Path) -> String {
         .unwrap_or(path)
         .to_string_lossy()
         .replace('\\', "/")
-}
-
-fn count_occurrences(text: &str, needle: &str) -> usize {
-    text.match_indices(needle).count()
 }
 
 fn stable_hash_text(text: &str) -> String {
@@ -2443,6 +2648,13 @@ jobs:
         let evidence = FuzzRunEvidence {
             schema_version: "pramaan.differential_fuzz.v1".to_string(),
             adapter: FuzzAdapterMode::DeterministicSimulated,
+            adapter_availability: FuzzAdapterAvailability {
+                hypothesis_available: false,
+                fast_check_available: false,
+                selected_mode: FuzzAdapterMode::DeterministicSimulated,
+                tool_backed: false,
+                reason: "fixture uses deterministic simulated adapter".to_string(),
+            },
             seed: 7,
             generated_input_count: 1,
             corpus_hash: "sha256:abc".to_string(),
@@ -2540,6 +2752,20 @@ jobs:
             .findings
             .iter()
             .any(|finding| finding.risk_ids.contains(&"R-087".to_string())));
+        assert!(diff.base.tests.iter().all(|test| test
+            .extractor
+            .evidence_label
+            .contains("structured_test_block")));
+        assert!(diff.base.tests.iter().any(|test| test
+            .assertion_signals
+            .iter()
+            .any(|signal| signal.kind == "equality")));
+        assert!(diff.head.tests.iter().any(|test| test
+            .skip_markers
+            .iter()
+            .any(|marker| marker.contains("skip")
+                || marker.contains("xfail")
+                || marker.contains("ignore"))));
         assert!(
             diff.findings
                 .iter()

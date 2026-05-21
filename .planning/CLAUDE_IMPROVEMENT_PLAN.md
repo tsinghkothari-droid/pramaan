@@ -399,3 +399,40 @@ For each approved phase:
 ## Approval Gate
 
 Implementation should start with Phase 18: P0 Product Honesty and Direction.
+
+## Phase 22.5 Completion - 2026-05-21
+
+Created `docs/claim-audit.md` with 27 audited claims covering README, STATUS,
+schemas, docs, Action behavior, oracle, mutation, fuzz, sandbox, policy, and
+release gates. The audit found 0 false-or-stale claims left in public copy and
+kept 3 public Alpha blockers explicit: external pilots, safe Hypothesis/
+fast-check harnesses, and full compiler-AST/signing claims. Verification used
+`cargo fmt --check`, `cargo test --workspace`, `cargo clippy --workspace -- -D warnings`,
+`node --test action/render-summary.test.mjs`, and targeted `rg` claim searches.
+
+## Phase 23 Completion - 2026-05-21
+
+Added structured oracle extractor evidence to `oracle-diff.json`: extractor
+profile, evidence label, assertion-signal kind, assertion strength, signal hash,
+and skip markers. The implementation improves auditability without pretending
+to be a full compiler AST parser; full parser-backed integrations remain a
+hardening task. The oracle fixture command produced 17 findings across Python,
+TypeScript, Rust, fixtures, and snapshots.
+
+## Phase 24 Completion - 2026-05-21
+
+Mutation receipts now distinguish `tool_executed`, `missing_tool`, and
+`not_applicable`; skipped/missing tools keep mutation risks out of
+`mitigated_risks` and put them in `not_applicable_risks`. Executed mutation runs
+record raw-output path and digest. Differential fuzz receipts now record
+Hypothesis/fast-check availability and `tool_backed=false` when deterministic
+replay evidence is selected.
+
+## Phase 25 Completion - 2026-05-21
+
+Recorded `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md`. Internal pilots
+ran oracle, mutation, Python fuzz, and TypeScript fuzz fixtures in under one
+second each on this machine, producing useful local evidence. Decision:
+private technical preview is reasonable; public Alpha is a no-go until three
+external real repositories are measured and the remaining release blockers are
+closed.

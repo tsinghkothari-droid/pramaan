@@ -2,7 +2,7 @@
 
 ## Intended Repository Description
 
-Pramaan: signed proof bundles and risk receipts for AI-generated code changes.
+Pramaan: hash-linked proof bundles and risk receipts for AI-generated code changes.
 
 ## Suggested Topics
 
@@ -19,7 +19,7 @@ Pramaan: signed proof bundles and risk receipts for AI-generated code changes.
 
 ## Suggested GitHub About Text
 
-Evidence, not vibes, for AI-generated code. Pramaan verifies PRs with signed receipts, oracle-integrity checks, mutation/fuzz evidence, and residual-risk summaries.
+Evidence, not vibes, for AI-generated code. Pramaan verifies PRs with hash-linked receipts, oracle-integrity checks, visible skipped stages, and residual-risk summaries. Signing, real mutation, and real fuzz/property execution are roadmap gates.
 
 ## Initial Repository Goals
 
@@ -41,5 +41,5 @@ Deliverables:
 - Receipt/claim/risk/bundle schemas.
 - Oracle-integrity detector for Python assertions.
 - Demo repository or fixture.
-- Signed or signable proof bundle.
+- Hash-linked proof bundle, with signing kept explicit as a follow-on gate.
 - GitHub Action summary.

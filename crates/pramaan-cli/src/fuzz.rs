@@ -3,15 +3,17 @@ use chrono::Utc;
 use pramaan_bundle::sha256_hex;
 use pramaan_core::{
     fuzz_mitigated_risks, fuzz_not_applicable_risks, timestamp, ArtifactRef,
-    DivergenceClassification, FuzzAdapterMode, FuzzDiscovery, FuzzDivergence, FuzzInputCase,
-    FuzzLanguage, FuzzRunEvidence, InputRef, OutputRef, PureFunctionCandidate, Receipt,
-    ReceiptSummary, StageStatus, ToolIdentity, UnsafeFunctionCandidate, RECEIPT_SCHEMA_VERSION,
+    DivergenceClassification, FuzzAdapterAvailability, FuzzAdapterMode, FuzzDiscovery,
+    FuzzDivergence, FuzzInputCase, FuzzLanguage, FuzzRunEvidence, InputRef, OutputRef,
+    PureFunctionCandidate, Receipt, ReceiptSummary, StageStatus, ToolIdentity,
+    UnsafeFunctionCandidate, RECEIPT_SCHEMA_VERSION,
 };
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::time::Instant;
 
 pub fn run_fuzz(
@@ -61,12 +63,14 @@ pub fn run_fuzz(
         Some(portable_path(&path))
     };
 
-    let adapter = adapter_mode(&base_discovery, &head_discovery);
+    let adapter_availability = adapter_availability(&base_discovery, &head_discovery, &head_repo);
+    let adapter = adapter_availability.selected_mode;
     let not_applicable =
         base_discovery.safe_functions.is_empty() || head_discovery.safe_functions.is_empty();
     let evidence = FuzzRunEvidence {
         schema_version: "pramaan.differential_fuzz.v1".to_string(),
         adapter,
+        adapter_availability,
         seed,
         generated_input_count: corpus.len(),
         corpus_hash: corpus_hash.clone(),
@@ -78,7 +82,7 @@ pub fn run_fuzz(
         divergences,
         limitations: vec![
             "Pure-function discovery is intentionally conservative; functions with side effects, calls, imports, async/yield, or complex bodies are marked not applicable.".to_string(),
-            "When Hypothesis or fast-check project wiring is unavailable, Pramaan emits deterministic simulated differential evidence with the same seed/replay/corpus receipt fields.".to_string(),
+            "When Hypothesis or fast-check project wiring is unavailable or not yet safely generated, Pramaan emits deterministic differential evidence with the same seed/replay/corpus receipt fields and labels it non-tool-backed.".to_string(),
         ],
     };
 
@@ -233,6 +237,24 @@ fn fuzz_receipt(
         stage_budget: None,
         metadata: BTreeMap::from([
             ("adapter".to_string(), evidence.adapter.as_str().to_string()),
+            (
+                "tool_backed".to_string(),
+                evidence.adapter_availability.tool_backed.to_string(),
+            ),
+            (
+                "hypothesis_available".to_string(),
+                evidence
+                    .adapter_availability
+                    .hypothesis_available
+                    .to_string(),
+            ),
+            (
+                "fast_check_available".to_string(),
+                evidence
+                    .adapter_availability
+                    .fast_check_available
+                    .to_string(),
+            ),
             ("seed".to_string(), evidence.seed.to_string()),
             (
                 "generated_input_count".to_string(),
@@ -780,9 +802,53 @@ fn classify_divergence(
     }
 }
 
-fn adapter_mode(base: &FuzzDiscovery, head: &FuzzDiscovery) -> FuzzAdapterMode {
-    let _candidate_count = base.safe_functions.len() + head.safe_functions.len();
-    FuzzAdapterMode::DeterministicSimulated
+fn adapter_availability(
+    base: &FuzzDiscovery,
+    head: &FuzzDiscovery,
+    repo: &Path,
+) -> FuzzAdapterAvailability {
+    let hypothesis_available = has_language(base, FuzzLanguage::Python)
+        && has_language(head, FuzzLanguage::Python)
+        && hypothesis_available();
+    let fast_check_available = has_language(base, FuzzLanguage::TypeScript)
+        && has_language(head, FuzzLanguage::TypeScript)
+        && fast_check_available(repo);
+
+    FuzzAdapterAvailability {
+        hypothesis_available,
+        fast_check_available,
+        selected_mode: FuzzAdapterMode::DeterministicSimulated,
+        tool_backed: false,
+        reason: if hypothesis_available || fast_check_available {
+            "external property-testing tool was detected, but safe generated harness execution is not enabled in this build; deterministic replay evidence was selected"
+                .to_string()
+        } else {
+            "no supported external property-testing adapter was available for the discovered pure-function candidates; deterministic replay evidence was selected"
+                .to_string()
+        },
+    }
+}
+
+fn has_language(discovery: &FuzzDiscovery, language: FuzzLanguage) -> bool {
+    discovery
+        .safe_functions
+        .iter()
+        .any(|candidate| candidate.language == language)
+}
+
+fn hypothesis_available() -> bool {
+    Command::new("python")
+        .args(["-c", "import hypothesis"])
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
+fn fast_check_available(repo: &Path) -> bool {
+    repo.join("node_modules").join("fast-check").exists()
+        || fs::read_to_string(repo.join("package.json"))
+            .map(|package_json| package_json.contains("\"fast-check\""))
+            .unwrap_or(false)
 }
 
 fn walk_files(root: &Path) -> Result<Vec<PathBuf>> {

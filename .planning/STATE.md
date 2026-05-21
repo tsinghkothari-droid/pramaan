@@ -6,12 +6,13 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** P0/P1 completion track. Phase 22 is complete; the next
-execution phase is Phase 22.5: P0 Assertion Truth Audit Gate.
+**Current focus:** P0/P1 completion track. Phases 22.5 and 23-25 are complete
+with explicit residual risk. The next responsible step is three external pilot
+repositories before public Alpha.
 
 ## Current Phase
 
-Phase 22.5: P0 Assertion Truth Audit Gate
+External pilot repositories before public Alpha
 
 ## Status
 
@@ -64,3 +65,7 @@ pilot gate before P2 expansion.
 | 2026-05-21 | Completed Phase 21 sandbox, threat model, and redaction. | Sandbox evidence now includes best-effort container identity and source-change-after-setup evidence, core has redaction and CI hardening checks, and the verifier threat model is documented. |
 | 2026-05-21 | Completed Phase 22 claim scope and static security signals. | Claim scope now supports issue text and maintainer scope notes, maps low-confidence and semantic mismatch warnings to risk IDs, and static checks surface relaxed config plus security-sensitive categories. |
 | 2026-05-21 | Inserted Phase 22.5 assertion truth audit gate before feature expansion. | Pramaan must now audit its own README/status/task/planning claims against executable evidence, checked fixtures, manual proof, or honest partial/planned labels before deeper AST and mutation/fuzz work proceeds. |
+| 2026-05-21 | Completed Phase 22.5 assertion truth audit gate. | `docs/claim-audit.md` now covers every `STATUS.md` capability row, stale signing/mutation/fuzz wording was tightened, and `scripts/check-claim-audit.mjs` enforces the ledger before Alpha work continues. |
+| 2026-05-21 | Completed Phase 23 with residual parser risk. | Oracle diffs now include extractor engines, evidence labels, assertion signal kinds, strength scores, hashes, and skip markers; full compiler AST integrations remain a hardening task. |
+| 2026-05-21 | Completed Phase 24 with honest adapter evidence. | Missing mutation tools no longer count as mitigated evidence, mutation receipts include execution mode and raw-output digests, and fuzz receipts record adapter availability plus `tool_backed=false` for deterministic replay. |
+| 2026-05-21 | Completed Phase 25 as no-go for public Alpha. | Internal fixture pilots ran quickly and produced useful evidence, but three external real-repository pilots and the claim-audit gate remain blockers before public Alpha. |

@@ -1,0 +1,99 @@
+# Claim Audit
+
+Last updated: 2026-05-21
+
+Purpose: keep Pramaan's public surface as evidence-first as the product itself.
+Every important claim below is either backed by executable evidence, backed by a
+fixture/manual proof, narrowed to partial/planned, or marked as an accepted
+risk before Alpha.
+
+## Labels
+
+| Label | Meaning |
+| --- | --- |
+| `executable-test` | Covered by unit, smoke, golden, or action tests. |
+| `checked-fixture` | Backed by a checked-in fixture or proof bundle. |
+| `manual-proof` | Backed by a repeatable command and observed output. |
+| `partial` | Implemented in part; public language must stay narrow. |
+| `planned` | Roadmap only; not a shipped promise. |
+| `experimental` | Present for demo/research, not production trust. |
+| `accepted-risk` | Known gap accepted for private preview only. |
+
+## Ledger
+
+| Claim ID | Source | Claim | Evidence label | Evidence path | Verification command | Status | Required fix |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| CLAIM-README-001 | `README.md` | Pramaan produces evidence, not correctness proof. | manual-proof | `README.md`, `docs/receipt-model.md` | `rg -n "correct" README.md docs` | pass | Keep wording honest. |
+| CLAIM-README-002 | `README.md` | Receipt-first verification bundle exists. | executable-test | `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
+| CLAIM-README-003 | `README.md` | Bundle verification catches tampering. | executable-test | `crates/pramaan-cli/tests/smoke.rs`, `crates/pramaan-bundle/src/lib.rs` | `cargo test --workspace` | pass | None. |
+| CLAIM-README-004 | `README.md` | Signing/Sigstore/in-toto are roadmap, not shipped production signing. | manual-proof | `STATUS.md`, `docs/threat-model.md` | `rg -n "Sigstore|in-toto|sign" README.md STATUS.md docs` | pass | Keep public copy as planned/partial. |
+| CLAIM-STATUS-001 | `STATUS.md` | Implemented/partial/planned matrix exists. | manual-proof | `STATUS.md` | `Get-Content STATUS.md` | pass | Keep updated after every phase. |
+| CLAIM-SCHEMA-001 | `schemas/` | Receipt schema version is `pramaan.receipt.v1`. | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
+| CLAIM-CORE-001 | `docs/receipt-model.md` | Canonical JSON hashing is deterministic. | executable-test | `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core canonical` | pass | None. |
+| CLAIM-POLICY-001 | `docs/github-action.md` | Default policy can explain pass/warn/fail. | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
+| CLAIM-ACTION-001 | `action.yml` | Action renders reviewer summary. | executable-test | `action/render-summary.test.mjs` | `node --test action/render-summary.test.mjs` | pass | None. |
+| CLAIM-ACTION-002 | `docs/github-action.md` | Artifact attestation is optional. | partial | `action.yml`, `docs/github-action.md` | `rg -n "attest" action.yml docs/github-action.md` | accepted-risk | Needs live GitHub runner proof before production claim. |
+| CLAIM-SANDBOX-001 | `docs/threat-model.md` | Sandbox records environment/toolchain/dirty evidence. | executable-test | `crates/pramaan-sandbox/src/lib.rs` | `cargo test -p pramaan-sandbox` | pass | None. |
+| CLAIM-SANDBOX-002 | `docs/threat-model.md` | Container identity capture is best effort. | executable-test | `crates/pramaan-sandbox/src/lib.rs` | `cargo test -p pramaan-sandbox container_identity` | pass | Keep "best effort" wording. |
+| CLAIM-CLAIM-001 | `TASKS.md` | Claim scope supports issue text and maintainer notes. | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
+| CLAIM-STATIC-001 | `TASKS.md` | Static checks classify hallucination-style failures. | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
+| CLAIM-STATIC-002 | `TASKS.md` | Relaxed static config and security-sensitive categories are surfaced. | executable-test | `crates/pramaan-cli/src/static_checks.rs` | `cargo test -p pramaan-cli static_checks` | pass | None. |
+| CLAIM-ORACLE-001 | `docs/demo.md` | Weakened-test demo produces a failed oracle receipt. | executable-test | `crates/pramaan-cli/tests/smoke.rs`, `examples/vulnerable-python-pr/` | `cargo test --workspace` | pass | None. |
+| CLAIM-ORACLE-002 | `TASKS.md` | Python/TS/Rust oracle weakening patterns are detected. | executable-test | `examples/fixtures/oracle/`, `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core oracle_fixture` | pass | None. |
+| CLAIM-ORACLE-003 | `.planning/ROADMAP.md` | Full compiler AST extraction exists. | accepted-risk | `docs/receipt-model.md`, `docs/risk-taxonomy.md` | `rg -n "full compiler AST|not yet" docs` | narrowed | Public language must say structured extractor evidence, not full AST proof. |
+| CLAIM-MUTATION-001 | `TASKS.md` | Mutation adapters run real tools when installed. | manual-proof | `crates/pramaan-cli/src/mutation.rs` | `cargo run -p pramaan-cli -- mutation --repo examples/fixtures/mutation --changed-file python/checkout.py --timeout-ms 1000 --out target/pramaan-pilot/mutation` | pass-with-risk | Needs CI image with tools installed for positive execution proof. |
+| CLAIM-MUTATION-002 | `docs/plugins.md` | Missing mutation tools do not mitigate risk. | executable-test | `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
+| CLAIM-FUZZ-001 | `TASKS.md` | Differential replay records seed, corpus hash, counterexamples, and divergence classes. | executable-test | `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
+| CLAIM-FUZZ-002 | `TASKS.md` | Hypothesis/fast-check campaigns run today. | accepted-risk | `docs/plugins.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "tool_backed=false|Hypothesis" docs .planning/research` | narrowed | Keep as follow-up until safe harnesses execute. |
+| CLAIM-BUNDLE-001 | `docs/bundle-verification.md` | Manifest references artifacts by digest and rejects tampering. | executable-test | `crates/pramaan-bundle/src/lib.rs` | `cargo test -p pramaan-bundle` | pass | None. |
+| CLAIM-REDACTION-001 | `docs/receipt-model.md` | Common secrets and private paths are redacted by helper. | executable-test | `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core redaction` | pass | Enterprise logs need broader fixtures. |
+| CLAIM-DEMO-001 | `docs/demo.md` | Public demos are inspectable in under 30 seconds. | manual-proof | `docs/demo.md`, `examples/proof-bundles/` | `cargo run -p pramaan-cli -- oracle --base-repo examples/fixtures/oracle/base --head-repo examples/fixtures/oracle/head --out target/pramaan-pilot/oracle` | pass-with-risk | Needs user study/external reviewer timing before marketing as measured. |
+| CLAIM-PILOT-001 | `.planning/ROADMAP.md` | Three external real repositories were validated. | accepted-risk | `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `Get-Content .planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | blocked | Required before public Alpha. |
+| CLAIM-RELEASE-001 | `TASKS.md` | Alpha MVP gates are satisfied. | accepted-risk | `TASKS.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "Alpha MVP|not yet|NO_GO" TASKS.md .planning` | blocked | Private preview only until external repository pilots close. |
+| CLAIM-STATUS-CAP-001 | `STATUS.md` | STATUS: Rust workspace and CLI skeleton | executable-test | `Cargo.toml`, `crates/pramaan-cli/src/main.rs` | `cargo build --workspace` | pass | Keep smoke tests green. |
+| CLAIM-STATUS-CAP-002 | `STATUS.md` | STATUS: Receipt model with risk IDs and artifact refs | executable-test | `crates/pramaan-core/src/lib.rs`, `schemas/receipt.schema.json` | `cargo test -p pramaan-core` | pass | Keep schema/runtime fixture tests aligned. |
+| CLAIM-STATUS-CAP-003 | `STATUS.md` | STATUS: Bundle manifest and hash-integrity verification | executable-test | `crates/pramaan-bundle/src/lib.rs` | `cargo test -p pramaan-bundle` | pass | Do not market as external signing. |
+| CLAIM-STATUS-CAP-004 | `STATUS.md` | STATUS: Real Sigstore/cosign keyless signing | planned | `docs/attestation.md`, `TASKS.md` | Not implemented yet | pass | Keep roadmap-only. |
+| CLAIM-STATUS-CAP-005 | `STATUS.md` | STATUS: in-toto/SLSA-compatible statement output | planned | `docs/attestation.md`, `TASKS.md` | Not implemented yet | pass | Keep roadmap-only. |
+| CLAIM-STATUS-CAP-006 | `STATUS.md` | STATUS: Sandbox base/head git worktrees | executable-test | `crates/pramaan-sandbox/src/lib.rs` | `cargo test -p pramaan-sandbox` | pass | Container enforcement remains separate. |
+| CLAIM-STATUS-CAP-007 | `STATUS.md` | STATUS: Container/OCI sandbox enforcement | planned | `docs/threat-model.md`, `TASKS.md` | Not implemented yet | pass | Keep distinct from OCI identity evidence. |
+| CLAIM-STATUS-CAP-008 | `STATUS.md` | STATUS: Environment/toolchain evidence | executable-test | `crates/pramaan-sandbox/src/lib.rs` | `cargo test -p pramaan-sandbox` | pass | Keep bounded to captured fields. |
+| CLAIM-STATUS-CAP-009 | `STATUS.md` | STATUS: Claim-scope receipt | executable-test | `crates/pramaan-cli/src/main.rs`, `schemas/claim_scope.schema.json` | `cargo test -p pramaan-cli --test smoke` | pass | Keep status Partial until matching is deeper. |
+| CLAIM-STATUS-CAP-010 | `STATUS.md` | STATUS: Linked issue ingestion and maintainer scope notes | executable-test | `crates/pramaan-cli/src/main.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-cli --test smoke` | pass | No automatic forge fetch yet. |
+| CLAIM-STATUS-CAP-011 | `STATUS.md` | STATUS: Static checks for Python, TypeScript, and Rust | executable-test | `crates/pramaan-cli/src/static_checks.rs`, `examples/fixtures/static/` | `cargo test -p pramaan-cli --test smoke` | pass | Tool availability remains explicit. |
+| CLAIM-STATUS-CAP-012 | `STATUS.md` | STATUS: Hallucination classification | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/risk-taxonomy.md` | `cargo test --workspace` | pass | Keep categories evidence-backed. |
+| CLAIM-STATUS-CAP-013 | `STATUS.md` | STATUS: Oracle integrity structured extractors | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/oracle.rs` | `cargo test --workspace` | pass | Full AST remains residual risk. |
+| CLAIM-STATUS-CAP-014 | `STATUS.md` | STATUS: Full compiler AST-backed oracle extractors | accepted-risk | `docs/receipt-model.md`, `docs/risk-taxonomy.md` | `rg -n "full compiler AST|not yet" docs` | narrowed | Current wording must stay as structured extractor evidence, not full AST proof. |
+| CLAIM-STATUS-CAP-015 | `STATUS.md` | STATUS: Demo weakened-test / fixture / hallucination scenarios | checked-fixture | `examples/`, `docs/demo.md` | Demo commands in `docs/demo.md` | pass | Demos are not CI-attested proof bundles. |
+| CLAIM-STATUS-CAP-016 | `STATUS.md` | STATUS: Diff-scoped mutation wrappers | executable-test | `crates/pramaan-cli/src/mutation.rs` | `cargo test -p pramaan-cli --test smoke` | pass-with-risk | Positive tool-backed CI image still needed. |
+| CLAIM-STATUS-CAP-017 | `STATUS.md` | STATUS: Production-grade mutmut/StrykerJS/cargo-mutants integration | accepted-risk | `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "mutation" .planning/research docs` | narrowed | Keep as private-preview residual risk. |
+| CLAIM-STATUS-CAP-018 | `STATUS.md` | STATUS: Differential fuzz/property simulated mode | executable-test | `crates/pramaan-cli/src/fuzz.rs`, `examples/fixtures/fuzz/` | `cargo test -p pramaan-cli --test smoke` | pass | Keep `tool_backed=false` visible where simulated. |
+| CLAIM-STATUS-CAP-019 | `STATUS.md` | STATUS: Real Hypothesis/fast-check adapters | accepted-risk | `docs/plugins.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "Hypothesis|fast-check|tool_backed=false" docs .planning/research` | narrowed | Keep as follow-up until safe harnesses execute. |
+| CLAIM-STATUS-CAP-020 | `STATUS.md` | STATUS: Replay command for failing generated cases | planned | `TASKS.md`, `.planning/ROADMAP.md` | Not implemented yet | pass | Keep future-only. |
+| CLAIM-STATUS-CAP-021 | `STATUS.md` | STATUS: GitHub Action wrapper | executable-test | `action.yml`, `action/render-summary.test.mjs` | `node --test action/render-summary.test.mjs` | pass | Live GitHub pilot remains required. |
+| CLAIM-STATUS-CAP-022 | `STATUS.md` | STATUS: Policy-as-code and `pramaan policy explain` | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs` | `cargo test --workspace` | pass | External policy-file loading remains future work. |
+| CLAIM-STATUS-CAP-023 | `STATUS.md` | STATUS: Threat model for malicious PRs/verifier plugins | manual-proof | `docs/threat-model.md` | `Get-Content docs/threat-model.md` | pass | Documentation is not enforcement. |
+| CLAIM-STATUS-CAP-024 | `STATUS.md` | STATUS: Redaction helpers for shareable evidence | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` | pass | Redaction profiles remain broader future work. |
+| CLAIM-STATUS-CAP-025 | `STATUS.md` | STATUS: Adapter certification mode | checked-fixture | `docs/adapter-certification.md`, `examples/fixtures/adapter_certification.synthetic.json` | Fixture/manual inspection | pass | Keep adjacent, not core v0.1 path. |
+| CLAIM-STATUS-CAP-026 | `STATUS.md` | STATUS: Public claim audit gate | executable-test | `docs/claim-audit.md`, `scripts/check-claim-audit.mjs` | `node scripts/check-claim-audit.mjs` | pass | Keep the ledger updated after every phase. |
+
+## Counts
+
+| Bucket | Count |
+| --- | ---: |
+| Total claims audited | 53 |
+| `STATUS.md` capability rows covered | 26 |
+| Executable-test claims | 33 |
+| Checked-fixture/manual-proof claims | 8 |
+| Partial/planned/accepted-risk claims | 12 |
+| False-or-stale claims left in public copy | 0 |
+| Public Alpha blockers | 3 |
+
+## Public Alpha Blockers
+
+1. Run Pramaan on three external real repositories and record noise, skipped
+   stages, runtime, and reviewer time-to-understand.
+2. Add safe generated harness execution for Hypothesis and fast-check, or keep
+   those claims explicitly planned.
+3. Keep every full-AST or production-signing statement narrowed until parser and
+   Sigstore/in-toto integrations are executable and fixture-backed.

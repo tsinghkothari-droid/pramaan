@@ -2,7 +2,8 @@
 
 ## One-Sentence Product
 
-Pramaan is a signed evidence layer for AI-generated code changes.
+Pramaan is a hash-linked evidence layer for AI-generated code changes, designed
+to become signed evidence as attestation support lands.
 
 ## The User Problem
 
@@ -56,7 +57,8 @@ Most AI review tools generate comments. Pramaan generates evidence.
 
 Most scanners report findings. Pramaan also reports what was checked, what was skipped, and what remains risky.
 
-Most CI logs are transient. Pramaan produces a signed or signable bundle intended for audit.
+Most CI logs are transient. Pramaan produces a hash-linked, signable bundle
+intended for audit.
 
 ## Non-Goals
 

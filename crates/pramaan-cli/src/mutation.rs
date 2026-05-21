@@ -213,6 +213,7 @@ fn run_or_skip_mutation(
             MutationSummary::empty(plan.language, &plan.tool, plan.changed_files.clone());
         summary.skipped = 1;
         metadata.extend(summary_metadata(&summary, kill_threshold));
+        metadata.insert("evidence_mode".to_string(), "not_applicable".to_string());
         return Ok(receipt(
             plan,
             StageStatus::NotApplicable,
@@ -229,6 +230,7 @@ fn run_or_skip_mutation(
                     .unwrap_or_else(|| "mutation adapter is not applicable".to_string()),
             },
             vec![],
+            vec![],
             mutation_mitigated_risks(),
             vec![format!(
                 "No mutation evidence was produced because {}.",
@@ -244,6 +246,7 @@ fn run_or_skip_mutation(
         || (plan.language == MutationLanguage::Rust && !cargo_mutants_available())
     {
         metadata.insert("missing_tool".to_string(), plan.tool.clone());
+        metadata.insert("evidence_mode".to_string(), "missing_tool".to_string());
         if plan.language == MutationLanguage::Rust {
             metadata.insert(
                 "missing_subcommand".to_string(),
@@ -269,6 +272,7 @@ fn run_or_skip_mutation(
                     plan.command.join(" ")
                 ),
             },
+            vec![],
             vec![],
             mutation_mitigated_risks(),
             vec![format!(
@@ -306,6 +310,8 @@ fn run_or_skip_mutation(
     }
     metadata.extend(summary_metadata(&summary, kill_threshold));
     metadata.insert("raw_output_path".to_string(), portable_path(raw_path));
+    metadata.insert("raw_output_digest".to_string(), raw_digest.clone());
+    metadata.insert("evidence_mode".to_string(), "tool_executed".to_string());
 
     let threshold_met = summary
         .kill_rate_percent()
@@ -355,6 +361,7 @@ fn run_or_skip_mutation(
         },
         mutation_mitigated_risks(),
         residual_risks,
+        vec![],
         vec![
             "Mutation tools use language-specific heuristics and may report equivalent mutants that still need review.".to_string(),
             "Diff scoping limits runtime and relevance but can miss behavior outside the changed-file set.".to_string(),
@@ -375,6 +382,7 @@ fn receipt(
     receipt_summary: ReceiptSummary,
     mitigated_risks: Vec<String>,
     residual_risks: Vec<String>,
+    not_applicable_risks: Vec<String>,
     limitations: Vec<String>,
     metadata: BTreeMap<String, String>,
 ) -> Receipt {
@@ -424,7 +432,7 @@ fn receipt(
         limitations,
         mitigated_risks,
         residual_risks,
-        not_applicable_risks: Vec::new(),
+        not_applicable_risks,
         agent_author: None,
         reviewer_override: None,
         multi_agent_provenance: Vec::new(),
@@ -721,6 +729,7 @@ fn render_mutation_summary(repo: &Path, out: &Path, receipts: &[(Receipt, PathBu
                 .mitigated_risks
                 .iter()
                 .chain(receipt.residual_risks.iter())
+                .chain(receipt.not_applicable_risks.iter())
         })
         .collect::<BTreeSet<_>>();
     println!();

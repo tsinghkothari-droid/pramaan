@@ -67,7 +67,7 @@ After running the Pramaan command above, inspect these files:
 | File | What to check |
 | --- | --- |
 | `target/pramaan-demo/oracle/receipts/oracle-integrity.receipt.json` | `stage` is `oracle_integrity`, `status` is `failed`, and `residual_risks` contains the finding risk IDs. |
-| `target/pramaan-demo/oracle/oracle-diff.json` | The finding kind is `weakened_assertion` for `test_applies_percentage_discount`. |
+| `target/pramaan-demo/oracle/oracle-diff.json` | The finding kind is `weakened_assertion` for `test_applies_percentage_discount`; discovered tests include extractor labels and assertion-signal hashes. |
 | `examples/vulnerable-python-pr/risk-map.json` | The public demo maps normal CI green and Pramaan red to stable risk IDs. |
 | `corpus/starter-adversarial-scenarios.json` | `ADV-001` links the implemented demo to the broader adversarial corpus. |
 

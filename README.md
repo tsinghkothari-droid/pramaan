@@ -45,11 +45,12 @@ Pramaan answers the question reviewers actually need answered:
 
 Pramaan is early-stage. The repo already ships a Rust CLI foundation, receipt
 schemas, bundle hash verification, sandbox/environment evidence, static-check
-adapters, heuristic oracle-integrity checks, demo fixtures, and a GitHub Action
-wrapper. It does **not** yet ship production-grade Sigstore signing, enforced
-container isolation, real Hypothesis/fast-check execution, complete
-mutmut/StrykerJS/cargo-mutants integration, or a fully orchestrated `verify`
-pipeline that runs every planned stage automatically.
+adapters, structured oracle-integrity checks, demo fixtures, mutation adapters
+that run when tools are installed, deterministic differential replay evidence,
+and a GitHub Action wrapper. It does **not** yet ship production-grade Sigstore
+signing, enforced container isolation, real Hypothesis/fast-check execution,
+full compiler-AST oracle parsing, or a fully orchestrated `verify` pipeline that
+runs every planned stage automatically.
 
 See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
 
@@ -119,7 +120,7 @@ The next layer of the developer toolchain needs to be:
 - **execution-grounded**: checks run against real base/head code, not only prose;
 - **risk-aware**: the output says what remains dangerous;
 - **replayable**: failures and fuzz cases can be reproduced;
-- **signed**: evidence can survive outside one CI run;
+- **signable**: evidence is hash-linked today and designed for future signing;
 - **honest**: no false claim of full correctness.
 
 Pramaan is built as that layer.
@@ -186,16 +187,17 @@ question:
 
 > If we perturb the changed logic, do the tests actually notice?
 
-Current code has mutation command wrappers and receipt normalization. Full
-production-grade mutmut, StrykerJS, and cargo-mutants integration remains
-roadmap work.
+Current code has mutation command wrappers, receipt normalization, raw-output
+digests, and skipped-tool receipts. The tools run when installed; missing tools
+remain visible residual evidence rather than a pass.
 
 ### Property, Fuzz, and Differential Checks
 
-For eligible changed functions, Pramaan is being built to compare base and head
-behavior on shared generated inputs. Current code has a deterministic simulated
-mode for narrow pure-function fixtures. Real Hypothesis and fast-check adapters
-remain roadmap work.
+For eligible changed functions, Pramaan compares base and head behavior on
+shared generated inputs. Current code has deterministic replay evidence for
+narrow pure-function fixtures and records whether Hypothesis or fast-check was
+available. Real tool-backed Hypothesis and fast-check campaigns remain roadmap
+work.
 
 This is how Pramaan catches "the bug is fixed, but nearby behavior changed."
 
@@ -215,7 +217,12 @@ Pramaan deliberately does not claim to be:
 - a generic agent registry;
 - a dashboard-first product before the CLI and GitHub Action are trustworthy.
 
-## Example Reviewer Summary
+## Illustrative Reviewer Summary
+
+This is the direction of the reviewer experience, not a guarantee that every
+line below is emitted by the current `verify` command in one integrated run.
+See [STATUS.md](STATUS.md) and [Claim Audit](docs/claim-audit.md) for what
+ships today.
 
 ```text
 Claim
@@ -311,7 +318,7 @@ single check. The value is the ledger:
 - what changed in the oracle;
 - what was skipped;
 - what remains risky;
-- who/what signed the bundle.
+- who/what signed or produced the bundle, when signing metadata is available.
 
 ## Intended Users
 
@@ -359,6 +366,7 @@ cargo run -p pramaan-cli -- verify --base HEAD --head HEAD --out target/pramaan-
 - [GitHub Action](docs/github-action.md)
 - [Killer demo](docs/demo.md)
 - [Research index](docs/RESEARCH_INDEX.md)
+- [Claim audit](docs/claim-audit.md)
 - [Roadmap](.planning/ROADMAP.md)
 
 ## License

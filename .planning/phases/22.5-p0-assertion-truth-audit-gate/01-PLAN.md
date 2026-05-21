@@ -101,3 +101,44 @@ Audit at minimum:
 Pramaan may still be early, but it must be impossible for a serious reviewer to
 say the repo is pretending. Every claim is either proven by local evidence,
 clearly labeled as incomplete, or removed.
+
+## Completion Summary
+
+Completed on 2026-05-21.
+
+Landed:
+
+- Added `docs/claim-audit.md` with 53 audited claims across `STATUS.md`,
+  README, setup/intent docs, schemas, examples, tasks, and the GitHub Action.
+- Added `scripts/check-claim-audit.mjs`, which fails if any `STATUS.md`
+  capability row is missing from the claim ledger or if stale/unresolved labels
+  remain.
+- Updated stale status rows from Phases 20-22 so policy explanation, issue/scope
+  ingestion, threat-model documentation, and redaction helpers are no longer
+  incorrectly shown as pure future work.
+- Tightened README/setup/intent wording around signing, mutation, fuzzing, and
+  the illustrative reviewer summary.
+- Marked the Phase 22.5 task group complete in `TASKS.md`.
+
+Audit counts:
+
+- Total claims audited: 53.
+- `STATUS.md` capability rows covered: 26 of 26.
+- Executable-test claims: 33.
+- Checked-fixture/manual-proof claims: 8.
+- Partial/planned/accepted-risk claims accepted with bounded wording: 12.
+- False or stale claims left unresolved: 0.
+
+Verification:
+
+- `node scripts/check-claim-audit.mjs`
+- `rg -n "signed proof|signed receipts|signed evidence layer|mutation/fuzz evidence|who/what signed|\\*\\*signed\\*\\*" README.md STATUS.md docs TASKS.md`
+
+Deferred:
+
+- The audit checker currently enforces `STATUS.md` coverage and stale-label
+  cleanup. A later release gate can expand it to parse all README and docs claim
+  IDs mechanically.
+- Full cargo verification depends on the current Rust working-tree edits in
+  oracle/mutation/fuzz/core files, which are intentionally left untouched by
+  this docs/audit phase.

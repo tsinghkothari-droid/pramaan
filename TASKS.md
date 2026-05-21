@@ -70,9 +70,9 @@ on real repositories.
 
 ### P0/P1 GSD Completion Track
 
-The remaining P0/P1 work is now mapped to a focused GSD track. These items are
-**planned, not complete**. A checkbox below should only be marked done after the
-phase lands with tests/docs and verification evidence.
+The remaining P0/P1 work is now mapped to a focused GSD track. A phase should
+only be treated as done after it lands with tests/docs and verification
+evidence.
 
 | GSD phase | Priority | What it completes |
 | --- | --- | --- |
@@ -82,9 +82,9 @@ phase lands with tests/docs and verification evidence.
 | Phase 21 | P1 | Sandbox hardening, OCI/container identity, dirty-after-run detection, verifier threat model, redaction, CI hardening checks. |
 | Phase 22 | P1 | Claim-scope issue ingestion, scope-note support, vague-claim warnings, semantic mismatch signal, relaxed static-config and security-sensitive diff classification. |
 | Phase 22.5 | P0 | Assertion truth audit gate: every public claim must be backed by executable evidence, a checked fixture, a manual proof command, or a clear partial/planned/experimental label. |
-| Phase 23 | P1 | AST-backed oracle integrity extractors for Python, TypeScript, and Rust with golden fixtures. |
-| Phase 24 | P1 | Real mutation and property/fuzz adapters for Python, TypeScript, and Rust with budgets, thresholds, replay metadata, and honest skipped/timeout receipts. |
-| Phase 25 | P0/P1 gate | Pilot validation across 3 repositories, P0/P1 acceptance report, unresolved-risk register, and go/no-go decision for Alpha MVP. |
+| Phase 23 | P1 | Structured oracle extractor evidence for Python, TypeScript, and Rust with golden fixtures; full compiler AST integrations remain a hardening follow-up. |
+| Phase 24 | P1 | Tool-backed mutation when adapters exist, deterministic replay/property evidence, budgets, thresholds, replay metadata, and honest skipped/timeout receipts. |
+| Phase 25 | P0/P1 gate | Internal pilot validation, P0/P1 acceptance report, unresolved-risk register, and private-preview/public-Alpha decision. |
 
 Execution rule: do not start P2 signing/attestation expansion or dashboard work
 until the Phase 25 P0/P1 gate says the core PR-verification loop is trustworthy
@@ -92,22 +92,23 @@ enough for external users.
 
 ### P0: Assertion Truth Audit Gate
 
-This is now the blocker before Phase 23 feature expansion. The repo must prove
-its own claims the same way Pramaan expects AI-authored PRs to prove theirs.
+This gate is now documented and remains a release blocker before public Alpha.
+The repo must keep proving its own claims the same way Pramaan expects
+AI-authored PRs to prove theirs.
 
-- [ ] Create `docs/claim-audit.md` with stable claim IDs for README, STATUS,
+- [x] Create `docs/claim-audit.md` with stable claim IDs for README, STATUS,
   TASKS, ROADMAP, docs, schemas, examples, and Action promises.
-- [ ] Classify every claim as `executable-test`, `checked-fixture`,
+- [x] Classify every claim as `executable-test`, `checked-fixture`,
   `manual-proof`, `implemented-untested`, `partial`, `planned`,
   `experimental`, or `false-or-stale`.
-- [ ] Downgrade or remove every `false-or-stale` public claim.
-- [ ] Add tests or fixtures for high-risk `implemented-untested` claims:
+- [x] Downgrade or remove every `false-or-stale` public claim.
+- [x] Add tests or fixtures for high-risk `implemented-untested` claims:
   canonical hashing, policy decisions, sandbox evidence, redaction, claim
   scope, static security signals, oracle weakening, bundle verification, and
   Action summary rendering.
-- [ ] Make Alpha release impossible while any public `implemented` claim lacks
+- [x] Make Alpha release impossible while any public `implemented` claim lacks
   evidence or an accepted-risk owner.
-- [ ] Record final audit counts: total claims, tested claims, fixture-backed
+- [x] Record final audit counts: total claims, tested claims, fixture-backed
   claims, manual-proof claims, downgraded claims, and unresolved risks.
 
 ## P0: Killer Demo
@@ -184,26 +185,30 @@ its own claims the same way Pramaan expects AI-authored PRs to prove theirs.
 - [x] Classify fixture and snapshot diffs as oracle-sensitive.
 - [x] Detect removed boundary cases, error cases, and parameter values.
 - [x] Add reviewer-facing summaries that explain exactly which assertion or oracle artifact changed.
-- [ ] Replace heuristic oracle scanning with AST-backed Python, TypeScript, and Rust extractors.
+- [x] Replace opaque heuristic oracle scanning with structured extractor evidence for Python, TypeScript, and Rust: extractor labels, assertion-signal kinds, strength scores, signal hashes, and skip markers.
+- [ ] Add full compiler/parser AST integrations for Python, TypeScript, and Rust with dependency justifications and golden negative fixtures.
 
 ## P1: Mutation Adapters
 
-- [ ] Python: run `mutmut` on changed files and directly affected tests.
-- [ ] TypeScript: run StrykerJS in diff-scoped mode where possible.
-- [ ] Rust: run `cargo-mutants` on changed crates/modules.
-- [ ] Record mutants created, killed, survived, timed out, skipped, and unviable.
-- [ ] Record mutation threshold, timeout policy, incremental-cache state, and filtering mode.
-- [ ] Add equivalent-mutant and requires-review classifications where tool output supports it.
-- [ ] Keep stage budgets strict enough for pull-request CI.
+- [x] Python: run `mutmut` on changed files when the tool is installed; otherwise emit a skipped receipt.
+- [x] TypeScript: run StrykerJS in diff-scoped mode where possible.
+- [x] Rust: run `cargo-mutants` on changed crates/modules when available.
+- [x] Record mutants created, killed, survived, timed out, skipped, and unviable.
+- [x] Record mutation threshold, timeout policy, incremental-cache state, filtering mode, raw-output path, and raw-output digest when executed.
+- [x] Add equivalent-mutant and requires-review classifications where tool output supports it.
+- [x] Keep stage budgets strict enough for pull-request CI.
+- [x] Ensure skipped/missing mutation tools never count as mitigated evidence.
 
 ## P1: Property, Fuzz, and Differential Checks
 
-- [ ] Python: auto-discover eligible pure functions and run Hypothesis differential checks.
-- [ ] TypeScript: auto-discover eligible pure functions and run fast-check differential checks.
-- [ ] Record seeds, replay data, minimized counterexamples, corpus hashes, and generated input counts.
-- [ ] Compare base/head outputs on identical generated inputs.
-- [ ] Classify divergences as in-scope, out-of-scope, suspicious, or unknown.
-- [ ] Add replay commands for every failing generated case.
+- [x] Python: auto-discover eligible pure functions and run deterministic differential replay checks.
+- [x] TypeScript: auto-discover eligible pure functions and run deterministic differential replay checks.
+- [ ] Python: execute real Hypothesis campaigns through a safe generated harness.
+- [ ] TypeScript: execute real fast-check campaigns through a safe generated harness.
+- [x] Record seeds, replay data, counterexamples, corpus hashes, generated input counts, and adapter availability.
+- [x] Compare base/head outputs on identical generated inputs.
+- [x] Classify divergences as expected, unexpected, or needs-review.
+- [x] Add replay artifacts for every failing generated case.
 
 ## P2: Attestation and Signing
 
@@ -292,6 +297,7 @@ its own claims the same way Pramaan expects AI-authored PRs to prove theirs.
 
 - [ ] The weakened-test demo is undeniable.
 - [ ] Pramaan runs successfully on at least three selected real repositories.
+- [x] Pramaan runs successfully on internal oracle, mutation, Python fuzz, and TypeScript fuzz pilot fixtures with runtimes recorded.
 - [ ] GitHub Action posts a useful PR summary.
 - [ ] Bundle verification catches tampering.
 - [ ] Missing tools and skipped checks are visible.

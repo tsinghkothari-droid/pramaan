@@ -133,6 +133,37 @@ changes are detected but the claim text does not mention matching symbols,
 Pramaan emits `R-007` as a bounded semantic mismatch signal. That signal should
 inform review; it is not a sole merge gate.
 
+## Oracle Extractor Evidence
+
+Phase 23 adds structured oracle extractor evidence to `oracle-diff.json`.
+Each discovered test now carries:
+
+- `extractor.engine`: the deterministic extractor used for that language;
+- `extractor.evidence_label`: whether the evidence came from a structured
+  parser or a fallback;
+- `assertion_signals`: normalized assertion kinds, strength scores, and stable
+  hashes for reviewer comparison;
+- `skip_markers`: skip, xfail, todo, ignore, or panic markers found in the
+  test block.
+
+This improves the reviewer story without overclaiming full compiler AST
+coverage. Current extractors are structured block parsers for Python,
+TypeScript, and Rust. Full compiler-backed parser integrations remain a
+hardening target and should be added only with fixtures and dependency
+justification.
+
+## Mutation And Fuzz Evidence
+
+Skipped mutation tools must not satisfy a mitigation gate. When `mutmut`,
+StrykerJS, or `cargo-mutants` is missing or a language is not applicable,
+mutation receipts keep `mitigated_risks` empty and place the mutation risk IDs
+in `not_applicable_risks`.
+
+Differential fuzz receipts record adapter availability separately from the
+selected adapter. A deterministic replay adapter may still produce useful
+base/head evidence, but it is labeled `tool_backed=false` until a safe
+Hypothesis or fast-check harness actually executes.
+
 ## Claim Discipline
 
 Receipts should use precise language:

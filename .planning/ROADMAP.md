@@ -330,6 +330,8 @@
 
 ## Phase 22.5: P0 Assertion Truth Audit Gate
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS.
+
 **Goal:** Audit every public and planning assertion so the repo cannot overstate
 what is implemented.
 
@@ -351,6 +353,9 @@ what is implemented.
 
 ## Phase 23: P1 AST Oracle Extractors
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Structured extractor
+evidence landed; full compiler AST integrations remain explicit follow-up.
+
 **Goal:** Replace the highest-risk heuristic oracle checks with AST-backed extractors and golden fixtures.
 
 **Priority:** P1
@@ -363,6 +368,11 @@ what is implemented.
 4. Golden fixtures cover positive and negative cases for each language.
 
 ## Phase 24: P1 Real Mutation and Property/Fuzz Adapters
+
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Tool-backed mutation
+execution is available when adapters are installed; fuzz/property remains
+deterministic replay evidence with adapter availability labels until safe
+Hypothesis/fast-check harness generation lands.
 
 **Goal:** Replace simulated/advisory execution with real tool-backed mutation and property/fuzz checks where tools are installed.
 
@@ -377,6 +387,10 @@ what is implemented.
 5. Missing tools, unsupported code, and timeouts are visible residual risk, never silent passes.
 
 ## Phase 25: P0/P1 Pilot Gate and Alpha Decision
+
+**Status:** Completed 2026-05-21 as NO_GO_PUBLIC_ALPHA. Internal pilot fixtures
+passed, but external real-repository pilots and Phase 22.5 claim audit remain
+public Alpha blockers.
 
 **Goal:** Prove whether the P0/P1 loop is actually useful before expanding into P2/P3 features.
 

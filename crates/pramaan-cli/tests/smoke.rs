@@ -576,6 +576,11 @@ fn fuzz_emits_replayable_divergence_receipt_for_python_fixture_pair() {
         serde_json::from_slice(&fs::read(evidence_path).expect("read fuzz evidence"))
             .expect("fuzz evidence json");
     assert_eq!(evidence["seed"], 4242);
+    assert_eq!(evidence["adapter_availability"]["tool_backed"], false);
+    assert!(evidence["adapter_availability"]["reason"]
+        .as_str()
+        .unwrap()
+        .contains("deterministic replay evidence"));
     assert!(evidence["corpus_hash"]
         .as_str()
         .unwrap()
@@ -602,6 +607,7 @@ fn fuzz_emits_replayable_divergence_receipt_for_python_fixture_pair() {
     assert_eq!(receipt["stage"], "differential_fuzz");
     assert_eq!(receipt["status"], "failed");
     assert_eq!(receipt["metadata"]["seed"], "4242");
+    assert_eq!(receipt["metadata"]["tool_backed"], "false");
     assert!(receipt["residual_risks"]
         .as_array()
         .unwrap()
@@ -720,6 +726,11 @@ fn fuzz_emits_typescript_fast_check_compatible_fields() {
         serde_json::from_slice(&fs::read(evidence_path).expect("read TypeScript fuzz evidence"))
             .expect("TypeScript fuzz evidence json");
     assert_eq!(evidence["adapter"], "deterministic_simulated");
+    assert_eq!(
+        evidence["adapter_availability"]["selected_mode"],
+        "deterministic_simulated"
+    );
+    assert_eq!(evidence["adapter_availability"]["tool_backed"], false);
     assert!(evidence["example_database_path"]
         .as_str()
         .unwrap()
@@ -807,10 +818,22 @@ fn mutation_emits_diff_scoped_receipts_with_budget_metadata() {
         assert!(receipt["metadata"]["timeout_ms"].is_string());
         assert!(receipt["metadata"]["filter_mode"].is_string());
         assert!(receipt["metadata"]["cache_mode"].is_string());
+        assert!(receipt["metadata"]["evidence_mode"].is_string());
         assert!(receipt["metadata"]["risk_ids"]
             .as_str()
             .expect("risk ids metadata")
             .contains("R-068"));
+        if ["skipped", "not_applicable"].contains(&receipt["status"].as_str().unwrap()) {
+            assert!(
+                receipt["mitigated_risks"].as_array().unwrap().is_empty(),
+                "skipped mutation tools must not count as mitigated evidence"
+            );
+            assert!(receipt["not_applicable_risks"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|risk| risk == "R-068"));
+        }
         for risk_id in ["R-068", "R-069", "R-070", "R-071", "R-072"] {
             let risk_is_present = ["mitigated_risks", "residual_risks", "not_applicable_risks"]
                 .iter()

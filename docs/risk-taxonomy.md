@@ -61,10 +61,27 @@ skips/todos/xfails/ignores, parametrized case reductions, weakened assertion
 signals, removed error paths, removed boundary cases, and changed or deleted
 fixture/snapshot artifacts.
 
-Current oracle extraction is deterministic and framework-aware by pattern, not
-yet a complete AST proof. Receipts should therefore keep heuristic limitations
+Phase 23 records structured extractor evidence in `oracle-diff.json`:
+extractor engine, evidence label, assertion-signal kinds, strength scores, and
+skip markers. This makes weakening findings easier to audit and reduces the
+opaque "regex found something" problem.
+
+Current oracle extraction is deterministic and structured, but not yet a
+complete compiler AST proof. Receipts should therefore keep parser limitations
 visible and may list the same family as both mitigated and residual when a
 specific finding remains open for reviewer judgment.
+
+## Mutation And Fuzz Notes
+
+Mutation risk IDs must not be treated as mitigated when the mutation tool did
+not run. Missing or inapplicable adapters move `R-068..R-072` into
+`not_applicable_risks` and set `metadata.evidence_mode` to `missing_tool` or
+`not_applicable`.
+
+Fuzz/property risk IDs remain residual when the selected adapter is
+`deterministic_simulated` and `tool_backed=false`. That evidence can still catch
+base/head divergence, but it is not the same claim as a real Hypothesis or
+fast-check campaign.
 
 ## Claim Scope and Static Security Notes
 
