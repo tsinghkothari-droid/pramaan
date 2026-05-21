@@ -301,18 +301,20 @@ AI coding agents and real reviewers. They are planned, not complete.
 
 #### Phase 26.2: Competitive Benchmark and Prior-Art Matrix
 
-- [ ] Add `docs/competitive-benchmark.md`.
-- [ ] Compare Pramaan against PR-Agent, OpenReview, inspect, Testomatio,
-  quality-monitor, actions/attest, SLSA verifier, and in-toto primitives.
-- [ ] For each tool, record overlap, what Pramaan should reuse, what Pramaan
+- [x] Add `docs/competitive-benchmark.md`.
+- [x] Compare Pramaan against PR-Agent, reviewdog-style quality reporters,
+  test-change monitors, Pynguin/EvoSuite-style test generators, mutation and
+  property/fuzz tools, GitHub artifact attestations, SLSA VSA, Sigstore, and
+  in-toto primitives.
+- [x] For each tool category, record overlap, what Pramaan should reuse, what Pramaan
   should not duplicate, and what evidence gap remains.
-- [ ] Add a "not a competitor" section for tools that are primitives rather
+- [x] Add a "not a competitor" section for tools that are primitives rather
   than replacement products.
-- [ ] Add an adoption-positioning table: AI reviewer, CI quality aggregator,
+- [x] Add an adoption-positioning table: AI reviewer, CI quality aggregator,
   supply-chain attestor, evidence-bundle verifier.
-- [ ] Add claim-audit rows for any README/marketing claim that says Pramaan is
+- [x] Add claim-audit rows for any README/marketing claim that says Pramaan is
   broader, stronger, or more comprehensive than existing tools.
-- [ ] Add a maintenance note requiring this benchmark to refresh before public
+- [x] Add a maintenance note requiring this benchmark to refresh before public
   Alpha and Serious v1.
 
 #### Phase 26.3: Competitor-Gap Fixtures

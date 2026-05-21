@@ -450,6 +450,13 @@ against adjacent GitHub tools and primitives before claiming superiority.
 
 **Priority:** Positioning
 
+**Status:** Completed 2026-05-21. `docs/competitive-benchmark.md` now maps
+Pramaan against AI PR reviewers, reviewdog-style aggregators, test-change
+monitors, test-generation tools, mutation/property engines, and
+SLSA/Sigstore/in-toto/GitHub attestation primitives. It narrows the public
+claim to evidence-bundle verification and leaves "catches what X misses" proof
+to Phase 26.3 executable fixtures.
+
 **Success Criteria:**
 
 1. `docs/competitive-benchmark.md` compares Pramaan against PR-Agent,

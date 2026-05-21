@@ -8,23 +8,22 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Current focus:** Research-driven continuation track. Phases 22.5 and 23-26
 are complete with explicit residual risk. Phase 28.5 now has a first
-implemented confidence-vote slice. Public Alpha remains blocked by Phase 26.1
-live GitHub Action proof, plus Phase 27 compiler/parser oracle hardening and
-Phase 28 real Hypothesis/fast-check harnesses. Newly inserted Phases 26.2,
-26.3, and 26.4 keep the product wedge honest by benchmarking competitors,
-building competitor-gap fixtures, and proving the minimum lovable verifier loop
-before broader expansion.
+implemented confidence-vote slice. Phase 26.1 live Action proof and Phase 26.2
+competitive benchmarking are complete. Public review still depends on
+competitor-gap fixtures, a minimum lovable verifier loop, compiler/parser oracle
+hardening, real Hypothesis/fast-check harnesses, sandboxed generated probes,
+anti-gaming hardening, and reviewer reports.
 
 ## Current Phase
 
 Phase 35.5: Reviewer UX and Local HTML Report
 
-Optional pre-alpha proof phases can run in parallel if they do not delay the
-live Action gate: Phase 26.2 competitive benchmark, Phase 26.3 competitor-gap
-fixtures, and Phase 26.4 minimum lovable verifier loop.
+Optional pre-alpha proof phases can run in parallel if they do not hide
+residual risk: Phase 26.3 competitor-gap fixtures and Phase 26.4 minimum
+lovable verifier loop.
 
 Phase 26.1 live Action proof is complete. Public review still depends on the
-remaining pre-36 readiness phases: competitive benchmark, competitor-gap
+remaining pre-36 readiness phases: competitor-gap
 fixtures, minimum lovable verifier loop, full parser/AST oracle hardening, real
 Hypothesis/fast-check execution, sandboxed generated probes, anti-gaming
 hardening, and local reviewer reports.
@@ -46,8 +45,9 @@ provenance, adapter certification, and the Serious v1 gate.
 
 - Whether Phase 26.1 should use this repository, a throwaway public fixture
   repository, or a fork PR for the live Action proof.
-- Whether Phase 26.2 should benchmark only open-source tools or include public
-  SaaS products with clearly labeled source limitations.
+- Phase 26.2 uses mostly open-source/public-doc sources and treats named SaaS
+  products cautiously; Phase 26.3 must provide executable evidence before any
+  "catches what X misses" claim.
 - Whether Phase 26.3 should use tool-category comparisons only, or include
   named-tool expectations where behavior is externally reproducible.
 - Whether Phase 26.4 should wait for Phase 35.5 reporting, or define a smaller
@@ -135,3 +135,4 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Executed Phase 35 operator docs and release packaging. | Private-preview adoption docs, plugin-author guidance, security model, enterprise deployment notes, troubleshooting, rendered examples, release checklist, and a docs link checker now exist while Marketplace publication remains unclaimed. |
 | 2026-05-21 | Added pre-Phase-36 autonomous GSD prompt. | `.planning/AUTONOMOUS_GSD_BEFORE_PHASE_36_PROMPT.md` now gives a fresh agent the exact remaining pre-language-depth phase order, verification contract, commit/push discipline, and honesty rules. |
 | 2026-05-21 | Completed Phase 26.1 live GitHub Action proof. | Live run `26229890652` built Pramaan, ran verification, rendered the job summary, and uploaded `pramaan-proof-bundle`; several Action and artifact-path bugs were fixed on the way. |
+| 2026-05-21 | Completed Phase 26.2 competitive benchmark. | `docs/competitive-benchmark.md` now narrows Pramaan's differentiation against AI PR reviewers, quality aggregators, test-generation systems, mutation/property tools, and supply-chain attestation primitives without claiming superiority before executable gap fixtures. |

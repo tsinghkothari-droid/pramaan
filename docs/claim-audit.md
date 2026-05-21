@@ -32,7 +32,7 @@ risk before Alpha.
 | CLAIM-CORE-001 | `docs/receipt-model.md` | Canonical JSON hashing is deterministic. | executable-test | `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core canonical` | pass | None. |
 | CLAIM-POLICY-001 | `docs/github-action.md` | Default policy can explain pass/warn/fail. | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
 | CLAIM-ACTION-001 | `action.yml` | Action renders reviewer summary. | executable-test | `action/render-summary.test.mjs` | `node --test action/render-summary.test.mjs` | pass | None. |
-| CLAIM-ACTION-002 | `docs/github-action.md` | Artifact attestation is optional. | partial | `action.yml`, `docs/github-action.md` | `rg -n "attest" action.yml docs/github-action.md` | accepted-risk | Needs live GitHub runner proof before production claim. |
+| CLAIM-ACTION-002 | `docs/github-action.md` | Artifact attestation is optional. | manual-proof | `action.yml`, `docs/github-action.md`, `.planning/reports/phase-26.1-live-action-proof.md` | `rg -n "attest" action.yml docs/github-action.md .planning/reports/phase-26.1-live-action-proof.md` | pass-with-risk | Live workflow-dispatch proof exists; production Sigstore/cosign identity remains planned. |
 | CLAIM-SANDBOX-001 | `docs/threat-model.md` | Sandbox records environment/toolchain/dirty evidence. | executable-test | `crates/pramaan-sandbox/src/lib.rs` | `cargo test -p pramaan-sandbox` | pass | None. |
 | CLAIM-SANDBOX-002 | `docs/threat-model.md` | Container identity capture is best effort. | executable-test | `crates/pramaan-sandbox/src/lib.rs` | `cargo test -p pramaan-sandbox container_identity` | pass | Keep "best effort" wording. |
 | CLAIM-CLAIM-001 | `TASKS.md` | Claim scope supports issue text and maintainer notes. | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs` | `cargo test --workspace` | pass | None. |
@@ -50,6 +50,7 @@ risk before Alpha.
 | CLAIM-REDACTION-001 | `docs/receipt-model.md` | Common secrets and private paths are redacted by helper. | executable-test | `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core redaction` | pass | Enterprise logs need broader fixtures. |
 | CLAIM-DEMO-001 | `docs/demo.md` | Public demos are inspectable in under 30 seconds. | manual-proof | `docs/demo.md`, `examples/proof-bundles/` | `cargo run -p pramaan-cli -- oracle --base-repo examples/fixtures/oracle/base --head-repo examples/fixtures/oracle/head --out target/pramaan-pilot/oracle` | pass-with-risk | Needs user study/external reviewer timing before marketing as measured. |
 | CLAIM-PILOT-001 | `.planning/ROADMAP.md` | Three external real repositories were validated. | manual-proof | `.planning/reports/phase-26-external-alpha-pilots.md` | `powershell -ExecutionPolicy Bypass -File scripts/run-phase26-pilots.ps1 -SkipClone` | pass | Live GitHub Action proof remains separate. |
+| CLAIM-POSITIONING-001 | `README.md` | Pramaan is complementary to AI PR reviewers, quality aggregators, test generators, and attestation primitives. | manual-proof | `docs/competitive-benchmark.md`, `README.md` | `rg -n "competitive benchmark|complement|not a replacement" README.md docs/competitive-benchmark.md` | pass | Refresh before public Alpha and Serious v1. |
 | CLAIM-RELEASE-001 | `TASKS.md` | Alpha MVP gates are satisfied. | accepted-risk | `TASKS.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "Alpha MVP|not yet|NO_GO" TASKS.md .planning` | blocked | Private preview only until external repository pilots close. |
 | CLAIM-STATUS-CAP-001 | `STATUS.md` | STATUS: Rust workspace and CLI skeleton | executable-test | `Cargo.toml`, `crates/pramaan-cli/src/main.rs` | `cargo build --workspace` | pass | Keep smoke tests green. |
 | CLAIM-STATUS-CAP-002 | `STATUS.md` | STATUS: Receipt model with risk IDs and artifact refs | executable-test | `crates/pramaan-core/src/lib.rs`, `schemas/receipt.schema.json` | `cargo test -p pramaan-core` | pass | Keep schema/runtime fixture tests aligned. |
@@ -72,7 +73,7 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-019 | `STATUS.md` | STATUS: Real Hypothesis/fast-check adapters | accepted-risk | `docs/plugins.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "Hypothesis|fast-check|tool_backed=false" docs .planning/research` | narrowed | Keep as follow-up until safe harnesses execute. |
 | CLAIM-STATUS-CAP-020 | `STATUS.md` | STATUS: Replay command for recorded generated cases | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs`, `docs/replay.md` | `cargo test --workspace` | pass | Keep status Partial until replay can re-execute generated harnesses. |
 | CLAIM-STATUS-CAP-020A | `STATUS.md` | STATUS: AI evidence-seeking probe plan | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs`, `schemas/probe.schema.json`, `docs/ai-probe-generator.md` | `cargo test --workspace` | pass | Keep status Partial until generated probes execute in a sandbox and rejected probes preserve real failure reasons. |
-| CLAIM-STATUS-CAP-021 | `STATUS.md` | STATUS: GitHub Action wrapper | executable-test | `action.yml`, `action/render-summary.test.mjs` | `node --test action/render-summary.test.mjs` | pass | Live GitHub pilot remains required. |
+| CLAIM-STATUS-CAP-021 | `STATUS.md` | STATUS: GitHub Action wrapper | executable-test | `action.yml`, `action/render-summary.test.mjs`, `.planning/reports/phase-26.1-live-action-proof.md` | `node --test action/render-summary.test.mjs` | pass | PR-event demo remains useful, but workflow-dispatch proof exists. |
 | CLAIM-STATUS-CAP-022 | `STATUS.md` | STATUS: Policy-as-code and `pramaan policy explain` | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs` | `cargo test --workspace` | pass | External policy-file loading remains future work. |
 | CLAIM-STATUS-CAP-023 | `STATUS.md` | STATUS: Auditable confidence vote | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/confidence.schema.json`, `docs/confidence.md` | `cargo test --workspace` | pass | Keep status Partial until calibration and broader fixtures land. |
 | CLAIM-STATUS-CAP-024 | `STATUS.md` | STATUS: Agent completion gate | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/agent_decision.schema.json`, `docs/agent-harness.md` | `cargo test --workspace` | pass | Keep status Partial until richer IDE/MCP integrations exist. |
@@ -85,18 +86,18 @@ risk before Alpha.
 
 | Bucket | Count |
 | --- | ---: |
-| Total claims audited | 57 |
+| Total claims audited | 58 |
 | `STATUS.md` capability rows covered | 29 |
 | Executable-test claims | 38 |
-| Checked-fixture/manual-proof claims | 9 |
+| Checked-fixture/manual-proof claims | 10 |
 | Partial/planned/accepted-risk claims | 10 |
 | False-or-stale claims left in public copy | 0 |
 | Public Alpha blockers | 3 |
 
 ## Public Alpha Blockers
 
-1. Prove the GitHub Action on a live PR, including uploaded bundle artifact and
-   rendered job summary.
+1. Add executable competitor-gap fixtures plus the minimum lovable verifier
+   loop before claiming public-review readiness.
 2. Add safe generated harness execution for Hypothesis and fast-check, or keep
    those claims explicitly planned.
 3. Keep every full-AST or production-signing statement narrowed until parser and

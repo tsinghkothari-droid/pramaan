@@ -74,6 +74,9 @@ See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
   checklist.
 - [Rendered Examples](docs/rendered-examples/README.md): pass, warning, fail,
   and bundle-inspection examples.
+- [Competitive Benchmark](docs/competitive-benchmark.md): what Pramaan
+  overlaps, reuses, and does differently from AI PR reviewers, quality
+  aggregators, test generators, and attestation primitives.
 - [Pre-Phase-36 GSD Prompt](.planning/AUTONOMOUS_GSD_BEFORE_PHASE_36_PROMPT.md):
   paste-ready autonomous prompt for finishing all remaining GSD phases before
   language-depth expansion.
@@ -106,6 +109,13 @@ were used, which risks were mitigated, and which risks remain.
 
 Pramaan is not another vague AI critic. It is execution-grounded verification
 infrastructure.
+
+It should also be understood as a complement to existing tools, not a blanket
+replacement. AI PR reviewers, reviewdog-style aggregators, test-generation
+systems, and SLSA/Sigstore/in-toto attestations are all useful adjacent tools.
+Pramaan's differentiator is the auditable PR evidence bundle around those
+signals. See the [competitive benchmark](docs/competitive-benchmark.md) for the
+current prior-art map and the claims Pramaan still refuses to make.
 
 ## What a Bundle Proves
 
