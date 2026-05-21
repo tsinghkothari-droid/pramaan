@@ -8,11 +8,11 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Current focus:** Research-driven continuation track. Phases 22.5 and 23-26
 are complete with explicit residual risk. Phase 28.5 now has a first
-implemented confidence-vote slice. Phase 26.1 live Action proof and Phase 26.2
-competitive benchmarking are complete. Public review still depends on
-competitor-gap fixtures, a minimum lovable verifier loop, compiler/parser oracle
-hardening, real Hypothesis/fast-check harnesses, sandboxed generated probes,
-anti-gaming hardening, and reviewer reports.
+implemented confidence-vote slice. Phase 26.1 live Action proof, Phase 26.2
+competitive benchmarking, and Phase 26.3 competitor-gap fixtures are complete.
+Public review still depends on a minimum lovable verifier loop,
+compiler/parser oracle hardening, real Hypothesis/fast-check harnesses,
+sandboxed generated probes, anti-gaming hardening, and reviewer reports.
 
 ## Current Phase
 
@@ -23,10 +23,9 @@ residual risk: Phase 26.3 competitor-gap fixtures and Phase 26.4 minimum
 lovable verifier loop.
 
 Phase 26.1 live Action proof is complete. Public review still depends on the
-remaining pre-36 readiness phases: competitor-gap
-fixtures, minimum lovable verifier loop, full parser/AST oracle hardening, real
-Hypothesis/fast-check execution, sandboxed generated probes, anti-gaming
-hardening, and local reviewer reports.
+remaining pre-36 readiness phases: minimum lovable verifier loop, full
+parser/AST oracle hardening, real Hypothesis/fast-check execution, sandboxed
+generated probes, anti-gaming hardening, and local reviewer reports.
 
 ## Status
 
@@ -136,3 +135,4 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Added pre-Phase-36 autonomous GSD prompt. | `.planning/AUTONOMOUS_GSD_BEFORE_PHASE_36_PROMPT.md` now gives a fresh agent the exact remaining pre-language-depth phase order, verification contract, commit/push discipline, and honesty rules. |
 | 2026-05-21 | Completed Phase 26.1 live GitHub Action proof. | Live run `26229890652` built Pramaan, ran verification, rendered the job summary, and uploaded `pramaan-proof-bundle`; several Action and artifact-path bugs were fixed on the way. |
 | 2026-05-21 | Completed Phase 26.2 competitive benchmark. | `docs/competitive-benchmark.md` now narrows Pramaan's differentiation against AI PR reviewers, quality aggregators, test-generation systems, mutation/property tools, and supply-chain attestation primitives without claiming superiority before executable gap fixtures. |
+| 2026-05-21 | Completed Phase 26.3 competitor-gap fixtures. | `corpus/competitor-gap-fixtures.v0.1.json` and `scripts/check-competitor-gap-fixtures.mjs` now validate seven category-level scenarios for weakened/skipped oracles, fixture drift, hallucinated code, false-green CI, unsigned reports, and hidden skipped stages. |

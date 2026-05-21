@@ -475,6 +475,12 @@ fixtures rather than marketing copy.
 
 **Priority:** Demo credibility
 
+**Status:** Completed 2026-05-21 for the v0.1 category-level fixture corpus.
+`corpus/competitor-gap-fixtures.v0.1.json`, `examples/competitor-gaps/`, and
+`scripts/check-competitor-gap-fixtures.mjs` now validate seven gap scenarios.
+Some entries are metadata fixtures rather than full executable demos; named-tool
+benchmarking remains a future empirical study.
+
 **Success Criteria:**
 
 1. Fixtures cover weakened assertions, added skips, fixture/snapshot drift,

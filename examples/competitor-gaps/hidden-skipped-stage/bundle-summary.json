@@ -1,0 +1,17 @@
+{
+  "scenario": "hidden-skipped-verification-stage",
+  "displayed_status": "pass",
+  "hidden_stage_statuses": [
+    {
+      "stage": "mutation_quality",
+      "status": "skipped",
+      "reason": "mutmut not installed"
+    },
+    {
+      "stage": "property_fuzz",
+      "status": "skipped",
+      "reason": "fast-check not installed"
+    }
+  ],
+  "reviewer_note": "Skipped required stages must lower confidence or warn; they cannot be rendered as success."
+}

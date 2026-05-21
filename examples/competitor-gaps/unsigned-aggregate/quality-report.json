@@ -1,0 +1,11 @@
+{
+  "scenario": "unsigned-aggregate-report",
+  "summary": "3 warnings, 0 failures",
+  "tool_outputs": [
+    "lint.log",
+    "coverage.txt"
+  ],
+  "receipt_graph": null,
+  "signature_or_attestation": null,
+  "reviewer_note": "Aggregate quality reports are useful, but without receipt-level hashes or attestable metadata they cannot prove which evidence was reviewed."
+}

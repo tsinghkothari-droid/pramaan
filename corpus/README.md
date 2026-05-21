@@ -9,6 +9,12 @@ The Phase 33 manifest is:
 corpus/adversarial-scenarios-v0.1.json
 ```
 
+The Phase 26.3 competitor-gap fixture manifest is:
+
+```text
+corpus/competitor-gap-fixtures.v0.1.json
+```
+
 The original starter manifest remains for compatibility:
 
 ```text
@@ -19,6 +25,12 @@ corpus/starter-adversarial-scenarios.json
 
 ```powershell
 node scripts/check-adversarial-corpus.mjs
+```
+
+Validate competitor-gap fixtures:
+
+```powershell
+node scripts/check-competitor-gap-fixtures.mjs
 ```
 
 The validator checks:
@@ -32,6 +44,12 @@ The validator checks:
   injection, crypto, and secrets;
 - malicious verifier, malicious CI, overfitted AI, compromised plugin, and
   careless-AI adversary models.
+
+The competitor-gap validator checks category-level examples for weakened
+assertions, skipped tests, fixture drift, hallucinated APIs, false-green CI,
+unsigned aggregate reports, and hidden skipped stages. Those fixtures compare
+Pramaan's evidence model against adjacent tool categories, not against a named
+product's latest hosted behavior.
 
 ## Scenario Status
 

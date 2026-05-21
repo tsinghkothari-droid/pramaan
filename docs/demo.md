@@ -159,6 +159,33 @@ examples/proof-bundles/
 These are not claims that the demo code is correct. They are stable artifacts
 showing the evidence shape a reviewer should inspect.
 
+## Competitor-Gap Fixtures
+
+Phase 26.3 adds category-level fixtures for places where ordinary review
+surfaces can look acceptable while Pramaan should still fail or warn:
+
+```text
+corpus/competitor-gap-fixtures.v0.1.json
+examples/competitor-gaps/
+```
+
+Validate the fixture manifest:
+
+```powershell
+node scripts/check-competitor-gap-fixtures.mjs
+```
+
+Run the added skipped-test oracle fixture:
+
+```powershell
+cargo run -p pramaan-cli -- oracle --base-repo examples/competitor-gaps/skipped-test/base --head-repo examples/competitor-gaps/skipped-test/head --out target/pramaan-gap/skipped-test
+```
+
+Expected result: Pramaan reports oracle risk for the newly skipped regression
+test. Metadata-only competitor-gap fixtures are not proof of named-tool
+performance; they are checked risk scenarios that should be promoted into
+executable demos as the verifier matures.
+
 ## External Pilot Evidence
 
 Phase 26 ran Pramaan locally against public Python, TypeScript, and Rust

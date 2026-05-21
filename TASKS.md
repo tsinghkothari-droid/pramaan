@@ -319,15 +319,17 @@ AI coding agents and real reviewers. They are planned, not complete.
 
 #### Phase 26.3: Competitor-Gap Fixtures
 
-- [ ] Add fixture scenarios where ordinary AI PR review would likely pass but
+- [x] Add fixture scenarios where ordinary AI PR review would likely pass but
   Pramaan should block or warn.
-- [ ] Cover weakened assertions, added skips, fixture/snapshot drift,
+- [x] Cover weakened assertions, added skips, fixture/snapshot drift,
   hallucinated API usage, false-green CI, unsigned aggregate quality reports,
   and hidden skipped verification stages.
-- [ ] Map every scenario to stable risk IDs and expected Pramaan receipts.
-- [ ] Add a report that says which public-tool category would miss or
+- [x] Map every scenario to stable risk IDs and expected Pramaan receipts.
+- [x] Add a report that says which public-tool category would miss or
   under-report each scenario.
-- [ ] Add CI validation that stale or duplicate gap fixtures fail.
+- [x] Add validation that stale or duplicate gap fixtures fail through
+  `node scripts/check-competitor-gap-fixtures.mjs`; CI wiring remains a Phase
+  26.4/35.5 packaging follow-up.
 - [ ] Keep competitor names out of brittle test names where possible; test the
   failure mode, not another project's implementation detail.
 

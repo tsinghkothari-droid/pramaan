@@ -203,3 +203,24 @@ Refresh this benchmark before:
 
 Phase 26.3 must turn the strongest comparison claims into executable fixtures.
 Until then, this document is positioning evidence, not proof of superiority.
+
+## Fixture Follow-Through
+
+Phase 26.3 adds the category-level fixture manifest:
+
+```text
+corpus/competitor-gap-fixtures.v0.1.json
+```
+
+Validate it with:
+
+```powershell
+node scripts/check-competitor-gap-fixtures.mjs
+```
+
+These fixtures are intentionally framed around adjacent tool categories rather
+than claims that a named product always misses a case. They support the narrower
+public claim that Pramaan targets evidence gaps ordinary review surfaces can
+hide: weakened or skipped tests, oracle-sensitive artifacts, hallucinated code,
+green CI without required evidence, unsigned aggregate reports, and skipped
+verification rendered as success.

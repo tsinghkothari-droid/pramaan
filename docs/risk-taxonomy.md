@@ -106,6 +106,32 @@ Rust helper currently maps IDs to families by range so Phase 1 can summarize
 synthetic receipts. Later phases should load the complete taxonomy from the
 schema-backed register and validate that every receipt risk ID exists.
 
+## Competitor-Gap Fixture Mapping
+
+The Phase 26.3 competitor-gap manifest lives at:
+
+```text
+corpus/competitor-gap-fixtures.v0.1.json
+```
+
+It maps adjacent-tool gaps to the same stable risk families:
+
+- weakened or skipped tests: `R-010..R-020`;
+- hallucinated imports or APIs: `R-038..R-040`;
+- missing or unsigned evidence: `R-081..R-090`;
+- CI status and workflow trust gaps: `R-091..R-095`;
+- demo/eval traceability: `R-100`.
+
+Validate it with:
+
+```powershell
+node scripts/check-competitor-gap-fixtures.mjs
+```
+
+The fixture manifest is a comparison harness, not a statement that any named
+tool will always miss the scenario. Named-tool benchmarking requires pinned
+versions and separate published results.
+
 Until then, any new receipt language should cite risk IDs conservatively:
 
 - Use a stable `R-000`-style ID only when it exists in the register.

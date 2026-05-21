@@ -1,0 +1,16 @@
+{
+  "scenario": "false-green-ci",
+  "ci_status": "success",
+  "observed_checks": [
+    {
+      "name": "unit-tests",
+      "conclusion": "success"
+    }
+  ],
+  "missing_required_evidence": [
+    "oracle_integrity",
+    "mutation_quality",
+    "bundle_manifest"
+  ],
+  "reviewer_note": "A green unit-test job is not the same as an evidence bundle. Required Pramaan stages are absent."
+}

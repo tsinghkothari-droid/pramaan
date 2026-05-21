@@ -1,0 +1,119 @@
+{
+  "schema_version": "pramaan.competitor_gap/v1",
+  "corpus_id": "pramaan-competitor-gap-fixtures-v0.1",
+  "description": "Category-level fixtures showing where Pramaan's receipt evidence is stronger than ordinary AI review, generic quality aggregation, or unsigned reports.",
+  "minimum_fixture_count": 7,
+  "fixtures": [
+    {
+      "id": "CG-001",
+      "name": "Weakened assertion passes ordinary CI",
+      "gap_category": "oracle_integrity",
+      "adjacent_tool_category": "ai_pr_reviewer",
+      "ordinary_surface": "A prose reviewer or ordinary CI may see passing tests and miss that the exact oracle was weakened.",
+      "pramaan_signal": "Oracle receipt fails with weakened_assertion and stable risk IDs.",
+      "expected_decision": "fail",
+      "status": "implemented_demo",
+      "fixture_paths": [
+        "examples/vulnerable-python-pr/base/test_checkout.py",
+        "examples/vulnerable-python-pr/weakened-test/test_checkout.py",
+        "examples/proof-bundles/weakened-assertion/receipts/oracle-integrity.receipt.json"
+      ],
+      "validation_command": "cargo run -p pramaan-cli -- oracle --base-repo examples/vulnerable-python-pr/base --head-repo examples/vulnerable-python-pr/weakened-test --out target/pramaan-gap/weakened-assertion",
+      "risk_ids": ["R-011", "R-014", "R-087", "R-100"]
+    },
+    {
+      "id": "CG-002",
+      "name": "Added skip marker hides a broken regression",
+      "gap_category": "oracle_integrity",
+      "adjacent_tool_category": "test_change_monitor",
+      "ordinary_surface": "The CI job can pass because the relevant regression test is disabled.",
+      "pramaan_signal": "Oracle receipt reports skipped_or_ignored_test and residual oracle risk.",
+      "expected_decision": "fail",
+      "status": "implemented_fixture",
+      "fixture_paths": [
+        "examples/competitor-gaps/skipped-test/base/test_discount.py",
+        "examples/competitor-gaps/skipped-test/head/test_discount.py"
+      ],
+      "validation_command": "cargo run -p pramaan-cli -- oracle --base-repo examples/competitor-gaps/skipped-test/base --head-repo examples/competitor-gaps/skipped-test/head --out target/pramaan-gap/skipped-test",
+      "risk_ids": ["R-010", "R-012", "R-087", "R-100"]
+    },
+    {
+      "id": "CG-003",
+      "name": "Fixture and snapshot drift bless wrong behavior",
+      "gap_category": "oracle_integrity",
+      "adjacent_tool_category": "ci_quality_aggregator",
+      "ordinary_surface": "A quality dashboard may show tests passing while approved-output files changed.",
+      "pramaan_signal": "Oracle receipt flags sensitive_artifact_changed for fixtures and snapshots.",
+      "expected_decision": "fail",
+      "status": "implemented_demo",
+      "fixture_paths": [
+        "examples/snapshot-fixture-drift-pr/base/fixtures/order.json",
+        "examples/snapshot-fixture-drift-pr/head/fixtures/order.json",
+        "examples/proof-bundles/snapshot-fixture-drift/receipts/oracle-integrity.receipt.json"
+      ],
+      "validation_command": "cargo run -p pramaan-cli -- oracle --base-repo examples/snapshot-fixture-drift-pr/base --head-repo examples/snapshot-fixture-drift-pr/head --out target/pramaan-gap/snapshot-fixture-drift",
+      "risk_ids": ["R-013", "R-018", "R-087", "R-100"]
+    },
+    {
+      "id": "CG-004",
+      "name": "Hallucinated import in generated Rust fix",
+      "gap_category": "static_hallucination",
+      "adjacent_tool_category": "ai_pr_reviewer",
+      "ordinary_surface": "The code can look idiomatic in review while depending on a nonexistent symbol.",
+      "pramaan_signal": "Static receipt records the underlying cargo failure and hallucination-style risk.",
+      "expected_decision": "fail",
+      "status": "implemented_demo",
+      "fixture_paths": [
+        "examples/hallucinated-rust-pr/src/lib.rs",
+        "examples/proof-bundles/hallucinated-rust/receipts/static/rust-cargo-check.receipt.json"
+      ],
+      "validation_command": "cargo run -p pramaan-cli -- static-checks --repo examples/hallucinated-rust-pr --out target/pramaan-gap/hallucinated-rust",
+      "risk_ids": ["R-038", "R-039", "R-040", "R-100"]
+    },
+    {
+      "id": "CG-005",
+      "name": "False-green CI with missing required evidence",
+      "gap_category": "ci_supply_chain",
+      "adjacent_tool_category": "ci_status_check",
+      "ordinary_surface": "A green unit-test check says commands exited successfully, not that Pramaan stages ran.",
+      "pramaan_signal": "Policy and confidence treat missing required stages as residual risk or failure.",
+      "expected_decision": "warn",
+      "status": "metadata_fixture",
+      "fixture_paths": [
+        "examples/competitor-gaps/false-green-ci/green-ci-summary.json"
+      ],
+      "validation_command": "node scripts/check-competitor-gap-fixtures.mjs --fixture CG-005",
+      "risk_ids": ["R-082", "R-091", "R-094", "R-100"]
+    },
+    {
+      "id": "CG-006",
+      "name": "Unsigned aggregate report has no receipt provenance",
+      "gap_category": "bundle_integrity",
+      "adjacent_tool_category": "ci_quality_aggregator",
+      "ordinary_surface": "A summary report can be useful but may not prove which raw artifacts were included.",
+      "pramaan_signal": "Bundle manifest links receipts and artifacts by digest and can reject tampering.",
+      "expected_decision": "warn",
+      "status": "metadata_fixture",
+      "fixture_paths": [
+        "examples/competitor-gaps/unsigned-aggregate/quality-report.json"
+      ],
+      "validation_command": "node scripts/check-competitor-gap-fixtures.mjs --fixture CG-006",
+      "risk_ids": ["R-081", "R-083", "R-086", "R-100"]
+    },
+    {
+      "id": "CG-007",
+      "name": "Hidden skipped verification stage rendered as success",
+      "gap_category": "policy_confidence",
+      "adjacent_tool_category": "status_dashboard",
+      "ordinary_surface": "A dashboard can collapse skipped mutation/fuzz stages into an overall green badge.",
+      "pramaan_signal": "Skipped required stages remain visible and cannot improve confidence.",
+      "expected_decision": "fail",
+      "status": "metadata_fixture",
+      "fixture_paths": [
+        "examples/competitor-gaps/hidden-skipped-stage/bundle-summary.json"
+      ],
+      "validation_command": "node scripts/check-competitor-gap-fixtures.mjs --fixture CG-007",
+      "risk_ids": ["R-068", "R-071", "R-082", "R-100"]
+    }
+  ]
+}
