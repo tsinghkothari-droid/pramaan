@@ -60,6 +60,21 @@ Use `TASKS.md` in this order:
    re-open completed P0/P1 work unless the claim audit or pilot evidence says
    the implementation is stale.
 
+### Priority Completion Snapshot
+
+This table is the quick answer for whether P0, P1, and P2 are complete.
+
+| Priority | Status | Meaning | Still blocking |
+| --- | --- | --- | --- |
+| P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, and assertion truth audit are done. | Public Alpha still needs Phase 26 external pilots and live Action proof. |
+| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, and deterministic property/fuzz evidence are usable with honest skipped-tool receipts. | Phase 27 parser-backed oracle hardening, Phase 28 real Hypothesis/fast-check harnesses, and Phase 28.5 confidence artifacts. |
+| P2 | Not complete | P2 is the trust/adoption layer after the core loop: signing, redaction, plugin trust, SARIF/policy integration, corpus, calibration, docs, and language depth. | Phases 29-36. |
+| P3 | Not started as product scope | Multi-forge, multi-agent provenance, and adapter certification are later expansion tracks. | Phases 37-39. |
+
+Do not mark P2 complete until signed/attested bundles, redaction profiles,
+plugin trust, SARIF/policy export, 25+ adversarial scenarios, calibration, and
+operator docs have all landed with tests or checked fixtures.
+
 ### Current Execution Order
 
 Build Pramaan in this order. Do not jump ahead unless the phase explicitly says
@@ -86,12 +101,12 @@ it can run in parallel.
 
 Execution guardrails:
 
-- [ ] Start with Phase 26 unless the user explicitly asks for a narrower phase.
-- [ ] Do not market public Alpha before Phase 26 has external pilot evidence.
-- [ ] Do not sign or attest confidence scores before Phase 28.5 exists.
-- [ ] Do not expand plugins before Phase 31 defines trust and isolation.
-- [ ] Do not publish public-demo bundles before Phase 30 redaction tests pass.
-- [ ] Do not call the project Serious v1 before Phase 40 closes or rejects the
+- Start with Phase 26 unless the user explicitly asks for a narrower phase.
+- Do not market public Alpha before Phase 26 has external pilot evidence.
+- Do not sign or attest confidence scores before Phase 28.5 exists.
+- Do not expand plugins before Phase 31 defines trust and isolation.
+- Do not publish public-demo bundles before Phase 30 redaction tests pass.
+- Do not call the project Serious v1 before Phase 40 closes or rejects the
   release gate.
 
 ### P0 Product Direction Tasks
