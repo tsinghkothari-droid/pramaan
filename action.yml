@@ -44,7 +44,7 @@ inputs:
     required: false
     default: private-preview
   attest:
-    description: Create a GitHub artifact attestation for the uploaded bundle. Requires id-token: write and attestations: write.
+    description: "Create a GitHub artifact attestation for the uploaded bundle. Requires id-token: write and attestations: write."
     required: false
     default: "false"
   pramaan-args:
