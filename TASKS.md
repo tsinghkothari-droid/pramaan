@@ -95,9 +95,11 @@ it can run in parallel.
 | 1.5 | Phase 26.5 | Agent harness interface for Claude Code, Codex, Cursor-style agents, and custom harnesses | Agents should call Pramaan before claiming done. | Agent adoption |
 | 2 | Phase 27 | Parser-backed subset oracle extractors | Confidence and signing are weaker if oracle evidence is still parser-light. | Phase 28.5 confidence inputs |
 | 2.1 | Phase 27.1 | Parser metadata and full-AST dependency decision | Full AST support needs dependency and runtime justification before public claims change. | Public full-AST claims |
+| 2.2 | Phase 27.2 | First full-AST oracle integration slice | Start with Python AST subprocess evidence instead of pretending all three languages are full-AST backed. | Public full-AST claims |
 | 3 | Phase 28 | Recorded-case replay for differential fuzz evidence | Confidence needs replayable generated-case evidence, even before real harness execution. | Phase 28.5 confidence inputs |
 | 3.1 | Phase 28.1 | Safe Hypothesis/fast-check harness execution | Real tool-backed campaigns need sandboxed generated harnesses. | Public tool-backed property claims |
 | 3.15 | Phase 28.15 | Fuzz harness truthfulness review gate | Tool-backed failures must affect verdicts, timeouts must be real, and harness errors must become receipts before public claims. | Public tool-backed property claims |
+| 3.2 | Phase 28.2 | Property/fuzz sandbox hardening | Truthful harness execution still needs sandbox-policy evidence and env/filesystem hardening. | Public tool-backed property claims |
 | 3.25 | Phase 28.25 | AI evidence-seeking probe generator | AI should generate better probes, but only executed probes count. | Phase 28.26 execution |
 | 3.26 | Phase 28.26 | Sandbox execution for generated probes | Safe-marker bounded probes now compile/run before they can be kept; rejected probes preserve failure reasons. | Public-review probe honesty |
 | 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
@@ -211,9 +213,11 @@ unfinished task family below into an executable GSD phase.
 | Phase 26.5 | Agent adoption | `pramaan agent done-gate`, agent decision schema, `AGENTS.md`, Claude Code hook/command templates, and blocked-agent fixtures. |
 | Phase 27 | P1 hardening | Parser-backed subset oracle extractors for Python, TypeScript, and Rust with negative fixtures and honest residual full-AST split. |
 | Phase 27.1 | P1 hardening split | Parser-version evidence, unsupported-syntax metadata, disagreement reporting fields, and full-AST dependency decisions; full compiler integrations remain split. |
+| Phase 27.2 | P1 hardening split | Planned first compiler/parser AST implementation slice, starting with Python AST subprocess evidence. |
 | Phase 28 | P1 hardening | Recorded-case replay CLI contracts for differential fuzz evidence, with real harness execution split honestly. |
 | Phase 28.1 | P1 hardening split | First bounded Hypothesis and fast-check generated-harness execution path with tool-version/raw-output evidence; Phase 28.15 owns review-found verdict/timeout/truthfulness gaps. |
 | Phase 28.15 | P1 corrective review gate | Completed truthfulness repair for harness failure promotion, real timeout enforcement, structured harness-error receipts, JS evaluation safety, and clearer tool-generated count metadata. |
+| Phase 28.2 | P1 hardening split | Planned sandbox-policy, env-scrub, filesystem-boundary, and cleanup evidence for generated property/fuzz harnesses. |
 | Phase 28.25 | 10x evidence depth | AI-generated probes for tests, properties, differential inputs, and security checks; only sandbox-executed probes count. |
 | Phase 28.26 | 10x evidence depth | Bounded generated-probe execution, rejected-probe preservation, and execution report validation. |
 | Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
@@ -299,8 +303,9 @@ Public Alpha blockers:
 - [x] Add parser-version evidence, unsupported-syntax metadata, disagreement
   reporting fields, and dependency decision docs for Python, TypeScript, and
   Rust.
-- [ ] Add full compiler/parser AST integrations for Python, TypeScript, and
-  Rust, or keep those claims explicitly planned.
+- [ ] Phase 27.2: add a first full compiler/parser AST integration slice,
+  starting with Python AST subprocess evidence while keeping TypeScript and Rust
+  subset claims explicit.
 - [x] Add local/offline VSA and in-toto attestation evidence, while keeping
   production Sigstore/GitHub identity claims explicitly planned.
 - [x] Prove the GitHub Action through a live `workflow_dispatch` run with an
@@ -586,9 +591,9 @@ AI-authored PRs to prove theirs.
   visible in `oracle-diff.json`.
 - [x] Add dependency decision docs and metadata fixtures for decorators,
   generated tests, TypeScript computed names, and Rust macro-generated tests.
-- [ ] Add full compiler/parser AST integrations for Python, TypeScript, and
-  Rust with subprocess/dependency pinning; current v0.1 remains a
-  parser-backed subset, not a full-AST proof.
+- [ ] Phase 27.2: add full compiler/parser AST integration with
+  subprocess/dependency pinning, starting with Python AST; current v0.1 remains
+  a parser-backed subset, not a full-AST proof.
 
 ## P1: Mutation Adapters
 
@@ -783,7 +788,8 @@ Phase 28.5 acceptance criteria:
 - [x] Require plugin identity, version, provenance, and optional signature in
   every plugin-emitted receipt.
 - [x] Prevent plugins from editing prior receipts or bundle manifests directly.
-- [ ] Run risky parsers, test runners, mutation engines, and fuzzers behind stronger sandbox boundaries.
+- [ ] Phase 28.2: run risky parsers, test runners, mutation engines, and
+  fuzzers behind stronger sandbox boundaries.
 - [x] Add malicious-plugin fixtures to the adversarial corpus.
 - [x] Add malicious-PR scenario specs to the adversarial corpus; executable
   malicious-PR repos remain future fixtures.

@@ -601,6 +601,23 @@ until subprocess protocols and dependency costs are justified.
 4. Claim audit stops marking full compiler AST extraction as planned only after
    executable fixtures pass.
 
+## Phase 27.2: Full AST Oracle Integration Slice
+
+**Status:** Planned 2026-05-21 as a gap-closure split. Start with Python AST
+via bounded subprocess helper; keep TypeScript and Rust as parser-backed subset
+evidence until separate integrations land.
+
+**Goal:** Convert one language from parser-backed subset evidence to real
+compiler/parser AST evidence without overclaiming the other languages.
+
+**Success Criteria:**
+
+1. Python AST helper emits normalized test nodes and parser metadata.
+2. Helper failures and timeouts become structured oracle residual risk.
+3. Subset-vs-AST disagreement is visible in oracle diff evidence.
+4. Public docs distinguish Python AST support from TypeScript/Rust subset
+   support.
+
 ## Phase 28: Tool-Backed Property, Fuzz, and Replay
 
 **Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Recorded-case replay CLI
@@ -671,6 +688,22 @@ and the private-preview harness only targets bounded pure-function candidates.
    residual risk.
 5. Tool version, generated cases, raw-output digest, timeout status, and
    deterministic corpus count are structured fields, not prose parsing.
+
+## Phase 28.2: Property/Fuzz Sandbox Hardening
+
+**Status:** Planned 2026-05-21 as a gap-closure split. Phase 28.1/28.15 made
+harness execution truthful; this phase owns stronger sandbox policy evidence.
+
+**Goal:** Add sandbox policy, environment scrubbing, filesystem boundaries, and
+cleanup evidence around generated Hypothesis/fast-check harness execution.
+
+**Success Criteria:**
+
+1. Harness receipts include sandbox policy and env-scrub metadata.
+2. Generated harnesses cannot write outside the temp root in fixture tests.
+3. Timeout/process cleanup evidence is recorded.
+4. Docs continue to label this as bounded private-preview until stronger
+   OS/container isolation exists.
 
 ## Phase 28.25: AI Evidence-Seeking Probe Generator
 
