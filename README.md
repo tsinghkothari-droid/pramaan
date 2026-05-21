@@ -44,14 +44,20 @@ Pramaan answers the question reviewers actually need answered:
 ## Current Implementation Status
 
 Pramaan is early-stage. The repo already ships a Rust CLI foundation, receipt
-schemas, bundle hash verification, sandbox/environment evidence, static-check
-adapters, structured oracle-integrity checks, demo fixtures, mutation adapters
-that run when tools are installed, deterministic differential replay evidence,
-an uncalibrated auditable confidence vote, and a GitHub Action wrapper. It does
-**not** yet ship production-grade Sigstore signing, enforced container
+schemas with stable `$id` URLs, bundle hash verification, sandbox/environment
+evidence, static-check adapters that record the real underlying tool versions,
+structured oracle-integrity checks, demo fixtures, mutation adapters that run
+when tools are installed, deterministic differential replay evidence, an
+uncalibrated auditable confidence vote, and a GitHub Action wrapper.
+
+`pramaan verify` now orchestrates the real stages by default (claim scope,
+sandbox setup, static checks, oracle integrity, differential fuzz). Mutation
+testing is opt-in via `--with-mutation`. Individual stages can be skipped with
+`--skip-stage <name>` for fast iteration.
+
+It does **not** yet ship production-grade Sigstore signing, enforced container
 isolation, real Hypothesis/fast-check execution, full compiler-AST oracle
-parsing, calibrated confidence, or a fully orchestrated `verify` pipeline that
-runs every planned stage automatically.
+parsing, or calibrated confidence.
 
 See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
 
@@ -64,21 +70,22 @@ request, it is being built toward an inspectable bundle of stage receipts:
 
 ```text
 PR diff
-  -> Sandbox and environment evidence
-  -> Claim scope
-  -> Static and hallucination checks
-  -> Oracle integrity
-  -> Delta mutation
-  -> Property, fuzz, and differential checks
-  -> Auditable confidence vote
-  -> Bundle integrity and signing/attestation
-  -> GitHub Action summary
+  -> Claim scope                                  (runs in `pramaan verify`)
+  -> Sandbox setup + environment evidence         (runs in `pramaan verify`)
+  -> Static and hallucination checks              (runs in `pramaan verify`)
+  -> Oracle integrity                             (runs in `pramaan verify`)
+  -> Differential fuzz / replay evidence          (runs in `pramaan verify`)
+  -> Delta mutation                               (opt-in: --with-mutation)
+  -> Auditable confidence vote                    (separate: pramaan confidence explain)
+  -> Bundle integrity, signing metadata, attestation
+  -> GitHub Action summary                        (rendered from bundle.manifest.json)
 ```
 
 Every stage emits a receipt, including skipped and failed stages. A reviewer can
-see exactly what ran, which tools and versions were used, which files and
-artifacts were hashed, which seeds or corpora were used, which risks were
-mitigated, and which risks remain.
+see exactly what ran, which tools and versions were used (the real ruff / mypy /
+tsc / cargo / mutmut / StrykerJS / cargo-mutants version, not just the Pramaan
+wrapper version), which files and artifacts were hashed, which seeds or corpora
+were used, which risks were mitigated, and which risks remain.
 
 Pramaan is not another vague AI critic. It is execution-grounded verification
 infrastructure.
@@ -346,16 +353,50 @@ Pramaan is for teams that expect AI agents to contribute production code:
 
 ## Quickstart
 
-```powershell
-cargo run -p pramaan-cli -- verify --base HEAD --head HEAD --out target/pramaan-smoke
+Verify a PR's diff with the default stage set (claim scope, sandbox,
+static checks, oracle integrity, differential fuzz):
+
+```bash
+cargo run -p pramaan-cli -- verify \
+  --base origin/main --head HEAD \
+  --out target/pramaan
+```
+
+Add mutation testing (slower, opt-in):
+
+```bash
+cargo run -p pramaan-cli -- verify \
+  --base origin/main --head HEAD \
+  --out target/pramaan \
+  --with-mutation
+```
+
+Fast iteration: skip stages you don't need right now:
+
+```bash
+cargo run -p pramaan-cli -- verify \
+  --base origin/main --head HEAD \
+  --out target/pramaan \
+  --skip-stage static_checks --skip-stage fuzz
+```
+
+Optional CI attribution — set these env vars to record which AI coding agent
+produced the change. Absent by default; never inferred:
+
+```bash
+export PRAMAAN_AGENT_PRODUCT="Codex"
+export PRAMAAN_AGENT_MODEL_FAMILY="gpt-5"
+export PRAMAAN_AGENT_MODEL_VERSION="..."
+export PRAMAAN_AGENT_EXECUTION_MODE="ci_pull_request"
+export PRAMAAN_AGENT_SOURCE="github_actions"
 ```
 
 Validate the workspace:
 
-```powershell
-cargo fmt --check
-cargo test --workspace
-cargo run -p pramaan-cli -- verify --base HEAD --head HEAD --out target/pramaan-smoke
+```bash
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace -- --test-threads=1
 ```
 
 ## Documentation

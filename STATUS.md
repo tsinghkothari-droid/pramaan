@@ -51,18 +51,25 @@ Status labels:
 ## Current Honest Product Claim
 
 Pramaan currently provides a receipt-first Rust CLI foundation with working
-bundle hash verification, sandbox/environment evidence, static-check adapters,
-parser-backed subset oracle integrity checks, demo fixtures, a default policy
-explanation path, recorded-case replay for differential fuzz evidence, an
-AI evidence-seeking probe plan that requires sandbox execution before
-mitigation, an uncalibrated auditable confidence vote, a deterministic agent
-completion gate, redaction helpers, threat-model documentation, a claim-audit
-ledger, and a GitHub Action wrapper.
+bundle hash verification, sandbox/environment evidence, static-check adapters
+that record the real underlying tool versions, parser-backed subset oracle
+integrity checks, demo fixtures, a default policy explanation path,
+recorded-case replay for differential fuzz evidence, an AI evidence-seeking
+probe plan that requires sandbox execution before mitigation, an uncalibrated
+auditable confidence vote, a deterministic agent completion gate, redaction
+helpers, threat-model documentation, a claim-audit ledger, and a GitHub Action
+wrapper.
+
+`pramaan verify` orchestrates real stages end-to-end: claim scope, sandbox
+setup, static checks, oracle integrity, and differential fuzz run by default,
+each producing real receipts under the bundle. Mutation testing is opt-in via
+`--with-mutation`. Stages can be excluded with repeated `--skip-stage <name>`
+flags. The synthetic-verification placeholder is now a fallback only, emitted
+exclusively when every real stage was skipped.
 
 It does **not** yet provide production-grade signed attestations, enforced
 container isolation, real Hypothesis/fast-check property execution, full
-compiler-AST oracle parsing, sandbox execution of AI-generated probes, or a
-complete end-to-end `verify` pipeline that runs every stage automatically. The
+compiler-AST oracle parsing, or sandbox execution of AI-generated probes. The
 confidence vote is implemented as decomposed residual-risk evidence, not as a
 calibrated probability or merge authority.
 
