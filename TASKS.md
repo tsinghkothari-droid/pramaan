@@ -72,7 +72,7 @@ This table is the quick answer for whether P0, P1, and P2 are complete.
 | Priority | Status | Meaning | Still blocking |
 | --- | --- | --- | --- |
 | P0 | Complete for private technical preview | Product thesis, killer demo, receipt trust, GitHub Action readiness, policy/SLA, assertion truth audit, three external local pilots, and a live workflow-dispatch Action proof are done. | Public review still needs the remaining pre-36 readiness phases. |
-| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence with parser metadata, bounded Hypothesis/fast-check harness execution when tools are installed, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Full compiler AST extraction remains split to a heavier Phase 27.2/36 path; production sandboxing for property tools remains open. |
+| P1 | Private-preview sufficient, not fully closed | Sandbox, claim scope, static checks, oracle integrity, mutation adapters, deterministic property/fuzz evidence, parser-backed oracle subset evidence with parser metadata, bounded Hypothesis/fast-check harness execution when tools are installed, bounded AI-probe sandbox execution, and the first auditable confidence artifact are usable with honest skipped-tool receipts. | Phase 28.15 must still close review findings before public tool-backed property/fuzz claims; full compiler AST extraction remains split to a heavier Phase 27.2/36 path; production sandboxing for property tools and arbitrary generated code remains open. |
 | P2 | Not complete | P2 is the trust/adoption layer after the core loop: signing, redaction, plugin trust, SARIF/policy integration, corpus, calibration, docs, and language depth. Phase 28.5 has started the trust bridge, but the rest remains open. | Phases 29-36. |
 | P3 | Not started as product scope | Multi-forge, multi-agent provenance, and adapter certification are later expansion tracks. | Phases 37-39. |
 
@@ -97,7 +97,9 @@ it can run in parallel.
 | 2.1 | Phase 27.1 | Parser metadata and full-AST dependency decision | Full AST support needs dependency and runtime justification before public claims change. | Public full-AST claims |
 | 3 | Phase 28 | Recorded-case replay for differential fuzz evidence | Confidence needs replayable generated-case evidence, even before real harness execution. | Phase 28.5 confidence inputs |
 | 3.1 | Phase 28.1 | Safe Hypothesis/fast-check harness execution | Real tool-backed campaigns need sandboxed generated harnesses. | Public tool-backed property claims |
-| 3.25 | Phase 28.25 | AI evidence-seeking probe generator | AI should generate better probes, but only executed probes count. | Phase 28.5 confidence inputs |
+| 3.15 | Phase 28.15 | PR-Agent-style fuzz harness review gate | Tool-backed failures must affect verdicts, timeouts must be real, and harness errors must become receipts before public claims. | Public tool-backed property claims |
+| 3.25 | Phase 28.25 | AI evidence-seeking probe generator | AI should generate better probes, but only executed probes count. | Phase 28.26 execution |
+| 3.26 | Phase 28.26 | Sandbox execution for generated probes | Safe-marker bounded probes now compile/run before they can be kept; rejected probes preserve failure reasons. | Public-review probe honesty |
 | 4 | Phase 28.5 | Auditable confidence vote and `confidence.schema.json` | The score must be decomposed before it is signed or marketed. | Phase 29 signed confidence |
 | 5 | Phase 29 | Local/offline in-toto/SLSA VSA and offline verify landed; production Sigstore/cosign identity remains planned. | Trust evidence must leave CI as a verifiable artifact. | Real MVP trust gate |
 | 6 | Phase 30 | Redaction profiles and public-safe bundle export landed; summary-only artifact minimization remains later hardening. | External pilots and demos need shareable bundles. | Public bundle sharing |
@@ -125,8 +127,8 @@ Execution guardrails:
 - Do not broaden engines before Phase 26.4 proves the minimum lovable verifier
   loop is coherent end to end.
 - Do not ask coding agents to self-certify completion before Phase 26.5 lands.
-- Do not count AI-generated probes as evidence before Phase 28.26 executes them
-  in a sandbox.
+- Do not count AI-generated probes as evidence unless `pramaan probe execute`
+  records `executed_passed`; rejected or pending probes are residual risk.
 - Do not sign or attest confidence scores before Phase 28.5 exists.
 - Do not offer enterprise policy-pack claims before Phase 32.5 exists.
 - Do not expand plugins before Phase 31 defines trust and isolation.
@@ -205,8 +207,10 @@ unfinished task family below into an executable GSD phase.
 | Phase 27 | P1 hardening | Parser-backed subset oracle extractors for Python, TypeScript, and Rust with negative fixtures and honest residual full-AST split. |
 | Phase 27.1 | P1 hardening split | Parser-version evidence, unsupported-syntax metadata, disagreement reporting fields, and full-AST dependency decisions; full compiler integrations remain split. |
 | Phase 28 | P1 hardening | Recorded-case replay CLI contracts for differential fuzz evidence, with real harness execution split honestly. |
-| Phase 28.1 | P1 hardening split | Safe real Hypothesis and fast-check generated-harness execution with budget/timeout/tool-version evidence. |
+| Phase 28.1 | P1 hardening split | First bounded Hypothesis and fast-check generated-harness execution path with tool-version/raw-output evidence; Phase 28.15 owns review-found verdict/timeout/truthfulness gaps. |
+| Phase 28.15 | P1 corrective review gate | PR-Agent-style review follow-up for harness failure promotion, real timeout enforcement, structured harness-error receipts, JS evaluation safety, and clearer tool-generated count metadata. |
 | Phase 28.25 | 10x evidence depth | AI-generated probes for tests, properties, differential inputs, and security checks; only sandbox-executed probes count. |
+| Phase 28.26 | 10x evidence depth | Bounded generated-probe execution, rejected-probe preservation, and execution report validation. |
 | Phase 28.5 | P1/P2 trust | Auditable confidence-vote algorithm, hard-gate rules, weak-signal aggregation, statistical intervals, and `confidence.schema.json`. |
 | Phase 29 | P2 trust | Local/offline SLSA VSA-style output, in-toto wrapping, composite-action attestation emission, and offline bundle verification; production Sigstore/cosign identity remains a hardening follow-up. |
 | Phase 30 | P2 trust | Redaction profiles, redacted bundle export, manifest rebuild, and public-demo scrub tests for secrets, private paths, internal hosts, and CI metadata. |
@@ -243,7 +247,7 @@ Unfinished task-family mapping:
 | Agent harness for coding agents | 26.5 |
 | Full AST/parser oracle integrations | 27.1 |
 | Real Hypothesis/fast-check campaigns | 28.1 |
-| AI evidence-seeking probe generation | 28.25 |
+| AI evidence-seeking probe generation and bounded execution | 28.25, 28.26 |
 | Auditable confidence vote and scoring schema | 28.5, 34 |
 | Attestation and signing | 29 |
 | Redaction profiles | 30 |
@@ -381,17 +385,18 @@ AI coding agents and real reviewers. They are planned, not complete.
   fixture/snapshot challenge.
 - [x] Store prompt hash and model/provider metadata without making provider
   output trusted evidence.
-- [ ] Run generated probes in isolated temp test locations.
-- [ ] Reject probes that do not compile, do not run, or do not exercise changed
+- [x] Run safe-marker generated probes in isolated temp test locations.
+- [x] Reject probes that do not compile, do not run, or do not exercise changed
   behavior.
 - [x] Preserve pending generated probes and execution requirement as evidence;
-  rejected-probe preservation remains tied to real execution.
+  rejected probes now keep compile/run/static rejection reasons.
 - [ ] Mutation-test or differential-test accepted probes where practical.
 - [x] Emit `ai_probe_generation` receipts with accepted/rejected/pending counts, risk
   IDs, and artifact hashes.
 - [x] Document that AI proposes probes, but only sandbox-executed probes count.
-- [ ] Split and execute `Phase 28.26`: sandbox execution for generated probes,
-  compile/run rejection reasons, and mutation/differential validation.
+- [x] Execute `Phase 28.26`: bounded sandbox execution for generated probes
+  and compile/run/static rejection reasons.
+- [ ] Add mutation/differential validation for accepted probes where practical.
 
 #### Phase 32.5: Policy Pack Library and Enterprise Profiles
 
@@ -560,11 +565,21 @@ AI-authored PRs to prove theirs.
 
 - [x] Python: auto-discover eligible pure functions and run deterministic differential replay checks.
 - [x] TypeScript: auto-discover eligible pure functions and run deterministic differential replay checks.
-- [x] Python: execute real Hypothesis campaigns through a safe generated harness
-  when Hypothesis is installed and eligible pure-function candidates exist.
-- [x] TypeScript: execute real fast-check campaigns through a safe generated
-  harness when fast-check is installed and eligible pure-function candidates
-  exist.
+- [x] Python: execute a first bounded Hypothesis subprocess harness when
+  Hypothesis is installed and eligible pure-function candidates exist.
+- [x] TypeScript: execute a first bounded fast-check subprocess harness when
+  fast-check is installed and eligible pure-function candidates exist.
+- [ ] Promote Hypothesis/fast-check harness-discovered failures into canonical
+  divergence, replay, counterexample, residual-risk, confidence, and policy
+  evidence.
+- [ ] Enforce real subprocess timeouts for Python and Node tool harnesses.
+- [ ] Convert harness nonzero exits/timeouts into structured receipt evidence
+  instead of opaque command aborts.
+- [ ] Remove dynamic JavaScript `Function(...)` evaluation or isolate it behind
+  a documented verifier-security boundary.
+- [ ] Store tool version, generated cases, timeout status, raw-output digest,
+  deterministic input count, and tool-generated case count as structured
+  evidence fields.
 - [x] Record seeds, replay data, counterexamples, corpus hashes, generated input counts, and adapter availability.
 - [x] Compare base/head outputs on identical generated inputs.
 - [x] Classify divergences as expected, unexpected, or needs-review.

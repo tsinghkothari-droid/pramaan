@@ -601,7 +601,10 @@ tools are installed. Python Hypothesis and TypeScript fast-check harnesses now
 run only for conservative pure-function candidates and record tool version,
 generated-case count, harness path, raw-output path, and raw-output digest in
 adapter availability metadata. Missing tools still select deterministic replay
-evidence with residual risk.
+evidence with residual risk. A PR-Agent-style local review later found this
+phase is not yet claim-truthful enough for public tool-backed fuzz claims,
+because generated harness failures are not promoted into the final verdict and
+the subprocess timeout is not enforced. Phase 28.15 owns that corrective work.
 
 **Success Criteria:**
 
@@ -611,6 +614,29 @@ evidence with residual risk.
 3. TypeScript fast-check records bounded runs, seeds, timeouts, tool versions,
    shrink data, and counterexamples.
 4. Missing tools or unsafe candidates remain visible residual/skipped evidence.
+
+## Phase 28.15: PR-Agent-Style Fuzz Harness Review Gate
+
+**Goal:** Resolve the Phase 28.1 review findings before tool-backed
+Hypothesis/fast-check evidence is allowed to influence confidence, policy,
+reports, or public claims.
+
+**Priority:** P1 corrective review gate
+
+**Status:** Planned from PR-Agent-style local review on 2026-05-21.
+
+**Success Criteria:**
+
+1. Harness-discovered failures are promoted into canonical divergence,
+   counterexample, replay, residual-risk, and policy evidence.
+2. Python and Node harness subprocesses enforce real timeouts and record timeout
+   evidence.
+3. Harness nonzero exits produce structured failed/skipped receipts instead of
+   opaque command aborts.
+4. Dynamic JS expression execution is removed or isolated with documented
+   residual risk.
+5. Tool version, generated cases, raw-output digest, timeout status, and
+   deterministic corpus count are structured fields, not prose parsing.
 
 ## Phase 28.25: AI Evidence-Seeking Probe Generator
 
@@ -632,6 +658,11 @@ and security probes while counting only sandbox-executed evidence.
 4. Weak, non-compiling, or irrelevant probes are preserved as rejected evidence.
 
 ## Phase 28.26: Sandbox Execution for Generated Probes
+
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Bounded safe-marker probe
+execution landed for Python/JavaScript/Rust syntax or run checks, rejected
+probes preserve reasons, and execution reports are validated. Mutation or
+differential validation of accepted probes remains future language-depth work.
 
 **Goal:** Execute provider- or agent-generated probe candidates in isolated temp
 test locations and preserve accepted/rejected execution evidence.

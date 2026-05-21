@@ -1869,3 +1869,192 @@ fn agent_attribution_flows_through_when_env_vars_are_set() {
         "must not silently revert to hardcoded vendor"
     );
 }
+
+#[test]
+fn probe_execute_keeps_only_sandbox_executed_candidates() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-probe-execute-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean probe execute output");
+    }
+
+    let verify_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "verify",
+            "--base",
+            "HEAD",
+            "--head",
+            "HEAD",
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+            "--skip-stage",
+            "static_checks",
+            "--skip-stage",
+            "oracle",
+            "--skip-stage",
+            "fuzz",
+        ])
+        .output()
+        .expect("run pramaan verify for probe bundle");
+    assert!(
+        verify_output.status.success(),
+        "verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&verify_output.stdout),
+        String::from_utf8_lossy(&verify_output.stderr)
+    );
+
+    let plan_path = out.join("probe-plan-fixture.json");
+    let plan = json!({
+        "schema_version": "pramaan.probe.v1",
+        "generator_version": "test",
+        "source_bundle": out.to_string_lossy(),
+        "generated_at": "2026-05-21T00:00:00Z",
+        "provider": {
+            "name": "fixture",
+            "mode": "test",
+            "model": null,
+            "prompt_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "trusted_for_decision": false
+        },
+        "probes": [
+            {
+                "probe_id": "probe-accepted-rust",
+                "risk_ids": ["R-014"],
+                "kind": "regression_assertion",
+                "language": "rust",
+                "target_files": ["tests/test_checkout.rs"],
+                "prompt_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "candidate_code": "// pramaan-accepted-probe\n// pramaan-bind R-014 test_checkout.rs\npub fn pramaan_probe() { assert!(true); }\n",
+                "sandbox_status": "requires_execution",
+                "execution_result": "not_executed",
+                "kept_or_rejected": "pending_execution",
+                "rejection_reason": null
+            },
+            {
+                "probe_id": "probe-compile-fail",
+                "risk_ids": ["R-014"],
+                "kind": "regression_assertion",
+                "language": "rust",
+                "target_files": ["tests/test_checkout.rs"],
+                "prompt_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "candidate_code": "// pramaan-accepted-probe\n// pramaan-bind R-014 test_checkout.rs\npub fn broken( { assert!(true); }\n",
+                "sandbox_status": "requires_execution",
+                "execution_result": "not_executed",
+                "kept_or_rejected": "pending_execution",
+                "rejection_reason": null
+            },
+            {
+                "probe_id": "probe-skeleton",
+                "risk_ids": ["R-014"],
+                "kind": "regression_assertion",
+                "language": "python",
+                "target_files": ["tests/test_checkout.py"],
+                "prompt_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "candidate_code": "# Generate an isolated test for the changed behavior.",
+                "sandbox_status": "requires_execution",
+                "execution_result": "not_executed",
+                "kept_or_rejected": "pending_execution",
+                "rejection_reason": null
+            }
+        ],
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "pending_count": 3,
+        "limitations": [
+            "fixture"
+        ]
+    });
+    fs::write(
+        &plan_path,
+        serde_json::to_vec_pretty(&plan).expect("serialize plan fixture"),
+    )
+    .expect("write plan fixture");
+
+    let execute_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "probe",
+            "execute",
+            "--plan",
+            plan_path.to_str().expect("utf-8 plan path"),
+            "--bundle",
+            out.to_str().expect("utf-8 bundle path"),
+            "--timeout-ms",
+            "5000",
+        ])
+        .output()
+        .expect("run pramaan probe execute");
+    assert!(
+        execute_output.status.success(),
+        "probe execute failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&execute_output.stdout),
+        String::from_utf8_lossy(&execute_output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&execute_output.stdout);
+    assert!(stdout.contains("accepted: 1"), "stdout was {stdout}");
+    assert!(stdout.contains("rejected: 2"), "stdout was {stdout}");
+    assert!(
+        stdout.contains("pending_execution: 0"),
+        "stdout was {stdout}"
+    );
+
+    let executed_plan_path = out
+        .join("probes")
+        .join("executed")
+        .join("ai-probe-plan.executed.json");
+    let executed_plan: serde_json::Value =
+        serde_json::from_slice(&fs::read(&executed_plan_path).expect("read executed probe plan"))
+            .expect("executed probe plan json");
+    assert_eq!(executed_plan["accepted_count"], 1);
+    assert_eq!(executed_plan["rejected_count"], 2);
+    assert_eq!(executed_plan["pending_count"], 0);
+    assert!(executed_plan["probes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|probe| {
+            probe["kept_or_rejected"] == "kept" && probe["sandbox_status"] == "executed_passed"
+        }));
+    assert!(executed_plan["probes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|probe| {
+            probe["kept_or_rejected"] == "rejected" && probe["sandbox_status"] == "executed_failed"
+        }));
+    assert!(executed_plan["probes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|probe| {
+            probe["kept_or_rejected"] == "rejected" && probe["sandbox_status"] == "rejected_static"
+        }));
+
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(
+            out.join("receipts")
+                .join("ai-probe-generation.receipt.json"),
+        )
+        .expect("read probe receipt"),
+    )
+    .expect("probe receipt json");
+    assert_eq!(receipt["metadata"]["accepted_count"], "1");
+    assert_eq!(receipt["metadata"]["rejected_count"], "2");
+    assert_eq!(receipt["metadata"]["pending_count"], "0");
+    assert!(receipt["artifacts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|artifact| {
+            artifact["name"] == "ai_probe_execution_json" && artifact["digest"].as_str().is_some()
+        }));
+}

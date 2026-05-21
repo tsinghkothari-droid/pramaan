@@ -48,7 +48,8 @@ schemas with stable `$id` URLs, bundle hash verification, sandbox/environment
 evidence, static-check adapters that record the real underlying tool versions,
 structured oracle-integrity checks, demo fixtures, mutation adapters that run
 when tools are installed, deterministic differential replay evidence, an
-uncalibrated auditable confidence vote, and a GitHub Action wrapper.
+AI evidence-seeking probe plan with bounded sandbox execution, an uncalibrated
+auditable confidence vote, and a GitHub Action wrapper.
 
 `pramaan verify` now orchestrates the real stages by default (claim scope,
 sandbox setup, static checks, oracle integrity, differential fuzz). Mutation
@@ -56,10 +57,12 @@ testing is opt-in via `--with-mutation`. Individual stages can be skipped with
 `--skip-stage <name>` for fast iteration.
 
 It does **not** yet ship production-grade Sigstore signing, enforced container
-isolation, production-sandboxed Hypothesis/fast-check execution, full
+isolation, production-sandboxed arbitrary generated code execution, full
 compiler-AST oracle parsing, or calibrated confidence. Bounded generated
-Hypothesis/fast-check harnesses can run when those tools are installed; missing
-tools remain visible residual risk.
+Hypothesis/fast-check harnesses can run when those tools are installed; bounded
+AI probes can be compile/run checked only when they carry the safe marker and
+bind to changed behavior. Missing tools and rejected probes remain visible
+residual risk.
 
 See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
 
@@ -235,9 +238,10 @@ remain visible residual evidence rather than a pass.
 
 For eligible changed functions, Pramaan compares base and head behavior on
 shared generated inputs. Current code has deterministic replay evidence for
-narrow pure-function fixtures and records whether Hypothesis or fast-check was
-available. Real tool-backed Hypothesis and fast-check campaigns remain roadmap
-work.
+narrow pure-function fixtures, records whether Hypothesis or fast-check was
+available, and attempts bounded generated Hypothesis/fast-check harnesses when
+those tools are installed. Missing tools remain visible fallback evidence, not
+a pass.
 
 This is how Pramaan catches "the bug is fixed, but nearby behavior changed."
 

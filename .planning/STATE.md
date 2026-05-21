@@ -13,8 +13,13 @@ competitive benchmarking, and Phase 26.3 competitor-gap fixtures are complete.
 Phase 26.4 now provides the local minimum lovable verifier loop. Phase 27.1
 adds parser metadata and dependency decisions while keeping full compiler AST
 claims deferred. Phase 28.1 adds bounded Hypothesis/fast-check harness
-execution when tools are installed. Public review still depends on sandboxed
-generated probes, anti-gaming hardening, and reviewer reports.
+execution when tools are installed, but a PR-Agent-style review found the
+tool-backed fuzz path is not yet claim-truthful enough because harness failures
+do not affect the final fuzz verdict and subprocess timeout enforcement is not
+implemented. Phase 28.15 is now the corrective gate before public tool-backed
+property/fuzz claims. Phase 28.26 adds bounded sandbox execution for safe-marker
+generated probes. Public review still depends on anti-gaming hardening and
+reviewer reports.
 
 ## Current Phase
 
@@ -25,8 +30,8 @@ residual risk: Phase 26.3 competitor-gap fixtures and Phase 26.4 minimum
 lovable verifier loop.
 
 Phase 26.1 live Action proof is complete. Public review still depends on the
-remaining pre-36 readiness phases: sandboxed generated probes, anti-gaming
-hardening, and local reviewer reports.
+remaining pre-36 readiness phases: anti-gaming hardening and local reviewer
+reports.
 
 ## Status
 
@@ -60,8 +65,13 @@ provenance, adapter certification, and the Serious v1 gate.
 - Phase 28.1 executes Hypothesis/fast-check through generated subprocess
   harnesses first and records missing tools as deterministic fallback evidence;
   stronger isolation remains future hardening.
-- Whether Phase 28.26 should execute generated probes through language-native
-  subprocess harnesses first or require plugin isolation before execution.
+- Phase 28.26 chose bounded language-native subprocess execution first:
+  unmarked/dangerous candidates are rejected, accepted probes must bind to
+  changed behavior, and production arbitrary generated-code execution remains
+  out of scope.
+- Whether Phase 28.15 should keep generated JavaScript evaluation at all, or
+  replace it with a shared safe arithmetic evaluator before any broader
+  TypeScript property claim.
 - Which production identity path should follow Phase 29's local/offline VSA:
   cosign subprocess, Rust Sigstore crate, or GitHub artifact attestations first.
 - Whether the Phase 28.5 deterministic starter weights should be adjusted after
@@ -142,3 +152,5 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Completed Phase 26.4 minimum lovable verifier loop. | `scripts/run-minimum-lovable-loop.ps1` now runs the weakened-test demo, emits an oracle bundle manifest, adds confidence and policy evidence, verifies the bundle, and writes a blockers-first Markdown report for 30-second reviewer inspection. |
 | 2026-05-21 | Completed Phase 27.1 scoped parser hardening. | Oracle test evidence now records parser version, fallback reason, unsupported syntax, and disagreement count; full compiler AST integrations remain explicit future work documented in `docs/oracle-parser-decision.md`. |
 | 2026-05-21 | Completed Phase 28.1 safe property-tool harness execution. | Differential fuzz now attempts bounded Hypothesis or fast-check generated harnesses for safe pure-function candidates when tools are installed, records tool version/generated cases/raw-output digest, and keeps missing tools visible as deterministic fallback evidence. |
+| 2026-05-21 | Added Phase 28.15 PR-Agent-style fuzz harness review gate. | Local review found that tool-backed harness failures are not promoted into final fuzz evidence, timeout enforcement is a no-op, harness failures abort instead of emitting receipts, and dynamic JS evaluation needs removal or isolation before public tool-backed property/fuzz claims. |
+| 2026-05-21 | Completed Phase 28.26 sandbox execution for generated probes. | `pramaan probe execute` now materializes bounded safe-marker probes under a temp sandbox, runs language-native commands with timeouts, preserves rejected compile/static/binding failures, writes execution reports, and updates the `ai_probe_generation` receipt. |

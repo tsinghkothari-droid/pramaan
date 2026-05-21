@@ -24,11 +24,13 @@ use pramaan_core::{
     RECEIPT_SCHEMA_VERSION,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::thread;
+use std::time::{Duration, Instant};
 
 mod fuzz;
 mod mutation;
@@ -266,6 +268,7 @@ struct ProbeArgs {
 #[derive(Debug, Subcommand)]
 enum ProbeCommands {
     Plan(ProbePlanArgs),
+    Execute(ProbeExecuteArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -274,6 +277,18 @@ struct ProbePlanArgs {
     bundle: PathBuf,
     #[arg(long)]
     out: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
+struct ProbeExecuteArgs {
+    #[arg(long)]
+    plan: PathBuf,
+    #[arg(long)]
+    bundle: PathBuf,
+    #[arg(long)]
+    out: Option<PathBuf>,
+    #[arg(long, default_value_t = 5000)]
+    timeout_ms: u64,
 }
 
 #[derive(Debug, Parser)]
@@ -429,6 +444,7 @@ fn replay_case_id(divergence: &FuzzDivergence) -> String {
 fn run_probe(args: ProbeArgs) -> Result<()> {
     match args.command {
         ProbeCommands::Plan(args) => run_probe_plan(args),
+        ProbeCommands::Execute(args) => run_probe_execute(args),
     }
 }
 
@@ -459,8 +475,14 @@ fn run_probe_plan(args: ProbePlanArgs) -> Result<()> {
             .join("receipts")
             .join("ai-probe-generation.receipt.json")
     };
-    let receipt =
-        probe_generation_receipt(&manifest, &artifact, &plan_path, &plan_digest, &bundle_root);
+    let receipt = probe_generation_receipt(
+        &manifest,
+        &artifact,
+        &plan_path,
+        &plan_digest,
+        None,
+        &bundle_root,
+    );
     write_json(&receipt_path, &receipt)?;
 
     if write_into_bundle {
@@ -486,6 +508,400 @@ fn run_probe_plan(args: ProbePlanArgs) -> Result<()> {
     println!("pending_execution: {}", artifact.pending_count);
     println!("provider_trusted_for_decision: false");
     Ok(())
+}
+
+fn run_probe_execute(args: ProbeExecuteArgs) -> Result<()> {
+    let manifest_path = resolve_manifest_path(&args.bundle);
+    let bundle_root = manifest_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .to_path_buf();
+    let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
+    let mut artifact: ProbePlanArtifact = serde_json::from_slice(
+        &fs::read(&args.plan)
+            .with_context(|| format!("reading probe plan {}", args.plan.display()))?,
+    )
+    .with_context(|| format!("parsing probe plan {}", args.plan.display()))?;
+    if artifact.schema_version != PROBE_SCHEMA_VERSION {
+        anyhow::bail!(
+            "{} has unsupported probe schema_version {}",
+            args.plan.display(),
+            artifact.schema_version
+        );
+    }
+
+    let out_dir = args
+        .out
+        .unwrap_or_else(|| bundle_root.join("probes").join("executed"));
+    fs::create_dir_all(&out_dir)
+        .with_context(|| format!("creating probe execution directory {}", out_dir.display()))?;
+    let sandbox_root = out_dir.join("sandbox");
+    if sandbox_root.exists() {
+        fs::remove_dir_all(&sandbox_root)
+            .with_context(|| format!("cleaning probe sandbox {}", sandbox_root.display()))?;
+    }
+    fs::create_dir_all(&sandbox_root)
+        .with_context(|| format!("creating probe sandbox {}", sandbox_root.display()))?;
+
+    let mut executions = Vec::new();
+    for probe in &mut artifact.probes {
+        let result = execute_probe_candidate(probe, &sandbox_root, args.timeout_ms)?;
+        probe.sandbox_status = result.sandbox_status;
+        probe.kept_or_rejected = result.decision;
+        probe.execution_result = result.execution_result.clone();
+        probe.rejection_reason = result.rejection_reason.clone();
+        executions.push(result);
+    }
+    recount_probe_artifact(&mut artifact);
+    artifact.generated_at = timestamp(Utc::now());
+    if !artifact
+        .limitations
+        .iter()
+        .any(|item| item.contains("safe-marker"))
+    {
+        artifact.limitations.push(
+            "Phase 28.26 executes only safe-marker bounded probes; unmarked or dangerous candidates are preserved as rejected evidence.".to_string(),
+        );
+    }
+
+    let executed_plan_path = out_dir.join("ai-probe-plan.executed.json");
+    write_json(&executed_plan_path, &artifact)?;
+    let executed_plan_digest = digest_file(&executed_plan_path)?;
+    let report = ProbeExecutionReport {
+        schema_version: PROBE_SCHEMA_VERSION.to_string(),
+        generated_at: timestamp(Utc::now()),
+        timeout_ms: args.timeout_ms,
+        sandbox_root: portable_path(&sandbox_root),
+        accepted_count: artifact.accepted_count,
+        rejected_count: artifact.rejected_count,
+        pending_count: artifact.pending_count,
+        executions,
+    };
+    let report_path = out_dir.join("ai-probe-execution.json");
+    write_json(&report_path, &report)?;
+    let report_digest = digest_file(&report_path)?;
+
+    let receipt_path = if out_dir.starts_with(&bundle_root) {
+        bundle_root
+            .join("receipts")
+            .join("ai-probe-generation.receipt.json")
+    } else {
+        out_dir
+            .join("receipts")
+            .join("ai-probe-generation.receipt.json")
+    };
+    let receipt = probe_generation_receipt(
+        &manifest,
+        &artifact,
+        &executed_plan_path,
+        &executed_plan_digest,
+        Some((&report_path, &report_digest)),
+        &bundle_root,
+    );
+    write_json(&receipt_path, &receipt)?;
+
+    if out_dir.starts_with(&bundle_root) {
+        let updated_manifest = build_manifest(
+            &bundle_root,
+            BundleBuildOptions {
+                bundle_id: manifest.bundle_id,
+                run_id: manifest.run_id,
+                repository: manifest.repository,
+            },
+        )
+        .context("rebuilding bundle manifest with executed probe artifacts")?;
+        write_manifest(&bundle_root, &updated_manifest)
+            .context("writing updated bundle manifest")?;
+    }
+
+    println!("Pramaan AI probe execution complete");
+    println!("manifest: {}", manifest_path.display());
+    println!("probe_plan: {}", executed_plan_path.display());
+    println!("execution_report: {}", report_path.display());
+    println!("accepted: {}", artifact.accepted_count);
+    println!("rejected: {}", artifact.rejected_count);
+    println!("pending_execution: {}", artifact.pending_count);
+    println!("provider_trusted_for_decision: false");
+    Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct ProbeExecutionReport {
+    schema_version: String,
+    generated_at: String,
+    timeout_ms: u64,
+    sandbox_root: String,
+    accepted_count: usize,
+    rejected_count: usize,
+    pending_count: usize,
+    executions: Vec<ProbeExecutionRecord>,
+}
+
+#[derive(Debug, Serialize)]
+struct ProbeExecutionRecord {
+    probe_id: String,
+    language: String,
+    command: Vec<String>,
+    sandbox_status: ProbeSandboxStatus,
+    decision: ProbeDecision,
+    execution_result: String,
+    rejection_reason: Option<String>,
+    stdout_digest: Option<String>,
+    stderr_digest: Option<String>,
+    materialized_path: Option<String>,
+    duration_ms: u128,
+}
+
+fn execute_probe_candidate(
+    probe: &ProbeCandidate,
+    sandbox_root: &Path,
+    timeout_ms: u64,
+) -> Result<ProbeExecutionRecord> {
+    let started = Instant::now();
+    let probe_dir = sandbox_root.join(sanitize_probe_id(&probe.probe_id));
+    fs::create_dir_all(&probe_dir)
+        .with_context(|| format!("creating probe sandbox {}", probe_dir.display()))?;
+
+    let mut record = ProbeExecutionRecord {
+        probe_id: probe.probe_id.clone(),
+        language: probe.language.as_str().to_string(),
+        command: Vec::new(),
+        sandbox_status: ProbeSandboxStatus::RejectedStatic,
+        decision: ProbeDecision::Rejected,
+        execution_result: String::new(),
+        rejection_reason: None,
+        stdout_digest: None,
+        stderr_digest: None,
+        materialized_path: None,
+        duration_ms: 0,
+    };
+
+    if probe.candidate_code.contains("Generate an isolated")
+        || !probe.candidate_code.contains("pramaan-accepted-probe")
+    {
+        record.execution_result =
+            "rejected_static: candidate is a skeleton or lacks the pramaan-accepted-probe marker"
+                .to_string();
+        record.rejection_reason = Some("candidate_skeleton_or_missing_safe_marker".to_string());
+        record.duration_ms = started.elapsed().as_millis();
+        return Ok(record);
+    }
+    if let Some(reason) = dangerous_probe_token(&probe.candidate_code) {
+        record.execution_result = format!("rejected_static: dangerous token {reason}");
+        record.rejection_reason = Some(format!("dangerous_token:{reason}"));
+        record.duration_ms = started.elapsed().as_millis();
+        return Ok(record);
+    }
+    if !probe_binds_to_changed_behavior(probe) {
+        record.execution_result =
+            "rejected_static: probe did not mention a risk id, target basename, or pramaan-bind"
+                .to_string();
+        record.rejection_reason = Some("no_changed_behavior_binding".to_string());
+        record.duration_ms = started.elapsed().as_millis();
+        return Ok(record);
+    }
+
+    let (file_name, command, args): (&str, &str, Vec<String>) = match probe.language {
+        ProbeLanguage::Python => ("test_probe.py", "python", vec!["test_probe.py".to_string()]),
+        ProbeLanguage::TypeScript => ("probe.test.js", "node", vec!["probe.test.js".to_string()]),
+        ProbeLanguage::Rust => (
+            "probe_test.rs",
+            "rustc",
+            vec![
+                "--crate-type".to_string(),
+                "lib".to_string(),
+                "--emit".to_string(),
+                "metadata".to_string(),
+                "probe_test.rs".to_string(),
+            ],
+        ),
+        ProbeLanguage::Unknown => {
+            record.execution_result = "rejected_static: unknown probe language".to_string();
+            record.rejection_reason = Some("unknown_language".to_string());
+            record.duration_ms = started.elapsed().as_millis();
+            return Ok(record);
+        }
+    };
+
+    let probe_path = probe_dir.join(file_name);
+    fs::write(&probe_path, &probe.candidate_code)
+        .with_context(|| format!("materializing probe {}", probe_path.display()))?;
+    let mut full_command = vec![command.to_string()];
+    full_command.extend(args.iter().cloned());
+    record.command = full_command;
+    record.materialized_path = Some(portable_path(&probe_path));
+
+    match run_probe_command(command, &args, &probe_dir, timeout_ms) {
+        Ok(output) => {
+            record.stdout_digest = Some(sha256_hex(output.stdout.as_bytes()));
+            record.stderr_digest = Some(sha256_hex(output.stderr.as_bytes()));
+            record.duration_ms = output.duration_ms;
+            if output.timed_out {
+                record.sandbox_status = ProbeSandboxStatus::ExecutedFailed;
+                record.execution_result = format!(
+                    "executed_failed: timed out after {}ms; stdout_digest={}; stderr_digest={}",
+                    timeout_ms,
+                    record.stdout_digest.clone().unwrap_or_default(),
+                    record.stderr_digest.clone().unwrap_or_default()
+                );
+                record.rejection_reason = Some("execution_timeout".to_string());
+            } else if output.exit_code == Some(0) {
+                record.sandbox_status = ProbeSandboxStatus::ExecutedPassed;
+                record.decision = ProbeDecision::Kept;
+                record.execution_result = format!(
+                    "executed_passed: command exited 0; stdout_digest={}; stderr_digest={}",
+                    record.stdout_digest.clone().unwrap_or_default(),
+                    record.stderr_digest.clone().unwrap_or_default()
+                );
+            } else {
+                record.sandbox_status = ProbeSandboxStatus::ExecutedFailed;
+                record.execution_result = format!(
+                    "executed_failed: exit_code={:?}; stdout_digest={}; stderr_digest={}",
+                    output.exit_code,
+                    record.stdout_digest.clone().unwrap_or_default(),
+                    record.stderr_digest.clone().unwrap_or_default()
+                );
+                record.rejection_reason = Some("execution_failed".to_string());
+            }
+        }
+        Err(error) => {
+            record.sandbox_status = ProbeSandboxStatus::ExecutedFailed;
+            record.execution_result = format!("executed_failed: {error:#}");
+            record.rejection_reason = Some("execution_error".to_string());
+            record.duration_ms = started.elapsed().as_millis();
+        }
+    }
+
+    Ok(record)
+}
+
+struct ProbeCommandOutput {
+    exit_code: Option<i32>,
+    stdout: String,
+    stderr: String,
+    duration_ms: u128,
+    timed_out: bool,
+}
+
+fn run_probe_command(
+    command: &str,
+    args: &[String],
+    cwd: &Path,
+    timeout_ms: u64,
+) -> Result<ProbeCommandOutput> {
+    let started = Instant::now();
+    let mut child = Command::new(command)
+        .args(args)
+        .current_dir(cwd)
+        .env("PRAMAAN_PROBE_NETWORK", "disabled")
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .with_context(|| format!("spawning probe command {command}"))?;
+
+    let timeout = Duration::from_millis(timeout_ms.max(1));
+    loop {
+        if child.try_wait()?.is_some() {
+            let output = child
+                .wait_with_output()
+                .context("collecting probe command output")?;
+            return Ok(ProbeCommandOutput {
+                exit_code: output.status.code(),
+                stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+                stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+                duration_ms: started.elapsed().as_millis(),
+                timed_out: false,
+            });
+        }
+        if started.elapsed() >= timeout {
+            let _ = child.kill();
+            let output = child
+                .wait_with_output()
+                .context("collecting timed-out probe command output")?;
+            return Ok(ProbeCommandOutput {
+                exit_code: output.status.code(),
+                stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+                stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+                duration_ms: started.elapsed().as_millis(),
+                timed_out: true,
+            });
+        }
+        thread::sleep(Duration::from_millis(20));
+    }
+}
+
+fn sanitize_probe_id(probe_id: &str) -> String {
+    probe_id
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+                ch
+            } else {
+                '_'
+            }
+        })
+        .collect()
+}
+
+fn dangerous_probe_token(code: &str) -> Option<&'static str> {
+    let lowered = code.to_ascii_lowercase();
+    let blocked = [
+        "socket",
+        "subprocess",
+        "os.system",
+        "child_process",
+        "std::process",
+        "std::net",
+        "requests.",
+        "fetch(",
+        "http://",
+        "https://",
+        "remove_file",
+        "remove_dir",
+        "unlink(",
+        "rmdir(",
+        "shutil.rmtree",
+    ];
+    blocked
+        .iter()
+        .find(|token| lowered.contains(**token))
+        .copied()
+}
+
+fn probe_binds_to_changed_behavior(probe: &ProbeCandidate) -> bool {
+    if probe.candidate_code.contains("pramaan-bind") {
+        return true;
+    }
+    probe
+        .risk_ids
+        .iter()
+        .any(|risk_id| probe.candidate_code.contains(risk_id))
+        || probe.target_files.iter().any(|target| {
+            Path::new(target)
+                .file_name()
+                .and_then(|name| name.to_str())
+                .map(|basename| probe.candidate_code.contains(basename))
+                .unwrap_or(false)
+        })
+}
+
+fn recount_probe_artifact(artifact: &mut ProbePlanArtifact) {
+    artifact.accepted_count = artifact
+        .probes
+        .iter()
+        .filter(|probe| probe.kept_or_rejected == ProbeDecision::Kept)
+        .count();
+    artifact.rejected_count = artifact
+        .probes
+        .iter()
+        .filter(|probe| probe.kept_or_rejected == ProbeDecision::Rejected)
+        .count();
+    artifact.pending_count = artifact
+        .probes
+        .iter()
+        .filter(|probe| probe.kept_or_rejected == ProbeDecision::PendingExecution)
+        .count();
 }
 
 fn resolve_manifest_path(bundle: &Path) -> PathBuf {
@@ -690,6 +1106,7 @@ fn probe_generation_receipt(
     artifact: &ProbePlanArtifact,
     plan_path: &Path,
     plan_digest: &str,
+    execution_report: Option<(&Path, &str)>,
     bundle_root: &Path,
 ) -> Receipt {
     let now = timestamp(Utc::now());
@@ -722,6 +1139,31 @@ fn probe_generation_receipt(
         artifact.provider.prompt_hash.clone(),
     );
 
+    let mut outputs = vec![OutputRef {
+        name: "ai_probe_plan".to_string(),
+        path: bundle_path(bundle_root, plan_path),
+        digest: Some(plan_digest.to_string()),
+    }];
+    let mut artifacts = vec![ArtifactRef {
+        name: "ai_probe_plan_json".to_string(),
+        path: bundle_path(bundle_root, plan_path),
+        media_type: Some("application/json".to_string()),
+        digest: Some(plan_digest.to_string()),
+    }];
+    if let Some((report_path, report_digest)) = execution_report {
+        outputs.push(OutputRef {
+            name: "ai_probe_execution_report".to_string(),
+            path: bundle_path(bundle_root, report_path),
+            digest: Some(report_digest.to_string()),
+        });
+        artifacts.push(ArtifactRef {
+            name: "ai_probe_execution_json".to_string(),
+            path: bundle_path(bundle_root, report_path),
+            media_type: Some("application/json".to_string()),
+            digest: Some(report_digest.to_string()),
+        });
+    }
+
     Receipt {
         schema_version: RECEIPT_SCHEMA_VERSION.to_string(),
         stage: "ai_probe_generation".to_string(),
@@ -739,22 +1181,17 @@ fn probe_generation_receipt(
             value: MANIFEST_FILE_NAME.to_string(),
             digest: Some(manifest.integrity.manifest_digest.prefixed()),
         }],
-        outputs: vec![OutputRef {
-            name: "ai_probe_plan".to_string(),
-            path: bundle_path(bundle_root, plan_path),
-            digest: Some(plan_digest.to_string()),
-        }],
-        artifacts: vec![ArtifactRef {
-            name: "ai_probe_plan_json".to_string(),
-            path: bundle_path(bundle_root, plan_path),
-            media_type: Some("application/json".to_string()),
-            digest: Some(plan_digest.to_string()),
-        }],
+        outputs,
+        artifacts,
         summary: ReceiptSummary {
-            title: "AI evidence-seeking probe plan emitted".to_string(),
+            title: if execution_report.is_some() {
+                "AI evidence-seeking probes sandbox executed".to_string()
+            } else {
+                "AI evidence-seeking probe plan emitted".to_string()
+            },
             details: format!(
-                "{} probes require sandbox execution; zero AI proposals are trusted as mitigation.",
-                artifact.pending_count
+                "accepted={}, rejected={}, pending={}; provider output remains untrusted for final decisions.",
+                artifact.accepted_count, artifact.rejected_count, artifact.pending_count
             ),
         },
         limitations: artifact.limitations.clone(),

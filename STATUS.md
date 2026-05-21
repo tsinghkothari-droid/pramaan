@@ -39,7 +39,7 @@ Status labels:
 | Differential fuzz/property simulated mode | Experimental | `crates/pramaan-cli/src/fuzz.rs` | Fuzz tests and replay fixtures |
 | Real Hypothesis/fast-check adapters | Partial | `crates/pramaan-cli/src/fuzz.rs`, `scripts/check-fuzz-harness-evidence.mjs` | Runs bounded generated harnesses when tools are installed; missing tools fall back visibly |
 | Replay command for recorded generated cases | Partial | `crates/pramaan-cli/src/main.rs`, `docs/replay.md` | `pramaan replay <bundle> --case <id>` |
-| AI evidence-seeking probe plan | Partial | `crates/pramaan-cli/src/main.rs`, `schemas/probe.schema.json`, `docs/ai-probe-generator.md` | `pramaan probe plan --bundle <bundle>` |
+| AI evidence-seeking probe plan and bounded execution | Partial | `crates/pramaan-cli/src/main.rs`, `schemas/probe.schema.json`, `docs/ai-probe-generator.md`, `scripts/check-ai-probe-execution.mjs` | `pramaan probe plan --bundle <bundle>` then `pramaan probe execute --plan <plan> --bundle <bundle>` |
 | GitHub Action wrapper | Partial | `action.yml`, `action/render-summary.mjs` | Node tests and example workflows |
 | Policy-as-code and `pramaan policy explain` | Partial | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `docs/github-action.md` | `cargo test --workspace` |
 | Auditable confidence vote | Partial | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/confidence.schema.json`, `docs/confidence.md` | `pramaan confidence explain <bundle>` |
@@ -56,8 +56,8 @@ bundle hash verification, sandbox/environment evidence, static-check adapters
 that record the real underlying tool versions, parser-backed subset oracle
 integrity checks, demo fixtures, a default policy explanation path,
 recorded-case replay for differential fuzz evidence, an AI evidence-seeking
-probe plan that requires sandbox execution before mitigation, an uncalibrated
-auditable confidence vote, a deterministic agent completion gate, redaction
+probe plan with bounded sandbox execution and rejected-probe preservation, an
+uncalibrated auditable confidence vote, a deterministic agent completion gate, redaction
 helpers, threat-model documentation, a claim-audit ledger, and a GitHub Action
 wrapper. Operator, security, enterprise, troubleshooting, rendered-example, and
 release-packaging docs exist for private technical preview adoption.
@@ -75,10 +75,12 @@ confidence and policy evidence, and emits a blockers-first Markdown report. This
 is a quickstart demo path, not production v1 readiness.
 
 It does **not** yet provide production-grade signed attestations, enforced
-container isolation, real Hypothesis/fast-check property execution, full
-compiler-AST oracle parsing, or sandbox execution of AI-generated probes. The
-confidence vote is implemented as decomposed residual-risk evidence, not as a
-calibrated probability or merge authority.
+container isolation, arbitrary generated-code execution, full compiler-AST
+oracle parsing, or calibrated confidence. Hypothesis/fast-check and AI-probe
+execution are bounded private-preview paths that run only when tools/markers
+permit and otherwise preserve residual risk. The confidence vote is implemented
+as decomposed residual-risk evidence, not as a calibrated probability or merge
+authority.
 
 ## First Target User
 

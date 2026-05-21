@@ -23,10 +23,31 @@ risk IDs, and writes `probes/ai-probe-plan.json` plus an
 - `sandbox_status=requires_execution`;
 - `kept_or_rejected=pending_execution`.
 
-No AI-generated probe mitigates risk until a later sandbox stage compiles/runs
-it and records the result. The current plan is useful because reviewers and
-agents can see exactly which missing evidence should be pursued next, without
-turning model output into proof.
+Phase 28.26 adds a bounded execution step:
+
+```powershell
+pramaan probe execute --plan target/pramaan/probes/ai-probe-plan.json --bundle target/pramaan
+```
+
+The command materializes each candidate under `probes/executed/sandbox/`, runs a
+language-native command with a timeout, captures stdout/stderr digests, and
+writes:
+
+- `probes/executed/ai-probe-plan.executed.json`
+- `probes/executed/ai-probe-execution.json`
+- an updated `ai_probe_generation` receipt
+
+Accepted probes must pass all of these checks:
+
+- contain the `pramaan-accepted-probe` marker;
+- avoid blocked network/process/filesystem tokens;
+- bind to changed behavior through a risk ID, target basename, or
+  `pramaan-bind`;
+- compile or run successfully under the language command.
+
+Rejected probes stay in the artifact with `rejection_reason`. This is
+intentional: a rejected generated probe is useful reviewer evidence about what
+Pramaan refused to trust.
 
 ## Probe Kinds
 
@@ -40,7 +61,11 @@ turning model output into proof.
 ## Honest Limits
 
 - Phase 28.25 does not call a hosted model.
-- Phase 28.25 does not execute generated tests.
+- Phase 28.26 executes only safe-marker bounded probes; arbitrary generated code
+  is rejected rather than run.
+- Rust probes are compile-checked first; deeper test-harness integration remains
+  future language-depth work.
 - A probe with `requires_execution` is residual risk, not mitigation.
+- A rejected probe is evidence, not failure of the whole bundle.
 - Provider output must remain reproducible enough to audit through prompt hash,
   model/provider metadata, and recorded candidate code.
