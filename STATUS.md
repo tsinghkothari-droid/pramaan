@@ -46,6 +46,7 @@ Status labels:
 | Agent completion gate | Partial | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/agent_decision.schema.json`, `docs/agent-harness.md` | `pramaan agent explain --bundle <bundle>` |
 | Threat model for malicious PRs/verifier plugins | Implemented | `docs/threat-model.md` | Manual doc review |
 | Verifier-abuse surface detection | Partial | `crates/pramaan-core/src/lib.rs`, `corpus/verifier-abuse-fixtures.v0.1.json`, `scripts/check-verifier-abuse-fixtures.mjs` | `cargo test -p pramaan-core verifier_abuse && node scripts/check-verifier-abuse-fixtures.mjs` |
+| Local reviewer reports | Partial | `crates/pramaan-cli/src/main.rs`, `docs/reviewer-ux.md`, `examples/reports/` | `pramaan report markdown --bundle <bundle>` and `pramaan report html --bundle <bundle> --out <report.html>` |
 | Redaction helpers for shareable evidence | Partial | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` |
 | Adapter certification mode | Partial | `docs/adapter-certification.md`, schemas | Docs/schema only |
 | Public claim audit gate | Implemented | `docs/claim-audit.md` | Manual ledger plus `cargo test --workspace` and Node action tests |
@@ -60,9 +61,10 @@ recorded-case replay for differential fuzz evidence, an AI evidence-seeking
 probe plan with bounded sandbox execution and rejected-probe preservation, an
 uncalibrated auditable confidence vote, a deterministic agent completion gate,
 redaction helpers, verifier-abuse surface detection, threat-model
-documentation, a claim-audit ledger, and a GitHub Action wrapper. Operator,
-security, enterprise, troubleshooting, rendered-example, and release-packaging
-docs exist for private technical preview adoption.
+documentation, local reviewer reports, a claim-audit ledger, and a GitHub
+Action wrapper. Operator, security, enterprise, troubleshooting,
+rendered-example, and release-packaging docs exist for private technical
+preview adoption.
 
 `pramaan verify` orchestrates real stages end-to-end: claim scope, sandbox
 setup, static checks, oracle integrity, and differential fuzz run by default,

@@ -318,7 +318,7 @@ AI coding agents and real reviewers. They are planned, not complete.
   should not duplicate, and what evidence gap remains.
 - [x] Add a "not a competitor" section for tools that are primitives rather
   than replacement products.
-- [x] Add an adoption-positioning table: AI reviewer, CI quality aggregator,
+- [x] Add an adoption-positioning table: review assistant, CI quality aggregator,
   supply-chain attestor, evidence-bundle verifier.
 - [x] Add claim-audit rows for any README/marketing claim that says Pramaan is
   broader, stronger, or more comprehensive than existing tools.
@@ -434,17 +434,17 @@ AI coding agents and real reviewers. They are planned, not complete.
 
 #### Phase 35.5: Reviewer UX and Local HTML Report
 
-- [ ] Add `pramaan report html --bundle <path> --out <report.html>`.
-- [ ] Add `pramaan report markdown --bundle <path>`.
-- [ ] Group report content into blockers, warnings, ran/skipped stages, oracle
+- [x] Add `pramaan report html --bundle <path> --out <report.html>`.
+- [x] Add `pramaan report markdown --bundle <path>`.
+- [x] Group report content into blockers, warnings, ran/skipped stages, oracle
   changes, replay commands, and human override fields.
-- [ ] Show oracle-integrity failures before lower-signal evidence.
-- [ ] Add copyable replay commands for mutation, fuzz, and property failures.
-- [ ] Add static fixture reports for pass, warn, and fail bundles.
-- [ ] Update the GitHub Action markdown summary to mirror the report hierarchy.
-- [ ] Add a smoke test that the weakened-test report includes blocker, oracle
+- [x] Show oracle-integrity failures before lower-signal evidence.
+- [x] Add copyable replay commands for mutation, fuzz, and property failures.
+- [x] Add static fixture reports for pass, warn, and fail bundles.
+- [x] Update the GitHub Action markdown summary to mirror the report hierarchy.
+- [x] Add a smoke test that the weakened-test report includes blocker, oracle
   finding, and replay or inspection paths.
-- [ ] Add docs that the local report is the first UX surface; hosted dashboard
+- [x] Add docs that the local report is the first UX surface; hosted dashboard
   is later.
 
 #### Phase 35.6: License-Safe Reviewer Interface Patterns

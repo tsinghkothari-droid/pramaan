@@ -451,7 +451,7 @@ against adjacent GitHub tools and primitives before claiming superiority.
 **Priority:** Positioning
 
 **Status:** Completed 2026-05-21. `docs/competitive-benchmark.md` now maps
-Pramaan against AI PR reviewers, reviewdog-style aggregators, test-change
+Pramaan against review assistants, quality-report aggregators, test-change
 monitors, test-generation tools, mutation/property engines, and
 SLSA/Sigstore/in-toto/GitHub attestation primitives. It narrows the public
 claim to evidence-bundle verification and leaves "catches what X misses" proof
@@ -459,9 +459,10 @@ to Phase 26.3 executable fixtures.
 
 **Success Criteria:**
 
-1. `docs/competitive-benchmark.md` compares Pramaan against PR-Agent,
-   OpenReview, inspect, Testomatio, quality-monitor, actions/attest,
-   SLSA verifier, and in-toto primitives.
+1. `docs/competitive-benchmark.md` compares Pramaan against adjacent
+   review-assistant, structural-triage, test-change-monitoring,
+   quality-reporting, artifact-attestation, SLSA verification, and in-toto
+   primitive categories.
 2. The benchmark separates competitors from reusable primitives.
 3. Each comparison records overlap, Pramaan's differentiated evidence layer,
    and what Pramaan should not duplicate.
@@ -601,7 +602,7 @@ tools are installed. Python Hypothesis and TypeScript fast-check harnesses now
 run only for conservative pure-function candidates and record tool version,
 generated-case count, harness path, raw-output path, and raw-output digest in
 adapter availability metadata. Missing tools still select deterministic replay
-evidence with residual risk. A PR-Agent-style local review later found this
+evidence with residual risk. An independent local review later found this
 phase is not yet claim-truthful enough for public tool-backed fuzz claims,
 because generated harness failures are not promoted into the final verdict and
 the subprocess timeout is not enforced. Phase 28.15 owns that corrective work.
@@ -615,7 +616,7 @@ the subprocess timeout is not enforced. Phase 28.15 owns that corrective work.
    shrink data, and counterexamples.
 4. Missing tools or unsafe candidates remain visible residual/skipped evidence.
 
-## Phase 28.15: PR-Agent-Style Fuzz Harness Review Gate
+## Phase 28.15: Fuzz Harness Truthfulness Review Gate
 
 **Goal:** Resolve the Phase 28.1 review findings before tool-backed
 Hypothesis/fast-check evidence is allowed to influence confidence, policy,
@@ -623,7 +624,7 @@ reports, or public claims.
 
 **Priority:** P1 corrective review gate
 
-**Status:** Planned from PR-Agent-style local review on 2026-05-21.
+**Status:** Planned from independent local review on 2026-05-21.
 
 **Success Criteria:**
 
@@ -892,6 +893,11 @@ unclaimed until Phase 26.1 live Action proof and a tagged release happen.
 
 ## Phase 35.5: Reviewer UX and Local HTML Report
 
+**Status:** Completed 2026-05-21 as PASS_WITH_RISKS. Rust-native
+`pramaan report markdown` and `pramaan report html` landed with blocker-first
+sections, override fields, static examples, and matching Action summary
+hierarchy. Hosted dashboards remain out of scope.
+
 **Goal:** Make proof bundles inspectable in under 30 seconds without requiring
 a hosted dashboard.
 
@@ -904,6 +910,30 @@ a hosted dashboard.
 3. Reports group blockers, warnings, ran/skipped stages, oracle changes,
    replay commands, and override fields.
 4. Weakened-test demo report is manually understandable in under 30 seconds.
+
+## Phase 35.6: License-Safe Reviewer Interface Patterns
+
+**Goal:** Borrow category-level interface lessons from mature pull-request
+tooling without importing names, text, prompts, configuration, screenshots, or
+source code from adjacent projects.
+
+**Priority:** Adoption UX and license hygiene
+
+**Status:** Planned 2026-05-21.
+
+**Success Criteria:**
+
+1. A PR URL entrypoint exists or is staged:
+   `pramaan verify-pr --url <pull-request-url>`.
+2. Reviewer comment commands are Pramaan-original: `/pramaan verify`,
+   `/pramaan explain`, `/pramaan replay`, and
+   `/pramaan policy <profile>`.
+3. `.pramaan.toml` is documented for policy profile, stage budgets,
+   redaction, mutation opt-in, report behavior, and summary update behavior.
+4. PR summaries update persistently instead of creating noisy repeated
+   comments.
+5. Public docs avoid named adjacent-project references and use category-level
+   prior-art language.
 
 ## Phase 36: Language Plugin Depth for Python, TypeScript, and Rust
 

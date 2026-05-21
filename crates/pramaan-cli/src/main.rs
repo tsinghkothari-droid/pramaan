@@ -60,6 +60,7 @@ enum Commands {
     Replay(ReplayArgs),
     Export(ExportArgs),
     Feedback(FeedbackArgs),
+    Report(ReportArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -189,6 +190,34 @@ struct FeedbackAnalyzeArgs {
     #[arg(long)]
     observations: Option<PathBuf>,
     #[arg(long, default_value = "target/pramaan-feedback")]
+    out: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct ReportArgs {
+    #[command(subcommand)]
+    command: ReportCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum ReportCommands {
+    Markdown(ReportMarkdownArgs),
+    Html(ReportHtmlArgs),
+}
+
+#[derive(Debug, Parser)]
+struct ReportMarkdownArgs {
+    #[arg(long)]
+    bundle: PathBuf,
+    #[arg(long)]
+    out: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
+struct ReportHtmlArgs {
+    #[arg(long)]
+    bundle: PathBuf,
+    #[arg(long)]
     out: PathBuf,
 }
 
@@ -373,6 +402,7 @@ fn main() -> Result<()> {
         Commands::Replay(args) => run_replay(args),
         Commands::Export(args) => run_export(args),
         Commands::Feedback(args) => run_feedback(args),
+        Commands::Report(args) => run_report(args),
     }
 }
 
@@ -1565,6 +1595,233 @@ fn run_feedback(args: FeedbackArgs) -> Result<()> {
         FeedbackCommands::Override(args) => run_feedback_override(args),
         FeedbackCommands::Analyze(args) => run_feedback_analyze(args),
     }
+}
+
+fn run_report(args: ReportArgs) -> Result<()> {
+    match args.command {
+        ReportCommands::Markdown(args) => run_report_markdown(args),
+        ReportCommands::Html(args) => run_report_html(args),
+    }
+}
+
+fn run_report_markdown(args: ReportMarkdownArgs) -> Result<()> {
+    let markdown = build_reviewer_markdown(&args.bundle)?;
+    if let Some(path) = args.out {
+        fs::write(&path, &markdown).with_context(|| format!("writing {}", path.display()))?;
+        println!("Pramaan reviewer markdown report written");
+        println!("report: {}", path.display());
+    } else {
+        print!("{markdown}");
+    }
+    Ok(())
+}
+
+fn run_report_html(args: ReportHtmlArgs) -> Result<()> {
+    let markdown = build_reviewer_markdown(&args.bundle)?;
+    let html = render_reviewer_html(&markdown);
+    fs::write(&args.out, html).with_context(|| format!("writing {}", args.out.display()))?;
+    println!("Pramaan reviewer HTML report written");
+    println!("report: {}", args.out.display());
+    Ok(())
+}
+
+fn build_reviewer_markdown(bundle: &Path) -> Result<String> {
+    let manifest_path = resolve_manifest_path(bundle);
+    let bundle_root = manifest_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .to_path_buf();
+    let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
+    let receipts = read_bundle_receipts(&bundle_root, &manifest)?;
+    Ok(render_reviewer_markdown(&manifest, &receipts, bundle))
+}
+
+fn render_reviewer_markdown(
+    manifest: &BundleManifest,
+    receipts: &[Receipt],
+    bundle_path: &Path,
+) -> String {
+    let blockers = manifest
+        .stages
+        .iter()
+        .filter(|stage| matches!(stage.status.as_str(), "failed" | "error" | "timed_out"))
+        .collect::<Vec<_>>();
+    let warnings = manifest
+        .stages
+        .iter()
+        .filter(|stage| {
+            !stage.residual_risks.is_empty()
+                && !matches!(stage.status.as_str(), "failed" | "error" | "timed_out")
+        })
+        .collect::<Vec<_>>();
+    let skipped = manifest
+        .stages
+        .iter()
+        .filter(|stage| matches!(stage.status.as_str(), "skipped" | "not_applicable"))
+        .collect::<Vec<_>>();
+    let ran = manifest
+        .stages
+        .iter()
+        .filter(|stage| !matches!(stage.status.as_str(), "skipped" | "not_applicable"))
+        .collect::<Vec<_>>();
+
+    let mut out = String::new();
+    out.push_str("# Pramaan Reviewer Report\n\n");
+    out.push_str(&format!("Final status: **{}**\n\n", manifest.final_status));
+    out.push_str(&format!(
+        "Compared refs: `{}` -> `{}`\n\n",
+        manifest.repository.base_ref, manifest.repository.head_ref
+    ));
+    out.push_str("This report is reviewer evidence, not a proof that the code is correct.\n\n");
+
+    out.push_str("## Blockers\n\n");
+    if blockers.is_empty() {
+        out.push_str("- None recorded by configured stages.\n\n");
+    } else {
+        for stage in blockers {
+            out.push_str(&format!(
+                "- **{}** `{}` risks: {}\n",
+                stage.id,
+                stage.status,
+                risk_list(&stage.residual_risks)
+            ));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## Warnings\n\n");
+    if warnings.is_empty() {
+        out.push_str("- None beyond blocker/skipped evidence.\n\n");
+    } else {
+        for stage in warnings {
+            out.push_str(&format!(
+                "- **{}** residual risks: {}\n",
+                stage.id,
+                risk_list(&stage.residual_risks)
+            ));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## What Ran\n\n");
+    if ran.is_empty() {
+        out.push_str(
+            "| Stage | Status | Receipt |\n| --- | --- | --- |\n| none | none | none |\n\n",
+        );
+    } else {
+        out.push_str("| Stage | Status | Receipt |\n| --- | --- | --- |\n");
+        for stage in ran {
+            out.push_str(&format!(
+                "| `{}` | `{}` | `{}` |\n",
+                stage.id, stage.status, stage.receipt_path
+            ));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## What Skipped\n\n");
+    if skipped.is_empty() {
+        out.push_str("- No skipped or not-applicable stages in the manifest.\n\n");
+    } else {
+        for stage in skipped {
+            out.push_str(&format!(
+                "- **{}** `{}` open risks: {}\n",
+                stage.id,
+                stage.status,
+                risk_list(&stage.not_applicable_risks)
+            ));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## What Changed In Tests\n\n");
+    let oracle_receipts = receipts
+        .iter()
+        .filter(|receipt| receipt.stage.contains("oracle"))
+        .collect::<Vec<_>>();
+    if oracle_receipts.is_empty() {
+        out.push_str("- No oracle-integrity receipt was found in this bundle.\n\n");
+    } else {
+        for receipt in oracle_receipts {
+            out.push_str(&format!(
+                "- **{}** `{}`: {} {}\n",
+                receipt.stage,
+                receipt.status.as_str(),
+                receipt.summary.title,
+                receipt.summary.details
+            ));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## Replay Commands\n\n");
+    let has_fuzz = manifest
+        .stages
+        .iter()
+        .any(|stage| stage.id.contains("fuzz") || stage.id.contains("property"));
+    if has_fuzz {
+        out.push_str(&format!(
+            "- `pramaan replay {} --case <case-id>`\n",
+            portable_path(bundle_path)
+        ));
+    }
+    let has_mutation = manifest
+        .stages
+        .iter()
+        .any(|stage| stage.id.contains("mutation"));
+    if has_mutation {
+        out.push_str("- Mutation replay is tool-specific; inspect the mutation receipt artifacts and rerun the same changed-file scope.\n");
+    }
+    if !has_fuzz && !has_mutation {
+        out.push_str("- No replayable fuzz/property/mutation evidence was recorded.\n");
+    }
+    out.push('\n');
+
+    out.push_str("## Human Override\n\n");
+    out.push_str("| Field | Value |\n| --- | --- |\n");
+    out.push_str("| Accepted risk IDs |  |\n");
+    out.push_str("| Reason |  |\n");
+    out.push_str("| Reviewer identity source |  |\n");
+    out.push_str("| Timestamp |  |\n\n");
+
+    out.push_str("## Bundle Integrity\n\n");
+    out.push_str(&format!(
+        "- Manifest digest: `{}`\n",
+        manifest.integrity.manifest_digest.prefixed()
+    ));
+    out.push_str(&format!("- Receipts: `{}`\n", manifest.receipts.len()));
+    out.push_str(&format!("- Artifacts: `{}`\n", manifest.artifacts.len()));
+    out
+}
+
+fn risk_list(risks: &[String]) -> String {
+    if risks.is_empty() {
+        "none".to_string()
+    } else {
+        risks
+            .iter()
+            .map(|risk| format!("`{risk}`"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
+fn render_reviewer_html(markdown: &str) -> String {
+    let mut html = String::from(
+        "<!doctype html><html><head><meta charset=\"utf-8\"><title>Pramaan Reviewer Report</title><style>body{font-family:Arial,sans-serif;max-width:960px;margin:32px auto;padding:0 20px;line-height:1.5;color:#18202a}h1,h2{color:#07111f}code{background:#eef2f7;padding:2px 5px;border-radius:4px}pre{white-space:pre-wrap;background:#f7f9fc;border:1px solid #d8e0ea;padding:16px;border-radius:8px}table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border:1px solid #d8e0ea;padding:8px;text-align:left}</style></head><body>",
+    );
+    html.push_str("<pre>");
+    html.push_str(&escape_html(markdown));
+    html.push_str("</pre></body></html>");
+    html
+}
+
+fn escape_html(input: &str) -> String {
+    input
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
 }
 
 fn run_feedback_override(args: FeedbackOverrideArgs) -> Result<()> {

@@ -19,18 +19,22 @@ do not affect the final fuzz verdict and subprocess timeout enforcement is not
 implemented. Phase 28.15 is now the corrective gate before public tool-backed
 property/fuzz claims. Phase 28.26 adds bounded sandbox execution for safe-marker
 generated probes. Phase 32.75 adds verifier-abuse surface detection. Public
-review still depends on local reviewer reports.
+review readiness track now has a local reviewer report path; remaining public
+launch work should focus on Phase 28.15 correctness repairs and fresh external
+review feedback.
 
 ## Current Phase
 
-Phase 35.5: Reviewer UX and Local HTML Report
+Phase 35.6: License-Safe Reviewer Interface Patterns
 
 Optional pre-alpha proof phases can run in parallel if they do not hide
 residual risk: Phase 26.3 competitor-gap fixtures and Phase 26.4 minimum
 lovable verifier loop.
 
-Phase 26.1 live Action proof is complete. Public review still depends on the
-remaining pre-36 readiness phase: local reviewer reports.
+Phase 26.1 live Action proof, Phase 28.26 sandboxed probes, Phase 32.75
+anti-gaming hardening, and Phase 35.5 local reports are complete. Public review
+still needs a final claim audit after Phase 28.15 repairs, because the current
+tool-backed fuzz path has known review findings.
 
 ## Status
 
@@ -154,4 +158,5 @@ provenance, adapter certification, and the Serious v1 gate.
 | 2026-05-21 | Added Phase 28.15 fuzz harness truthfulness review gate. | Local review found that tool-backed harness failures are not promoted into final fuzz evidence, timeout enforcement is a no-op, harness failures abort instead of emitting receipts, and dynamic JS evaluation needs removal or isolation before public tool-backed property/fuzz claims. |
 | 2026-05-21 | Completed Phase 28.26 sandbox execution for generated probes. | `pramaan probe execute` now materializes bounded safe-marker probes under a temp sandbox, runs language-native commands with timeouts, preserves rejected compile/static/binding failures, writes execution reports, and updates the `ai_probe_generation` receipt. |
 | 2026-05-21 | Completed Phase 32.75 anti-gaming hardening. | Claim scope now flags verifier-surface path changes as `R-094`/`R-095`, security-sensitive policy profiles hard-fail those risks, and `corpus/verifier-abuse-fixtures.v0.1.json` validates six anti-gaming scenarios. |
+| 2026-05-21 | Completed Phase 35.5 local reviewer reports. | `pramaan report markdown` and `pramaan report html` now render blocker-first bundle reports with ran/skipped stages, oracle test-change evidence, replay commands, human override fields, examples, docs, and matching Action summary sections. |
 | 2026-05-21 | Added Phase 35.6 license-safe reviewer interface patterns. | Pramaan can learn from category-level pull-request tooling ergonomics while keeping all names, copy, command design, configuration, screenshots, and implementation original to this MIT-licensed repo. |

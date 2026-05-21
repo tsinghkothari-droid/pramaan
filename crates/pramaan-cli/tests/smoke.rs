@@ -2058,3 +2058,106 @@ fn probe_execute_keeps_only_sandbox_executed_candidates() {
             artifact["name"] == "ai_probe_execution_json" && artifact["digest"].as_str().is_some()
         }));
 }
+
+#[test]
+fn report_commands_render_reviewer_sections() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-report-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean report output");
+    }
+
+    let verify_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "verify",
+            "--base",
+            "HEAD",
+            "--head",
+            "HEAD",
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+            "--skip-stage",
+            "static_checks",
+            "--skip-stage",
+            "oracle",
+            "--skip-stage",
+            "fuzz",
+        ])
+        .output()
+        .expect("run pramaan verify for report bundle");
+    assert!(
+        verify_output.status.success(),
+        "verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&verify_output.stdout),
+        String::from_utf8_lossy(&verify_output.stderr)
+    );
+
+    let markdown_path = out.join("reviewer-report.md");
+    let markdown_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "report",
+            "markdown",
+            "--bundle",
+            out.to_str().expect("utf-8 bundle path"),
+            "--out",
+            markdown_path.to_str().expect("utf-8 markdown path"),
+        ])
+        .output()
+        .expect("run pramaan report markdown");
+    assert!(
+        markdown_output.status.success(),
+        "report markdown failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&markdown_output.stdout),
+        String::from_utf8_lossy(&markdown_output.stderr)
+    );
+    let markdown = fs::read_to_string(&markdown_path).expect("read markdown report");
+    for section in [
+        "## Blockers",
+        "## Warnings",
+        "## What Ran",
+        "## What Skipped",
+        "## What Changed In Tests",
+        "## Replay Commands",
+        "## Human Override",
+    ] {
+        assert!(
+            markdown.contains(section),
+            "missing report section {section}"
+        );
+    }
+    assert!(markdown.contains("This report is reviewer evidence"));
+
+    let html_path = out.join("reviewer-report.html");
+    let html_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "report",
+            "html",
+            "--bundle",
+            out.to_str().expect("utf-8 bundle path"),
+            "--out",
+            html_path.to_str().expect("utf-8 html path"),
+        ])
+        .output()
+        .expect("run pramaan report html");
+    assert!(
+        html_output.status.success(),
+        "report html failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&html_output.stdout),
+        String::from_utf8_lossy(&html_output.stderr)
+    );
+    let html = fs::read_to_string(&html_path).expect("read html report");
+    assert!(html.contains("<!doctype html>"));
+    assert!(html.contains("Pramaan Reviewer Report"));
+    assert!(html.contains("## Blockers"));
+}

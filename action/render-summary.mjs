@@ -174,11 +174,33 @@ Manifest digest: \`${digest}\`
 
 Policy decision: **${policyDecision}**
 
+## Blockers
+
+${hardFailures}
+
+## Warnings
+
+${warnings}
+
 ## Failed, skipped, or incomplete stages
 
 | Stage | Status | Residual risk families | Mitigated risk families |
 | --- | --- | --- | --- |
 ${stageSection}
+
+## What Ran
+
+${(manifest.stages ?? [])
+    .filter((stage) => !["skipped", "not_applicable"].includes(stage.status))
+    .map((stage) => `- \`${stage.id}\` ${stage.status}`)
+    .join("\n") || "- none"}
+
+## What Skipped
+
+${(manifest.stages ?? [])
+    .filter((stage) => ["skipped", "not_applicable"].includes(stage.status))
+    .map((stage) => `- \`${stage.id}\` ${stage.status}`)
+    .join("\n") || "- none"}
 
 ## Risk families
 
@@ -200,13 +222,15 @@ ${stageSection}
 
 Policy: \`${policy?.policy_id ?? "not recorded"}\`
 
-Hard failures:
+## Human Override
 
-${hardFailures}
+Accepted risk IDs:
 
-Warnings:
+Reason:
 
-${warnings}
+Reviewer identity source:
+
+Timestamp:
 
 ${tail ? `## CLI tail\n\n\`\`\`text\n${tail}\n\`\`\`\n` : ""}`;
 }

@@ -58,6 +58,11 @@ test("renderSummary emphasizes failed stages and residual risk families", () => 
   assert.match(markdown, /github_actions: not_requested/);
   assert.match(markdown, /Policy decision: \*\*failed\*\*/);
   assert.match(markdown, /stage_status:static_python:failed/);
+  assert.match(markdown, /## Blockers/);
+  assert.match(markdown, /## Warnings/);
+  assert.match(markdown, /## What Ran/);
+  assert.match(markdown, /## What Skipped/);
+  assert.match(markdown, /## Human Override/);
   assert.doesNotMatch(markdown, /\| claim_scope \| OK passed/);
 });
 

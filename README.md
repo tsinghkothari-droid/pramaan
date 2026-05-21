@@ -82,6 +82,8 @@ See [STATUS.md](STATUS.md) for the ground-truth feature matrix.
   checklist.
 - [Rendered Examples](docs/rendered-examples/README.md): pass, warning, fail,
   and bundle-inspection examples.
+- [Reviewer UX](docs/reviewer-ux.md): local HTML/Markdown reports for
+  blocker-first bundle inspection.
 - [Competitive Benchmark](docs/competitive-benchmark.md): what Pramaan
   overlaps, reuses, and does differently from review assistants,
   quality-report aggregators, test generators, and attestation primitives.

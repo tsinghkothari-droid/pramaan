@@ -51,7 +51,7 @@ risk before Alpha.
 | CLAIM-REDACTION-001 | `docs/receipt-model.md` | Common secrets and private paths are redacted by helper. | executable-test | `crates/pramaan-core/src/lib.rs` | `cargo test -p pramaan-core redaction` | pass | Enterprise logs need broader fixtures. |
 | CLAIM-DEMO-001 | `docs/demo.md` | Public demos are inspectable in under 30 seconds. | manual-proof | `docs/demo.md`, `examples/proof-bundles/` | `cargo run -p pramaan-cli -- oracle --base-repo examples/fixtures/oracle/base --head-repo examples/fixtures/oracle/head --out target/pramaan-pilot/oracle` | pass-with-risk | Needs user study/external reviewer timing before marketing as measured. |
 | CLAIM-PILOT-001 | `.planning/ROADMAP.md` | Three external real repositories were validated. | manual-proof | `.planning/reports/phase-26-external-alpha-pilots.md` | `powershell -ExecutionPolicy Bypass -File scripts/run-phase26-pilots.ps1 -SkipClone` | pass | Live GitHub Action proof remains separate. |
-| CLAIM-POSITIONING-001 | `README.md` | Pramaan is complementary to AI PR reviewers, quality aggregators, test generators, and attestation primitives. | manual-proof | `docs/competitive-benchmark.md`, `README.md` | `rg -n "competitive benchmark|complement|not a replacement" README.md docs/competitive-benchmark.md` | pass | Refresh before public Alpha and Serious v1. |
+| CLAIM-POSITIONING-001 | `README.md` | Pramaan is complementary to review assistants, quality aggregators, test generators, and attestation primitives. | manual-proof | `docs/competitive-benchmark.md`, `README.md` | `rg -n "competitive benchmark|complement|not a replacement" README.md docs/competitive-benchmark.md` | pass | Refresh before public Alpha and Serious v1. |
 | CLAIM-GAP-001 | `docs/competitive-benchmark.md` | Category-level competitor-gap fixtures exist for evidence gaps Pramaan targets. | manual-proof | `corpus/competitor-gap-fixtures.v0.1.json`, `scripts/check-competitor-gap-fixtures.mjs` | `node scripts/check-competitor-gap-fixtures.mjs` | pass-with-risk | Metadata fixtures are not named-tool benchmark results. |
 | CLAIM-QUICKSTART-001 | `docs/quickstart.md`, `STATUS.md` | One-command local quickstart produces a bundle, confidence evidence, policy explanation, and blockers-first report. | manual-proof | `scripts/run-minimum-lovable-loop.ps1`, `.planning/reports/phase-26.4-minimum-lovable-loop-uat.md` | `powershell -ExecutionPolicy Bypass -File scripts/run-minimum-lovable-loop.ps1` | pass-with-risk | This is an oracle-focused demo loop; Phase 35.5 owns Rust-native report commands. |
 | CLAIM-RELEASE-001 | `TASKS.md` | Alpha MVP gates are satisfied. | accepted-risk | `TASKS.md`, `.planning/research/P0_P1_ALPHA_PILOT_2026-05-21.md` | `rg -n "Alpha MVP|not yet|NO_GO" TASKS.md .planning` | blocked | Private preview only until external repository pilots close. |
@@ -83,17 +83,18 @@ risk before Alpha.
 | CLAIM-STATUS-CAP-024 | `STATUS.md` | STATUS: Agent completion gate | executable-test | `crates/pramaan-core/src/lib.rs`, `crates/pramaan-cli/src/main.rs`, `schemas/agent_decision.schema.json`, `docs/agent-harness.md` | `cargo test --workspace` | pass | Keep status Partial until richer IDE/MCP integrations exist. |
 | CLAIM-STATUS-CAP-025 | `STATUS.md` | STATUS: Threat model for malicious PRs/verifier plugins | manual-proof | `docs/threat-model.md` | `Get-Content docs/threat-model.md` | pass | Documentation is not enforcement. |
 | CLAIM-STATUS-CAP-026 | `STATUS.md` | STATUS: Verifier-abuse surface detection | executable-test | `crates/pramaan-core/src/lib.rs`, `corpus/verifier-abuse-fixtures.v0.1.json`, `scripts/check-verifier-abuse-fixtures.mjs` | `cargo test -p pramaan-core verifier_abuse && node scripts/check-verifier-abuse-fixtures.mjs` | pass-with-risk | Detects verifier-surface path changes; deeper exploit fixtures remain Phase 40 work. |
-| CLAIM-STATUS-CAP-027 | `STATUS.md` | STATUS: Redaction helpers for shareable evidence | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` | pass | Redaction profiles remain broader future work. |
-| CLAIM-STATUS-CAP-028 | `STATUS.md` | STATUS: Adapter certification mode | checked-fixture | `docs/adapter-certification.md`, `examples/fixtures/adapter_certification.synthetic.json` | Fixture/manual inspection | pass | Keep adjacent, not core v0.1 path. |
-| CLAIM-STATUS-CAP-029 | `STATUS.md` | STATUS: Public claim audit gate | executable-test | `docs/claim-audit.md`, `scripts/check-claim-audit.mjs` | `node scripts/check-claim-audit.mjs` | pass | Keep the ledger updated after every phase. |
+| CLAIM-STATUS-CAP-027 | `STATUS.md` | STATUS: Local reviewer reports | executable-test | `crates/pramaan-cli/src/main.rs`, `crates/pramaan-cli/tests/smoke.rs`, `docs/reviewer-ux.md`, `examples/reports/` | `cargo test -p pramaan-cli --test smoke report_commands_render_reviewer_sections` | pass-with-risk | Static local reports exist; hosted dashboards remain future work. |
+| CLAIM-STATUS-CAP-028 | `STATUS.md` | STATUS: Redaction helpers for shareable evidence | executable-test | `crates/pramaan-core/src/lib.rs`, `docs/receipt-model.md` | `cargo test -p pramaan-core` | pass | Redaction profiles remain broader future work. |
+| CLAIM-STATUS-CAP-029 | `STATUS.md` | STATUS: Adapter certification mode | checked-fixture | `docs/adapter-certification.md`, `examples/fixtures/adapter_certification.synthetic.json` | Fixture/manual inspection | pass | Keep adjacent, not core v0.1 path. |
+| CLAIM-STATUS-CAP-030 | `STATUS.md` | STATUS: Public claim audit gate | executable-test | `docs/claim-audit.md`, `scripts/check-claim-audit.mjs` | `node scripts/check-claim-audit.mjs` | pass | Keep the ledger updated after every phase. |
 
 ## Counts
 
 | Bucket | Count |
 | --- | ---: |
-| Total claims audited | 63 |
-| `STATUS.md` capability rows covered | 31 |
-| Executable-test claims | 43 |
+| Total claims audited | 64 |
+| `STATUS.md` capability rows covered | 32 |
+| Executable-test claims | 44 |
 | Checked-fixture/manual-proof claims | 12 |
 | Partial/planned/accepted-risk claims | 8 |
 | False-or-stale claims left in public copy | 0 |
