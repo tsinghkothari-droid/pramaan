@@ -389,8 +389,8 @@ Hypothesis/fast-check harness generation lands.
 ## Phase 25: P0/P1 Pilot Gate and Alpha Decision
 
 **Status:** Completed 2026-05-21 as NO_GO_PUBLIC_ALPHA. Internal pilot fixtures
-passed, but external real-repository pilots and Phase 22.5 claim audit remain
-public Alpha blockers.
+passed, but external real-repository pilots and remaining public-claim gaps
+remain public Alpha blockers.
 
 **Goal:** Prove whether the P0/P1 loop is actually useful before expanding into P2/P3 features.
 
@@ -403,6 +403,198 @@ public Alpha blockers.
 3. Alpha MVP release gates are evaluated honestly.
 4. Unfinished P0/P1 items are either closed, split, or explicitly accepted as alpha residual risk.
 5. The next roadmap decision is documented: continue to P2 signing/attestation, repeat P0/P1 hardening, or pivot.
+
+## Phase 26: External Alpha Pilots and Live Action Proof
+
+**Goal:** Run Pramaan on three external real repositories and prove the GitHub Action on a live PR before public Alpha.
+
+**Priority:** Alpha gate
+
+**Success Criteria:**
+
+1. Pilot report covers one Python, one TypeScript, and one Rust repository where possible.
+2. Runtime, skipped-stage profile, false-positive/false-negative notes, reviewer time-to-understand, and residual risks are recorded.
+3. At least one live GitHub Action run uploads a bundle and renders a useful PR summary.
+4. Public Alpha decision is updated from evidence, not internal fixture confidence.
+
+## Phase 27: Parser-Backed Oracle Extractors
+
+**Goal:** Close the current structured-extractor risk with parser-backed Python, TypeScript, and Rust oracle evidence.
+
+**Priority:** P1 hardening
+
+**Success Criteria:**
+
+1. Parser-backed extractors handle assertions, skips, ignores, xfails, snapshots, fixtures, and renamed/deleted tests.
+2. Golden negative fixtures cover comments, strings, macros, multiline assertions, generated tests, and renamed test bodies.
+3. Receipts preserve stable risk IDs and make unsupported syntax explicit.
+
+## Phase 28: Tool-Backed Property, Fuzz, and Replay
+
+**Goal:** Execute real Hypothesis and fast-check campaigns safely where eligible code exists, with replayable evidence.
+
+**Priority:** P1 hardening
+
+**Success Criteria:**
+
+1. Safe generated harnesses run within strict budgets.
+2. Seeds, generated counts, corpus hashes, counterexamples, shrink data, and tool versions are recorded.
+3. `pramaan replay` can reproduce recorded failing generated cases.
+4. Missing tools remain skipped evidence, not mitigated evidence.
+
+## Phase 29: Attestation, VSA, and Offline Verification
+
+**Goal:** Make bundles verifiable outside the original CI job with signing, artifact attestations, and VSA-style summaries.
+
+**Priority:** P2 trust
+
+**Success Criteria:**
+
+1. Bundle manifests can be signed through cosign or Sigstore-compatible flow.
+2. GitHub artifact attestation integration is documented and exercised where permissions allow.
+3. Pramaan emits an in-toto/SLSA-compatible VSA-style verification summary.
+4. Offline verification rejects tampered bundle, signature, manifest, and attestation fixtures.
+
+## Phase 30: Redaction Profiles and Public Bundle Export
+
+**Goal:** Make shared bundles safe for reviewers, customers, and public demos.
+
+**Priority:** P2 trust
+
+**Success Criteria:**
+
+1. `internal-full`, `reviewer-redacted`, `public-demo`, and `summary-only` profiles are implemented or explicitly scoped.
+2. Secret, private path, internal hostname, endpoint, and CI metadata fixtures are scrubbed.
+3. Redacted bundles remain inspectable and verifiable under allowed transformations.
+
+## Phase 31: Plugin Protocol Trust and Isolation
+
+**Goal:** Prevent plugins from becoming an accidental trusted root for receipt evidence.
+
+**Priority:** P2 security
+
+**Success Criteria:**
+
+1. Plugin protocol defines identity, version, provenance, allowed receipt capabilities, and optional signatures.
+2. Plugins cannot edit prior receipts or bundle manifests directly.
+3. Malicious-plugin fixtures cover false pass emission, artifact path escape, receipt tampering, and environment leakage.
+4. Isolation boundary and residual risks are documented.
+
+## Phase 32: SARIF, Policy, and Agentic Workflow Security
+
+**Goal:** Export Pramaan evidence into existing review systems and harden untrusted agent workflow inputs.
+
+**Priority:** P2 security
+
+**Success Criteria:**
+
+1. Pramaan findings can export as SARIF and import into GitHub code scanning.
+2. OPA/Rego policy export or parity tests match default Rust policy decisions.
+3. Agentic workflow-injection fixtures map untrusted PR/issue/comment text to stable risk IDs.
+4. Optional CodeQL/security scanner evidence is correlation, not sole gate.
+
+## Phase 33: Adversarial Corpus 25 and Secure-Code Scenarios
+
+**Goal:** Grow the adversarial corpus to 25 high-signal scenarios before larger eval claims.
+
+**Priority:** P2 evals
+
+**Success Criteria:**
+
+1. Corpus has at least 25 scenarios mapped to stable risk IDs.
+2. Secure-code scenarios cover validation removal, authorization weakening, unsafe deserialization, injection sanitization removal, crypto misuse, and secret exposure.
+3. Malicious verifier or CI-abuse scenarios are included.
+4. Corpus runner or report catches duplicate or stale scenarios.
+
+## Phase 34: Calibration, Drift, and Reviewer Feedback Loop
+
+**Goal:** Reduce alert fatigue by comparing findings to repo baselines and capturing human override outcomes.
+
+**Priority:** P2 feedback
+
+**Success Criteria:**
+
+1. Reviewer overrides persist with accepted risk IDs, reason, reviewer identity source, and merge outcome when available.
+2. Repo baselines track mutation survival, oracle warnings, skipped stages, runtime, and static findings.
+3. Trend exports show drift by repo, risk family, agent author, and time window.
+4. Dashboard data exists without making a dashboard required for CLI adoption.
+
+## Phase 35: Operator Docs, Release Packaging, and Adoption
+
+**Goal:** Make Pramaan installable, runnable, and explainable by an external maintainer.
+
+**Priority:** P2 adoption
+
+**Success Criteria:**
+
+1. Operator, plugin-author, security model, enterprise deployment, and troubleshooting docs exist.
+2. PR summary screenshots or rendered examples cover pass, warning, and fail cases.
+3. Release packaging workflow or manual release checklist is staged.
+4. Marketplace status is documented honestly.
+
+## Phase 36: Language Plugin Depth for Python, TypeScript, and Rust
+
+**Goal:** Deepen the first three supported language paths before expanding language count.
+
+**Priority:** P2 language depth
+
+**Success Criteria:**
+
+1. Python, TypeScript, and Rust support matrices are accurate and claim-audited.
+2. Each language has static, oracle, mutation, property/fuzz, and fixture coverage.
+3. Changed-function detection and diff scoping are language-aware.
+4. Go and Java remain blocked until plugin protocol and first-language depth are credible.
+
+## Phase 37: Provider-Neutral Forge and GitLab Support
+
+**Goal:** Design non-GitHub support before GitHub assumptions harden into the bundle model.
+
+**Priority:** P3 enterprise
+
+**Success Criteria:**
+
+1. Provider-neutral PR, commit, identity, artifact, and attestation interfaces are defined.
+2. GitLab OIDC and attestation differences are documented with fixtures.
+3. GitHub behavior remains stable.
+4. Gitea and Bitbucket are documented later targets unless a pilot forces earlier support.
+
+## Phase 38: Multi-Agent Provenance and Handoff Tracking
+
+**Goal:** Track modern workflows where multiple agents and humans contribute to one PR.
+
+**Priority:** P3 provenance
+
+**Success Criteria:**
+
+1. Provenance model supports author agent, reviewer agent, test-writing agent, unknown agent, and final human reviewer.
+2. Intermediate commit attribution and handoff metadata are recorded when available.
+3. Unknown provenance is explicit and policy-visible.
+
+## Phase 39: Adapter Certification as a Bounded Adjacent Track
+
+**Goal:** Preserve adapter-certification ideas without distracting from PR verification.
+
+**Priority:** P3 adjacent
+
+**Success Criteria:**
+
+1. Adapter certification remains optional and separate from public Alpha gates.
+2. Checks cover tool names, descriptions, schemas, auth scopes, idempotency, retry behavior, rate limits, and auditability.
+3. Adapter proof-bundle examples exist without implying an adapter registry exists.
+
+## Phase 40: Serious v1 Release Gate and Corpus 100
+
+**Goal:** Decide Serious v1 only after real pilots, verifiable bundles, redaction, plugin trust, calibration, and 100 adversarial scenarios.
+
+**Priority:** Serious v1 gate
+
+**Success Criteria:**
+
+1. Corpus has 100+ non-duplicate scenarios mapped to risk IDs.
+2. Benchmark-integrity checks detect stale fixtures and overfit eval assumptions.
+3. Cross-platform CI is green or residual failures are explicitly accepted.
+4. Final claim audit has zero false-or-stale public claims.
+5. Serious v1 report names go, no-go, or conditional release.
 
 ## Coverage
 
@@ -432,5 +624,10 @@ public Alpha blockers.
 the remaining P0/P1 tasks in `TASKS.md`; they do not change the original 111
 research-mapped requirement count.
 
+**Research-driven continuation track:** Phases 26-40 map the remaining
+unchecked P1/P2/P3 and Serious v1 task families to executable GSD plans after
+the 2026-05-21 internet research refresh. They are delivery phases, not a new
+requirement-counting scheme.
+
 ---
-*Roadmap updated: 2026-05-21 after P0/P1 completion-track planning*
+*Roadmap updated: 2026-05-21 after research-driven GSD continuation planning*

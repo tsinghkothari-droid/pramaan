@@ -436,3 +436,15 @@ second each on this machine, producing useful local evidence. Decision:
 private technical preview is reasonable; public Alpha is a no-go until three
 external real repositories are measured and the remaining release blockers are
 closed.
+
+## Research-Driven GSD Continuation - 2026-05-21
+
+Added `.planning/research/GSD_PHASE_RESEARCH_REFRESH_2026-05-21.md` and mapped
+the remaining `TASKS.md` work into Phases 26-40. The revised order starts with
+external pilots and live Action proof, then parser-backed oracle evidence,
+tool-backed property/fuzz replay, attestation/VSA/offline verification,
+redaction, plugin trust, SARIF/policy/agentic-workflow security, corpus growth,
+calibration, adoption docs, language depth, forge support, multi-agent
+provenance, bounded adapter certification, and a Serious v1 release gate. This
+keeps research attached to files, fixtures, policies, schemas, reports, or
+release decisions.

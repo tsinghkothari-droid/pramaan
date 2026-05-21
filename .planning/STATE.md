@@ -6,29 +6,33 @@ See: `.planning/PROJECT.md` (updated 2026-05-18)
 
 **Core value:** Pramaan must make it obvious when an AI agent weakened the oracle, faked confidence, or passed shallow tests while still breaking the intended behavior.
 
-**Current focus:** P0/P1 completion track. Phases 22.5 and 23-25 are complete
-with explicit residual risk. The next responsible step is three external pilot
-repositories before public Alpha.
+**Current focus:** Research-driven continuation track. Phases 22.5 and 23-25
+are complete with explicit residual risk. The next responsible step is Phase
+26: three external pilot repositories and a live GitHub Action proof before
+public Alpha.
 
 ## Current Phase
 
-External pilot repositories before public Alpha
+Phase 26: External Alpha Pilots and Live Action Proof
 
 ## Status
 
 Phases 1-12 and the Phase 16a schema-impact subset are implemented and
 validated. Phases 13-17 remain the broader Serious v1 execution path. Phases
-18-25 are now the focused P0/P1 completion track: product honesty, golden
-evidence, SLA/policy gates, sandbox/threat/redaction hardening, claim/static
-security signals, AST oracle extractors, real mutation/fuzz adapters, and a
-pilot gate before P2 expansion.
+18-25 completed the focused P0/P1 track and ended in a public-Alpha no-go until
+external pilots are measured. Phases 26-40 now map the remaining task families:
+external pilots, parser-backed oracles, real property/fuzz harnesses,
+attestations, redaction, plugin trust, SARIF/policy integration, corpus growth,
+calibration, adoption docs, language depth, forge support, multi-agent
+provenance, adapter certification, and the Serious v1 gate.
 
 ## Open Questions
 
-- Exact v1 demo language: Python first is recommended, TypeScript also viable.
-- Whether to create a real monorepo skeleton immediately in Phase 1 or keep planning docs first until phase discussion.
-- Whether initial signing should be pure local signing metadata or a Sigstore-compatible placeholder.
-- How much claim/scope extraction should be deterministic in v1 versus LLM-assisted with a reviewable receipt.
+- Exact external pilot repositories for Phase 26.
+- Whether Phase 29 should use cosign subprocess first or a Rust Sigstore crate.
+- Whether Phase 31 isolation starts with subprocess/container boundaries or a WASM boundary.
+- Whether Phase 32 should implement OPA export first or policy parity tests first.
+- Which storage shape Phase 34 should use for baselines before a hosted dashboard exists.
 
 ## Recent Decisions
 
@@ -69,3 +73,4 @@ pilot gate before P2 expansion.
 | 2026-05-21 | Completed Phase 23 with residual parser risk. | Oracle diffs now include extractor engines, evidence labels, assertion signal kinds, strength scores, hashes, and skip markers; full compiler AST integrations remain a hardening task. |
 | 2026-05-21 | Completed Phase 24 with honest adapter evidence. | Missing mutation tools no longer count as mitigated evidence, mutation receipts include execution mode and raw-output digests, and fuzz receipts record adapter availability plus `tool_backed=false` for deterministic replay. |
 | 2026-05-21 | Completed Phase 25 as no-go for public Alpha. | Internal fixture pilots ran quickly and produced useful evidence, but three external real-repository pilots and the claim-audit gate remain blockers before public Alpha. |
+| 2026-05-21 | Added research-driven GSD continuation track for Phases 26-40. | Current benchmark, supply-chain, CI security, policy, SARIF, attestation, plugin-security, and AI-code-security research now maps every remaining `TASKS.md` family to an executable phase instead of more open-ended research. |

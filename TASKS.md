@@ -93,6 +93,58 @@ preview is reasonable; public Alpha remains blocked** until three external
 repository pilots are measured and the remaining public-claim gaps stay
 narrowed in `docs/claim-audit.md`.
 
+### Research-Driven GSD Continuation Track
+
+Current internet research was refreshed on 2026-05-21 in
+`.planning/research/GSD_PHASE_RESEARCH_REFRESH_2026-05-21.md`. The refresh
+does not change Pramaan's thesis: Pramaan produces evidence, not a correctness
+proof. It does change the remaining build order. The next track turns every
+unfinished task family below into an executable GSD phase.
+
+| GSD phase | Priority | What it completes |
+| --- | --- | --- |
+| Phase 26 | Alpha gate | Three external real-repository pilots, live GitHub Action proof, runtime/noise metrics, and a public-Alpha go/no-go update. |
+| Phase 27 | P1 hardening | Full parser-backed oracle extractors for Python, TypeScript, and Rust with negative fixtures and dependency justifications. |
+| Phase 28 | P1 hardening | Safe real Hypothesis and fast-check generated-harness execution, replay CLI contracts, and budget/timeout evidence. |
+| Phase 29 | P2 trust | Sigstore/cosign bundle signing, GitHub artifact attestation, SLSA VSA-style output, and offline bundle verification. |
+| Phase 30 | P2 trust | Redaction profiles and public-demo bundle export tests for secrets, private paths, internal hosts, and CI metadata. |
+| Phase 31 | P2 security | Plugin protocol, plugin identity/provenance, least-privilege receipt permissions, and isolated plugin execution threat model. |
+| Phase 32 | P2 security | SARIF export, policy-as-code parity, CI hardening expansion, CodeQL/security-scanner integration, and agentic workflow-injection checks. |
+| Phase 33 | P2 evals | Adversarial corpus expansion to 25 scenarios, including secure-code and malicious-verifier cases. |
+| Phase 34 | P2 feedback | Reviewer override persistence, repo baselines, calibration, drift exports, and agent-author trend metrics. |
+| Phase 35 | P2 adoption | Operator guide, plugin-author guide, security model, troubleshooting docs, screenshots, and release packaging. |
+| Phase 36 | P2 language depth | Deep Python, TypeScript, and Rust plugin quality before Go/Java expansion. |
+| Phase 37 | P3 enterprise | Provider-neutral forge abstraction, GitLab attestation/OIDC design, and Gitea/Bitbucket notes. |
+| Phase 38 | P3 provenance | Multi-agent provenance chains, intermediate commit attribution, and handoff metadata. |
+| Phase 39 | P3 adjacent | Keep adapter certification bounded, with proof-bundle examples and adapter risk taxonomy. |
+| Phase 40 | Serious v1 gate | 100-scenario corpus, benchmark-integrity checks, cross-platform CI, final claim audit, and Serious v1 go/no-go decision. |
+
+Execution rule: **Phase 26 comes next.** Do not market public Alpha until Phase
+26 has real external pilot evidence. Do not expand the plugin ecosystem until
+Phase 31 defines plugin trust and isolation. Do not claim public-safe bundle
+sharing until Phase 30 redaction tests pass. Do not claim Serious v1 until
+Phase 40 closes the 100-scenario corpus and final release gate.
+
+Unfinished task-family mapping:
+
+| Open task family | Owning phases |
+| --- | --- |
+| Public Alpha blockers | 26, 27, 28, 29 |
+| Full AST/parser oracle integrations | 27 |
+| Real Hypothesis/fast-check campaigns | 28 |
+| Attestation and signing | 29 |
+| Redaction profiles | 30 |
+| Plugin trust and verifier security | 31 |
+| CI/security review integrations | 32 |
+| Adversarial corpus and secure-code scenarios | 33, 40 |
+| Reviewer feedback, calibration, and drift | 34 |
+| Documentation and adoption | 35 |
+| Python/TypeScript/Rust language depth | 36 |
+| Non-GitHub enterprise support | 37 |
+| Multi-agent provenance | 38 |
+| Adapter certification | 39 |
+| Serious v1 release gates | 40 |
+
 ### Current Alpha Decision Snapshot
 
 **Decision:** private technical preview yes, public Alpha no-go.
