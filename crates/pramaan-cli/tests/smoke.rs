@@ -32,6 +32,15 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
             "HEAD",
             "--out",
             out.to_str().expect("utf-8 output path"),
+            // HEAD..HEAD smoke: skip the real stages to keep this test fast and
+            // exercise the synthetic_verification fallback. A separate test
+            // (verify_runs_real_stages_when_none_skipped) covers orchestration.
+            "--skip-stage",
+            "static_checks",
+            "--skip-stage",
+            "oracle",
+            "--skip-stage",
+            "fuzz",
         ])
         .output()
         .expect("run pramaan verify");
@@ -54,7 +63,7 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
     assert!(stdout.contains("mitigated"));
     assert!(stdout.contains("residual"));
     assert!(stdout.contains("skipped"));
-    assert!(stdout.contains("does not prove the code correct"));
+    assert!(stdout.contains("stages_skipped:"));
 
     let claim_scope_path = out.join("claim_scope.synthetic.json");
     let claim_receipt_path = out.join("receipts").join("claim-scope.receipt.json");
@@ -762,6 +771,12 @@ fn bundle_verify_fails_when_artifact_is_tampered() {
             "HEAD",
             "--out",
             out.to_str().expect("utf-8 output path"),
+            "--skip-stage",
+            "static_checks",
+            "--skip-stage",
+            "oracle",
+            "--skip-stage",
+            "fuzz",
         ])
         .output()
         .expect("run pramaan verify");
@@ -1518,6 +1533,88 @@ fn mutation_emits_diff_scoped_receipts_with_budget_metadata() {
 }
 
 #[test]
+fn verify_runs_real_stages_when_none_skipped() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let out = workspace
+        .join("target")
+        .join("pramaan-verify-orchestration-tests")
+        .join(format!("{}", std::process::id()));
+
+    if out.exists() {
+        fs::remove_dir_all(&out).expect("clean orchestration output");
+    }
+
+    // Skip only static_checks (expensive: would run cargo check on a worktree
+    // checkout, taking minutes) and mutation (opt-in). Oracle and fuzz are
+    // fast against the head worktree.
+    let output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "verify",
+            "--base",
+            "HEAD",
+            "--head",
+            "HEAD",
+            "--out",
+            out.to_str().expect("utf-8 output path"),
+            "--skip-stage",
+            "static_checks",
+        ])
+        .output()
+        .expect("run pramaan verify with real stages");
+
+    assert!(
+        output.status.success(),
+        "verify failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("stages_run: oracle, fuzz"),
+        "stages_run should list oracle and fuzz; got stdout:\n{stdout}"
+    );
+    assert!(
+        !stdout.contains("synthetic_verification"),
+        "synthetic_verification fallback must not be emitted when real stages ran; got stdout:\n{stdout}"
+    );
+
+    let oracle_receipt = out.join("receipts").join("oracle-integrity.receipt.json");
+    assert!(
+        oracle_receipt.exists(),
+        "oracle stage should have written a receipt"
+    );
+    let fuzz_receipt = out.join("receipts").join("differential-fuzz.receipt.json");
+    assert!(
+        fuzz_receipt.exists(),
+        "fuzz stage should have written a receipt"
+    );
+
+    let manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(out.join("bundle.manifest.json")).expect("read manifest"))
+            .expect("manifest json");
+    let stage_ids: Vec<&str> = manifest["stages"]
+        .as_array()
+        .expect("stages array")
+        .iter()
+        .filter_map(|stage| stage["id"].as_str())
+        .collect();
+    assert!(
+        stage_ids.contains(&"oracle_integrity"),
+        "manifest should reference oracle_integrity stage; got {stage_ids:?}"
+    );
+    assert!(
+        stage_ids.contains(&"differential_fuzz"),
+        "manifest should reference differential_fuzz stage; got {stage_ids:?}"
+    );
+}
+
+#[test]
 fn agent_attribution_flows_through_when_env_vars_are_set() {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -1548,6 +1645,14 @@ fn agent_attribution_flows_through_when_env_vars_are_set() {
             "HEAD",
             "--out",
             out.to_str().expect("utf-8 output path"),
+            // Attribution flows through claim_scope, which runs before any
+            // real stage. Skip real stages to keep this test fast.
+            "--skip-stage",
+            "static_checks",
+            "--skip-stage",
+            "oracle",
+            "--skip-stage",
+            "fuzz",
         ])
         .output()
         .expect("run pramaan verify with agent env");

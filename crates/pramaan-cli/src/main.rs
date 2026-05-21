@@ -62,6 +62,17 @@ struct VerifyArgs {
     head: String,
     #[arg(long, default_value = "target/pramaan")]
     out: PathBuf,
+    /// Skip a stage by id. May be passed multiple times. Known ids:
+    /// static_checks, oracle, fuzz, mutation.
+    #[arg(long = "skip-stage")]
+    skip_stages: Vec<String>,
+    /// Run diff-scoped mutation testing (mutmut / StrykerJS / cargo-mutants).
+    /// Off by default because mutation runs can take minutes per language.
+    #[arg(long = "with-mutation", default_value_t = false)]
+    with_mutation: bool,
+    /// Deterministic seed for the differential-fuzz stage.
+    #[arg(long = "fuzz-seed", default_value_t = 1337)]
+    fuzz_seed: u64,
 }
 
 #[derive(Debug, Parser)]
@@ -694,6 +705,9 @@ fn run_agent_done_gate(args: AgentDoneGateArgs) -> Result<()> {
         base: args.base,
         head: args.head,
         out: out.clone(),
+        skip_stages: Vec::new(),
+        with_mutation: false,
+        fuzz_seed: 1337,
     })?;
     run_agent_explain(out, None)
 }
@@ -1207,32 +1221,82 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     };
     write_json(&sandbox_receipt_path, &sandbox_receipt)?;
 
-    let synthetic_receipt_path = receipt_dir.join("synthetic-verification.receipt.json");
-    let synthetic_receipt = Receipt::synthetic(
-        "synthetic_verification",
-        StageStatus::NotApplicable,
-        &args.base,
-        &args.head,
-        vec![OutputRef {
-            name: "synthetic_receipt".to_string(),
-            path: portable_path(&synthetic_receipt_path),
-            digest: None,
-        }],
-        vec![ArtifactRef {
-            name: "phase_1_contract".to_string(),
-            path: bundle_path(&args.out, &args.out),
-            media_type: Some("inode/directory".to_string()),
-            digest: None,
-        }],
-        ReceiptSummary {
-            title: "Synthetic verifier placeholder completed".to_string(),
-            details:
-                "No repository checks ran; this receipt exercises status, artifact, and risk fields."
-                    .to_string(),
-        },
-        RiskRefs::sample(),
-    );
-    write_json(&synthetic_receipt_path, &synthetic_receipt)?;
+    let (base_worktree, head_worktree) = sandbox_run.worktree_paths();
+    let base_worktree = base_worktree.to_path_buf();
+    let head_worktree = head_worktree.to_path_buf();
+
+    let skip: BTreeSet<String> = args.skip_stages.iter().map(|s| s.to_lowercase()).collect();
+    let mut stages_run: Vec<&'static str> = Vec::new();
+
+    if !skip.contains("static_checks") {
+        static_checks::run_static_checks(head_worktree.clone(), args.out.clone())
+            .context("running static_checks stage")?;
+        stages_run.push("static_checks");
+    }
+
+    if !skip.contains("oracle") {
+        oracle::run_oracle(
+            base_worktree.clone(),
+            head_worktree.clone(),
+            args.out.clone(),
+        )
+        .context("running oracle stage")?;
+        stages_run.push("oracle");
+    }
+
+    if !skip.contains("fuzz") {
+        fuzz::run_fuzz(
+            base_worktree.clone(),
+            head_worktree.clone(),
+            Some(claim_scope_path.clone()),
+            args.out.clone(),
+            args.fuzz_seed,
+        )
+        .context("running fuzz stage")?;
+        stages_run.push("fuzz");
+    }
+
+    if args.with_mutation && !skip.contains("mutation") {
+        mutation::run_mutation(
+            head_worktree.clone(),
+            args.out.clone(),
+            Vec::new(),
+            120_000,
+            70,
+        )
+        .context("running mutation stage")?;
+        stages_run.push("mutation");
+    }
+
+    if stages_run.is_empty() {
+        let synthetic_receipt_path = receipt_dir.join("synthetic-verification.receipt.json");
+        let synthetic_receipt = Receipt::synthetic(
+            "synthetic_verification",
+            StageStatus::NotApplicable,
+            &args.base,
+            &args.head,
+            vec![OutputRef {
+                name: "synthetic_receipt".to_string(),
+                path: portable_path(&synthetic_receipt_path),
+                digest: None,
+            }],
+            vec![ArtifactRef {
+                name: "phase_1_contract".to_string(),
+                path: bundle_path(&args.out, &args.out),
+                media_type: Some("inode/directory".to_string()),
+                digest: None,
+            }],
+            ReceiptSummary {
+                title: "Synthetic verifier fallback".to_string(),
+                details: format!(
+                    "All real stages were skipped (--skip-stage: {}). Bundle reflects partial evidence only.",
+                    args.skip_stages.join(",")
+                ),
+            },
+            RiskRefs::sample(),
+        );
+        write_json(&synthetic_receipt_path, &synthetic_receipt)?;
+    }
 
     let manifest = build_manifest(
         &args.out,
@@ -1241,15 +1305,7 @@ fn run_verify(args: VerifyArgs) -> Result<()> {
     .context("building bundle manifest")?;
     let manifest_path = write_manifest(&args.out, &manifest).context("writing bundle manifest")?;
 
-    render_summary(
-        &args,
-        &[
-            (&claim_receipt, &claim_receipt_path),
-            (&sandbox_receipt, &sandbox_receipt_path),
-            (&synthetic_receipt, &synthetic_receipt_path),
-        ],
-        &manifest_path,
-    );
+    render_summary(&args, &manifest, &manifest_path, &stages_run);
 
     Ok(())
 }
@@ -1583,26 +1639,34 @@ fn public_symbols_in_file(relative: &str, path: &Path) -> Vec<String> {
     }
 }
 
-fn render_summary(args: &VerifyArgs, receipts: &[(&Receipt, &Path)], manifest_path: &Path) {
+fn render_summary(
+    args: &VerifyArgs,
+    manifest: &BundleManifest,
+    manifest_path: &Path,
+    stages_run: &[&'static str],
+) {
     println!("Pramaan verification bundle emitted");
     println!("base: {}", args.base);
     println!("head: {}", args.head);
     println!("bundle: {}", args.out.display());
     println!("manifest: {}", manifest_path.display());
+    println!("final_status: {}", manifest.final_status);
+    println!("stages_run: {}", stages_run.join(", "));
+    if !args.skip_stages.is_empty() {
+        println!("stages_skipped: {}", args.skip_stages.join(", "));
+    }
     println!();
     println!("Stages");
-    println!("{:<24} {:<16} receipt", "stage", "status");
+    println!("{:<32} {:<16} receipt", "stage", "status");
 
-    for (receipt, path) in receipts {
+    for stage in &manifest.stages {
         println!(
-            "{:<24} {:<16} {}",
-            receipt.stage,
-            receipt.status.as_str(),
-            path.display()
+            "{:<32} {:<16} {}",
+            stage.id, stage.status, stage.receipt_path
         );
     }
 
-    let risks = summarize_risks(receipts);
+    let risks = summarize_risks_from_manifest(manifest);
 
     println!();
     println!("Risk families");
@@ -1636,17 +1700,17 @@ struct RiskSummary {
     not_applicable: BTreeMap<&'static str, usize>,
 }
 
-fn summarize_risks(receipts: &[(&Receipt, &Path)]) -> RiskSummary {
+fn summarize_risks_from_manifest(manifest: &BundleManifest) -> RiskSummary {
     let mut summary = RiskSummary::default();
 
-    for (receipt, _) in receipts {
-        count_families(&receipt.mitigated_risks, &mut summary.mitigated);
-        if receipt.status == StageStatus::Skipped {
-            count_families(&receipt.residual_risks, &mut summary.skipped);
+    for stage in &manifest.stages {
+        count_families(&stage.mitigated_risks, &mut summary.mitigated);
+        if stage.status == "skipped" {
+            count_families(&stage.residual_risks, &mut summary.skipped);
         } else {
-            count_families(&receipt.residual_risks, &mut summary.residual);
+            count_families(&stage.residual_risks, &mut summary.residual);
         }
-        count_families(&receipt.not_applicable_risks, &mut summary.not_applicable);
+        count_families(&stage.not_applicable_risks, &mut summary.not_applicable);
     }
 
     summary
