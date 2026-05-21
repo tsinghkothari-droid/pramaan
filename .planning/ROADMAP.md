@@ -328,6 +328,27 @@
 5. Security-sensitive diffs are classified for auth, authorization, crypto, SQL/query construction, subprocess, filesystem, deserialization, secrets, network, and permissions.
 6. Semantic claim-implementation mismatch remains bounded evidence, not a sole merge gate.
 
+## Phase 22.5: P0 Assertion Truth Audit Gate
+
+**Goal:** Audit every public and planning assertion so the repo cannot overstate
+what is implemented.
+
+**Priority:** P0
+
+**Success Criteria:**
+
+1. `docs/claim-audit.md` inventories claims from `README.md`, `STATUS.md`,
+   `TASKS.md`, `.planning/ROADMAP.md`, docs, schemas, examples, and
+   `action.yml`.
+2. Every claim is labeled as `executable-test`, `checked-fixture`,
+   `manual-proof`, `implemented-untested`, `partial`, `planned`,
+   `experimental`, or `false-or-stale`.
+3. Every implemented claim points to a test, fixture, repeatable command, or
+   accepted-risk follow-up.
+4. Every false, stale, or overstated claim is rewritten, downgraded, or removed.
+5. Alpha release gates fail if public implemented claims lack evidence.
+6. The completion summary records claim counts and unresolved risk.
+
 ## Phase 23: P1 AST Oracle Extractors
 
 **Goal:** Replace the highest-risk heuristic oracle checks with AST-backed extractors and golden fixtures.

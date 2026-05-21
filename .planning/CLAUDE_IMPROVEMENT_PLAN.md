@@ -8,6 +8,12 @@ This plan was written before implementation. On 2026-05-21, the user asked to
 complete P0/P1 through GSD. The actionable follow-on is now the supplemental
 Phase 18-25 track in `.planning/ROADMAP.md` and `.planning/phases/`.
 
+Update on 2026-05-21: Phase 22.5 was inserted before Phase 23 as a blocking
+P0 assertion truth audit gate. The rule is that Pramaan must test its own public
+claims before adding more feature depth: every README/status/task/planning
+assertion needs executable evidence, a checked fixture, a manual proof command,
+or an honest partial/planned/experimental label.
+
 ## Exploration Completed
 
 I inspected the requested project surface:
