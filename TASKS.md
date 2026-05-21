@@ -552,7 +552,7 @@ Audit and documentation:
 - [x] Add an example `confidence.md` output to fixture/demo evidence.
 - [x] Keep initial weights deterministic and documented until Phase 34 has
   enough pilot data for calibration.
-- [ ] In Phase 34, evaluate calibration using Brier score, log loss, and
+- [x] In Phase 34, evaluate calibration using Brier score, log loss, and
   reliability diagrams / expected calibration error where labeled outcomes
   exist.
 
@@ -593,8 +593,8 @@ Phase 28.5 acceptance criteria:
 - [ ] Add flaky-case quarantine rules.
 - [ ] Track false positives, false negatives, runtime, and reviewer time-to-understand.
 - [ ] Create a benchmark report template.
-- [ ] Add repo-level baseline calibration: expected mutation survival range, expected skipped-stage profile, runtime baseline, and noise-floor warnings.
-- [ ] Add trend/drift metrics across PRs: agent failure rate, mutation survival drift, oracle-risk drift, skipped-stage drift, and runtime drift.
+- [x] Add repo-level baseline calibration: expected mutation survival range, expected skipped-stage profile, runtime baseline, and noise-floor warnings.
+- [x] Add trend/drift export across bundles: mutation survival drift, oracle-risk drift, skipped-stage drift, runtime drift, residual-risk families, and agent-author fields.
 - [ ] Add benchmark-integrity mutation harness to detect agents overfitting eval tasks or hidden-test assumptions.
 - [x] Add secure-code corpus categories for removed validation, weakened authorization, unsafe deserialization, injection sanitization removal, crypto misuse, and secret exposure.
 
@@ -612,12 +612,12 @@ Phase 28.5 acceptance criteria:
 
 ## P2: Feedback, Calibration, and Drift
 
-- [ ] Persist reviewer override decisions as first-class evidence, not comments that disappear in PR history.
+- [x] Persist reviewer override decisions as first-class evidence, not comments that disappear in PR history.
 - [ ] Correlate override outcomes with later defects or revert signals when available.
-- [ ] Store per-repo baselines for mutation survival, oracle warnings, skipped stages, runtime, and static/hallucination findings.
-- [ ] Expose a trend API or export format for weekly/monthly agent-code quality drift.
-- [ ] Add dashboard-ready metrics without making the dashboard a blocker for CLI adoption.
-- [ ] Track agent-author attribution over time to compare failure modes by agent, model, workflow, and repository.
+- [x] Store per-repo baselines for mutation survival, oracle warnings, skipped stages, runtime, and static/hallucination findings.
+- [x] Expose a trend export format for weekly/monthly agent-code quality drift; a hosted trend API remains future work.
+- [x] Add dashboard-ready JSON/CSV metrics without making the dashboard a blocker for CLI adoption.
+- [x] Track agent-author attribution in multi-bundle exports to compare failure modes by agent, model, workflow, and repository; long-lived hosted analytics remain future work.
 
 ## P2: Verifier and Plugin Security
 
@@ -684,7 +684,7 @@ public-Alpha-ready until those are complete.
 - [ ] Documentation is good enough for an external maintainer to install and inspect a bundle.
 - [ ] Auditable confidence vote is decomposed, signed, and clearly labeled as
   risk evidence rather than correctness proof.
-- [ ] Repo-level calibration prevents obvious alert fatigue.
+- [x] Repo-level calibration prevents obvious alert fatigue in local baseline JSON/CSV mode.
 - [x] Plugin trust model prevents untrusted plugins from poisoning receipts.
 - [x] CI hardening checks catch unsafe workflow patterns for untrusted PR code.
 - [ ] Redaction profiles are tested before any bundle is safe to export.
@@ -698,7 +698,7 @@ public-Alpha-ready until those are complete.
 - [ ] Cross-platform CI.
 - [ ] Security model and threat model complete.
 - [ ] Public demo proves "GitHub green, Pramaan red" in under 30 seconds.
-- [ ] Reviewer overrides, agent attribution, baseline calibration, and drift reporting are part of the proof-bundle lifecycle.
+- [x] Reviewer overrides, agent attribution, baseline calibration, and drift exports are part of the proof-bundle lifecycle.
 - [ ] Confidence model is calibrated on pilot data and reports Brier/log-loss
   or equivalent calibration evidence.
 - [x] PII/secrets scrubbing is tested before enterprise bundle export.

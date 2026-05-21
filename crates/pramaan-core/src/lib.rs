@@ -12,6 +12,7 @@ pub const CLAIM_SCOPE_SCHEMA_VERSION: &str = "pramaan.claim_scope.v1";
 pub const CONFIDENCE_SCHEMA_VERSION: &str = "pramaan.confidence.v1";
 pub const AGENT_DECISION_SCHEMA_VERSION: &str = "pramaan.agent_decision.v1";
 pub const PROBE_SCHEMA_VERSION: &str = "pramaan.probe.v1";
+pub const FEEDBACK_SCHEMA_VERSION: &str = "pramaan.feedback.v1";
 pub const CONFIDENCE_ALGORITHM_VERSION: &str = "pramaan-confidence-v0.1-uncalibrated";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3032,6 +3033,237 @@ pub struct ConfidenceArtifact {
     pub receipt_count: usize,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ReviewerOverrideEvidence {
+    pub schema_version: String,
+    pub bundle_id: String,
+    pub manifest_digest: String,
+    pub stage: String,
+    pub override_record: ReviewerOverride,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RepoBaseline {
+    pub schema_version: String,
+    pub repository: String,
+    pub sample_size: u64,
+    pub expected_mutation_survivors_max: u64,
+    pub expected_oracle_residual_risks_max: u64,
+    pub expected_skipped_stages_max: u64,
+    pub expected_static_residual_risks_max: u64,
+    pub expected_runtime_ms_p95: u64,
+    pub confidence_score_floor: u8,
+    pub noise_floor_note: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BundleFeedbackMetrics {
+    pub bundle_id: String,
+    pub repository: String,
+    pub final_status: String,
+    pub runtime_ms: u64,
+    pub confidence_score: Option<u8>,
+    pub mutation_survivors: u64,
+    pub oracle_residual_risks: u64,
+    pub skipped_stages: u64,
+    pub static_residual_risks: u64,
+    pub residual_by_family: BTreeMap<String, u64>,
+    pub agent_author: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DriftWarning {
+    pub metric: String,
+    pub observed: f64,
+    pub baseline: f64,
+    pub severity: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CalibrationObservation {
+    pub bundle_id: String,
+    pub confidence_score: u8,
+    pub outcome_safe: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub agent_author: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CalibrationBucket {
+    pub bucket: String,
+    pub count: u64,
+    pub average_prediction: f64,
+    pub empirical_success_rate: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CalibrationReport {
+    pub status: String,
+    pub observation_count: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub brier_score: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub log_loss: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expected_calibration_error: Option<f64>,
+    pub buckets: Vec<CalibrationBucket>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FeedbackReport {
+    pub schema_version: String,
+    pub bundle_count: usize,
+    pub metrics: Vec<BundleFeedbackMetrics>,
+    pub drift_warnings: Vec<DriftWarning>,
+    pub calibration: CalibrationReport,
+    pub reviewer_overrides: Vec<ReviewerOverrideEvidence>,
+    pub limitations: Vec<String>,
+}
+
+pub fn compare_to_baseline(
+    metrics: &BundleFeedbackMetrics,
+    baseline: &RepoBaseline,
+) -> Vec<DriftWarning> {
+    let mut warnings = Vec::new();
+    push_upper_bound_warning(
+        &mut warnings,
+        "mutation_survivors",
+        metrics.mutation_survivors as f64,
+        baseline.expected_mutation_survivors_max as f64,
+        "mutation survivor count is above this repository baseline",
+    );
+    push_upper_bound_warning(
+        &mut warnings,
+        "oracle_residual_risks",
+        metrics.oracle_residual_risks as f64,
+        baseline.expected_oracle_residual_risks_max as f64,
+        "oracle residual risk count is above this repository baseline",
+    );
+    push_upper_bound_warning(
+        &mut warnings,
+        "skipped_stages",
+        metrics.skipped_stages as f64,
+        baseline.expected_skipped_stages_max as f64,
+        "skipped stage count is above this repository baseline",
+    );
+    push_upper_bound_warning(
+        &mut warnings,
+        "static_residual_risks",
+        metrics.static_residual_risks as f64,
+        baseline.expected_static_residual_risks_max as f64,
+        "static/hallucination residual risk count is above this repository baseline",
+    );
+    push_upper_bound_warning(
+        &mut warnings,
+        "runtime_ms",
+        metrics.runtime_ms as f64,
+        baseline.expected_runtime_ms_p95 as f64,
+        "runtime is above the repository p95 baseline",
+    );
+    if let Some(confidence_score) = metrics.confidence_score {
+        if confidence_score < baseline.confidence_score_floor {
+            warnings.push(DriftWarning {
+                metric: "confidence_score".to_string(),
+                observed: f64::from(confidence_score),
+                baseline: f64::from(baseline.confidence_score_floor),
+                severity: "warning".to_string(),
+                message: "confidence score is below this repository baseline floor".to_string(),
+            });
+        }
+    }
+    warnings
+}
+
+fn push_upper_bound_warning(
+    warnings: &mut Vec<DriftWarning>,
+    metric: &str,
+    observed: f64,
+    baseline: f64,
+    message: &str,
+) {
+    if observed > baseline {
+        let severity = if baseline == 0.0 || observed >= baseline * 2.0 {
+            "blocker"
+        } else {
+            "warning"
+        };
+        warnings.push(DriftWarning {
+            metric: metric.to_string(),
+            observed,
+            baseline,
+            severity: severity.to_string(),
+            message: message.to_string(),
+        });
+    }
+}
+
+pub fn evaluate_calibration(observations: &[CalibrationObservation]) -> CalibrationReport {
+    if observations.is_empty() {
+        return CalibrationReport {
+            status: "no_labeled_outcomes".to_string(),
+            observation_count: 0,
+            brier_score: None,
+            log_loss: None,
+            expected_calibration_error: None,
+            buckets: Vec::new(),
+        };
+    }
+
+    let mut brier = 0.0;
+    let mut log_loss = 0.0;
+    let mut buckets = (0..5)
+        .map(|index| (index, Vec::<(f64, f64)>::new()))
+        .collect::<BTreeMap<_, _>>();
+    for observation in observations {
+        let prediction = f64::from(observation.confidence_score.min(100)) / 100.0;
+        let outcome = if observation.outcome_safe { 1.0 } else { 0.0 };
+        brier += (prediction - outcome) * (prediction - outcome);
+        let clamped = prediction.clamp(0.000_001, 0.999_999);
+        log_loss += -(outcome * clamped.ln() + (1.0 - outcome) * (1.0 - clamped).ln());
+        let bucket = (usize::from(observation.confidence_score.min(99)) / 20) as i32;
+        buckets
+            .entry(bucket)
+            .or_default()
+            .push((prediction, outcome));
+    }
+
+    let count = observations.len() as f64;
+    let mut bucket_rows = Vec::new();
+    let mut ece = 0.0;
+    for index in 0..5 {
+        let rows = buckets.remove(&index).unwrap_or_default();
+        if rows.is_empty() {
+            continue;
+        }
+        let bucket_count = rows.len() as f64;
+        let avg_prediction =
+            rows.iter().map(|(prediction, _)| prediction).sum::<f64>() / bucket_count;
+        let empirical_success_rate =
+            rows.iter().map(|(_, outcome)| outcome).sum::<f64>() / bucket_count;
+        ece += (bucket_count / count) * (avg_prediction - empirical_success_rate).abs();
+        bucket_rows.push(CalibrationBucket {
+            bucket: format!("{}-{}", index * 20, index * 20 + 19),
+            count: rows.len() as u64,
+            average_prediction: round4(avg_prediction),
+            empirical_success_rate: round4(empirical_success_rate),
+        });
+    }
+
+    CalibrationReport {
+        status: "shadow".to_string(),
+        observation_count: observations.len() as u64,
+        brier_score: Some(round4(brier / count)),
+        log_loss: Some(round4(log_loss / count)),
+        expected_calibration_error: Some(round4(ece)),
+        buckets: bucket_rows,
+    }
+}
+
+fn round4(value: f64) -> f64 {
+    (value * 10_000.0).round() / 10_000.0
+}
+
 pub fn build_confidence_artifact(receipts: &[Receipt]) -> ConfidenceArtifact {
     let mut receipts = receipts
         .iter()
@@ -4930,6 +5162,83 @@ fn rust_parser_subset() {
             }
             _ => {}
         }
+    }
+
+    #[test]
+    fn feedback_calibration_scores_labeled_outcomes() {
+        let report = evaluate_calibration(&[
+            CalibrationObservation {
+                bundle_id: "a".to_string(),
+                confidence_score: 90,
+                outcome_safe: true,
+                agent_author: Some("codex:gpt".to_string()),
+            },
+            CalibrationObservation {
+                bundle_id: "b".to_string(),
+                confidence_score: 75,
+                outcome_safe: true,
+                agent_author: Some("codex:gpt".to_string()),
+            },
+            CalibrationObservation {
+                bundle_id: "c".to_string(),
+                confidence_score: 20,
+                outcome_safe: false,
+                agent_author: Some("claude:sonnet".to_string()),
+            },
+        ]);
+
+        assert_eq!(report.status, "shadow");
+        assert_eq!(report.observation_count, 3);
+        assert!(report.brier_score.expect("brier") < 0.05);
+        assert!(report.log_loss.expect("log loss") < 0.25);
+        assert!(report.expected_calibration_error.expect("ece") < 0.2);
+        assert_eq!(report.buckets.len(), 3);
+    }
+
+    #[test]
+    fn feedback_baseline_comparison_flags_drift() {
+        let metrics = BundleFeedbackMetrics {
+            bundle_id: "bundle".to_string(),
+            repository: ".".to_string(),
+            final_status: "failed".to_string(),
+            runtime_ms: 125_000,
+            confidence_score: Some(42),
+            mutation_survivors: 3,
+            oracle_residual_risks: 2,
+            skipped_stages: 1,
+            static_residual_risks: 0,
+            residual_by_family: BTreeMap::new(),
+            agent_author: Some("codex:gpt".to_string()),
+        };
+        let baseline = RepoBaseline {
+            schema_version: FEEDBACK_SCHEMA_VERSION.to_string(),
+            repository: ".".to_string(),
+            sample_size: 20,
+            expected_mutation_survivors_max: 1,
+            expected_oracle_residual_risks_max: 0,
+            expected_skipped_stages_max: 0,
+            expected_static_residual_risks_max: 1,
+            expected_runtime_ms_p95: 90_000,
+            confidence_score_floor: 70,
+            noise_floor_note: "synthetic baseline".to_string(),
+        };
+
+        let warnings = compare_to_baseline(&metrics, &baseline);
+        assert!(warnings
+            .iter()
+            .any(|warning| warning.metric == "mutation_survivors"));
+        assert!(warnings
+            .iter()
+            .any(|warning| warning.metric == "oracle_residual_risks"));
+        assert!(warnings
+            .iter()
+            .any(|warning| warning.metric == "skipped_stages"));
+        assert!(warnings
+            .iter()
+            .any(|warning| warning.metric == "runtime_ms"));
+        assert!(warnings
+            .iter()
+            .any(|warning| warning.metric == "confidence_score"));
     }
 
     fn policy_stage(

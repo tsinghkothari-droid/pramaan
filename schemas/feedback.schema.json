@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pramaan.dev/schemas/feedback.schema.json",
+  "title": "Pramaan Feedback and Calibration Artifacts",
+  "type": "object",
+  "required": ["schema_version"],
+  "properties": {
+    "schema_version": {
+      "const": "pramaan.feedback.v1"
+    }
+  },
+  "$defs": {
+    "repo_baseline": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "repository",
+        "sample_size",
+        "expected_mutation_survivors_max",
+        "expected_oracle_residual_risks_max",
+        "expected_skipped_stages_max",
+        "expected_static_residual_risks_max",
+        "expected_runtime_ms_p95",
+        "confidence_score_floor",
+        "noise_floor_note"
+      ],
+      "properties": {
+        "schema_version": { "const": "pramaan.feedback.v1" },
+        "repository": { "type": "string" },
+        "sample_size": { "type": "integer", "minimum": 0 },
+        "expected_mutation_survivors_max": { "type": "integer", "minimum": 0 },
+        "expected_oracle_residual_risks_max": { "type": "integer", "minimum": 0 },
+        "expected_skipped_stages_max": { "type": "integer", "minimum": 0 },
+        "expected_static_residual_risks_max": { "type": "integer", "minimum": 0 },
+        "expected_runtime_ms_p95": { "type": "integer", "minimum": 0 },
+        "confidence_score_floor": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "noise_floor_note": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "calibration_observation_file": {
+      "type": "object",
+      "required": ["observations"],
+      "properties": {
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["bundle_id", "confidence_score", "outcome_safe"],
+            "properties": {
+              "bundle_id": { "type": "string" },
+              "confidence_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "outcome_safe": { "type": "boolean" },
+              "agent_author": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "feedback_report": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "bundle_count",
+        "metrics",
+        "drift_warnings",
+        "calibration",
+        "reviewer_overrides",
+        "limitations"
+      ],
+      "properties": {
+        "schema_version": { "const": "pramaan.feedback.v1" },
+        "bundle_count": { "type": "integer", "minimum": 0 },
+        "metrics": { "type": "array" },
+        "drift_warnings": { "type": "array" },
+        "calibration": { "type": "object" },
+        "reviewer_overrides": { "type": "array" },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "reviewer_override_evidence": {
+      "type": "object",
+      "required": ["schema_version", "bundle_id", "manifest_digest", "stage", "override_record"],
+      "properties": {
+        "schema_version": { "const": "pramaan.feedback.v1" },
+        "bundle_id": { "type": "string" },
+        "manifest_digest": { "type": "string" },
+        "stage": { "type": "string" },
+        "override_record": {
+          "type": "object",
+          "required": [
+            "decision",
+            "accepted_risk_ids",
+            "reviewer_identity_source",
+            "timestamp",
+            "reason",
+            "update_calibration"
+          ],
+          "properties": {
+            "decision": {
+              "enum": ["approved_despite_risk", "rejected", "needs_follow_up"]
+            },
+            "accepted_risk_ids": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^R-[0-9]{3}$" }
+            },
+            "reviewer_identity_source": { "type": "string" },
+            "timestamp": { "type": "string" },
+            "reason": { "type": "string" },
+            "linked_outcome": { "type": "string" },
+            "update_calibration": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

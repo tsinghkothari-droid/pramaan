@@ -1,0 +1,22 @@
+{
+  "observations": [
+    {
+      "bundle_id": "bundle-safe-high",
+      "confidence_score": 90,
+      "outcome_safe": true,
+      "agent_author": "codex:gpt"
+    },
+    {
+      "bundle_id": "bundle-safe-mid",
+      "confidence_score": 72,
+      "outcome_safe": true,
+      "agent_author": "codex:gpt"
+    },
+    {
+      "bundle_id": "bundle-risk-low",
+      "confidence_score": 25,
+      "outcome_safe": false,
+      "agent_author": "claude:sonnet"
+    }
+  ]
+}

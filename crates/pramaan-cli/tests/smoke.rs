@@ -501,6 +501,93 @@ fn verify_writes_receipts_and_prints_a_claim_disciplined_summary() {
         .expect("read rego")
         .contains("package pramaan.default"));
 
+    let override_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "feedback",
+            "override",
+            "--bundle",
+            out.to_str().expect("utf-8 output path"),
+            "--stage",
+            "claim_scope",
+            "--risk",
+            "R-090",
+            "--reviewer",
+            "github:user/reviewer",
+            "--reason",
+            "Synthetic smoke test override for accepted residual risk.",
+            "--linked-outcome",
+            "merged",
+        ])
+        .output()
+        .expect("run pramaan feedback override");
+    assert!(
+        override_output.status.success(),
+        "feedback override failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&override_output.stdout),
+        String::from_utf8_lossy(&override_output.stderr)
+    );
+    let override_path = out.join("feedback").join("reviewer-override.json");
+    assert!(override_path.exists(), "reviewer override evidence exists");
+    let override_json: serde_json::Value =
+        serde_json::from_slice(&fs::read(&override_path).expect("read override"))
+            .expect("override JSON");
+    assert_eq!(override_json["schema_version"], "pramaan.feedback.v1");
+    assert_eq!(
+        override_json["override_record"]["decision"],
+        "approved_despite_risk"
+    );
+    assert_eq!(
+        override_json["override_record"]["accepted_risk_ids"][0],
+        "R-090"
+    );
+
+    let feedback_out = out.join("feedback-analysis");
+    let baseline_path = workspace
+        .join("examples")
+        .join("fixtures")
+        .join("repo-baseline.synthetic.json");
+    let observations_path = workspace
+        .join("examples")
+        .join("fixtures")
+        .join("calibration-observations.synthetic.json");
+    let feedback_output = Command::new(env!("CARGO_BIN_EXE_pramaan"))
+        .current_dir(&workspace)
+        .args([
+            "feedback",
+            "analyze",
+            "--bundle",
+            out.to_str().expect("utf-8 output path"),
+            "--baseline",
+            baseline_path.to_str().expect("utf-8 baseline path"),
+            "--observations",
+            observations_path.to_str().expect("utf-8 observations path"),
+            "--out",
+            feedback_out.to_str().expect("utf-8 feedback out"),
+        ])
+        .output()
+        .expect("run pramaan feedback analyze");
+    assert!(
+        feedback_output.status.success(),
+        "feedback analyze failed\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&feedback_output.stdout),
+        String::from_utf8_lossy(&feedback_output.stderr)
+    );
+    let feedback_stdout = String::from_utf8_lossy(&feedback_output.stdout);
+    assert!(feedback_stdout.contains("Pramaan feedback analysis complete"));
+    assert!(feedback_stdout.contains("calibration_status: shadow"));
+    let feedback_report_path = feedback_out.join("feedback-report.json");
+    let feedback_csv_path = feedback_out.join("feedback-metrics.csv");
+    assert!(feedback_report_path.exists(), "feedback report exists");
+    assert!(feedback_csv_path.exists(), "feedback CSV exists");
+    let feedback_report: serde_json::Value =
+        serde_json::from_slice(&fs::read(feedback_report_path).expect("read feedback report"))
+            .expect("feedback report JSON");
+    assert_eq!(feedback_report["schema_version"], "pramaan.feedback.v1");
+    assert_eq!(feedback_report["calibration"]["status"], "shadow");
+    assert_eq!(feedback_report["calibration"]["observation_count"], 3);
+    assert!(feedback_report["metrics"][0]["confidence_score"].is_number());
+
     let mut tampered_vsa = vsa;
     tampered_vsa["verification_result"] = json!("PASSED");
     fs::write(

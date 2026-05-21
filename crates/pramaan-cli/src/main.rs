@@ -12,16 +12,19 @@ use pramaan_core::risks::{
 };
 use pramaan_core::{
     build_agent_decision, build_confidence_artifact, builtin_policy_profiles, canonical_json_bytes,
-    detect_agentic_workflow_injection, evaluate_policy, policy_profile_by_id,
-    render_confidence_markdown, risk_family, timestamp, AgentAttribution, ArtifactRef,
-    AttributionConfidence, ClaimScope, ConfidenceDecision, EvidenceSensitivity, FuzzDivergence,
-    FuzzRunEvidence, OutputRef, PluginIdentity, PluginPermissions, PolicyDecision,
+    compare_to_baseline, detect_agentic_workflow_injection, evaluate_calibration, evaluate_policy,
+    policy_profile_by_id, render_confidence_markdown, risk_family, timestamp, AgentAttribution,
+    ArtifactRef, AttributionConfidence, BundleFeedbackMetrics, CalibrationObservation, ClaimScope,
+    ConfidenceDecision, EvidenceSensitivity, FeedbackReport, FuzzDivergence, FuzzRunEvidence,
+    OutputRef, OverrideDecision, PluginIdentity, PluginPermissions, PolicyDecision,
     PolicyStageEvidence, ProbeCandidate, ProbeDecision, ProbeKind, ProbeLanguage,
     ProbePlanArtifact, ProbeProvider, ProbeSandboxStatus, Receipt, ReceiptSummary,
-    RedactionManifest, RiskRefs, StageBudget, StageStatus, ToolIdentity, PROBE_SCHEMA_VERSION,
+    RedactionManifest, RepoBaseline, ReviewerOverride, ReviewerOverrideEvidence, RiskRefs,
+    StageBudget, StageStatus, ToolIdentity, FEEDBACK_SCHEMA_VERSION, PROBE_SCHEMA_VERSION,
     RECEIPT_SCHEMA_VERSION,
 };
 use pramaan_sandbox::{SandboxPlan, SandboxRunner};
+use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -54,6 +57,7 @@ enum Commands {
     Probe(ProbeArgs),
     Replay(ReplayArgs),
     Export(ExportArgs),
+    Feedback(FeedbackArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -137,6 +141,52 @@ struct ExportSarifArgs {
 #[derive(Debug, Parser)]
 struct ExportRegoArgs {
     #[arg(long)]
+    out: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+struct FeedbackArgs {
+    #[command(subcommand)]
+    command: FeedbackCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum FeedbackCommands {
+    Override(FeedbackOverrideArgs),
+    Analyze(FeedbackAnalyzeArgs),
+}
+
+#[derive(Debug, Parser)]
+struct FeedbackOverrideArgs {
+    #[arg(long)]
+    bundle: PathBuf,
+    #[arg(long)]
+    stage: String,
+    #[arg(long = "risk")]
+    risks: Vec<String>,
+    #[arg(long)]
+    reason: String,
+    #[arg(long)]
+    reviewer: String,
+    #[arg(long, default_value = "approved_despite_risk")]
+    decision: String,
+    #[arg(long)]
+    linked_outcome: Option<String>,
+    #[arg(long, default_value_t = true)]
+    update_calibration: bool,
+    #[arg(long)]
+    out: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
+struct FeedbackAnalyzeArgs {
+    #[arg(long = "bundle", required = true)]
+    bundles: Vec<PathBuf>,
+    #[arg(long)]
+    baseline: Option<PathBuf>,
+    #[arg(long)]
+    observations: Option<PathBuf>,
+    #[arg(long, default_value = "target/pramaan-feedback")]
     out: PathBuf,
 }
 
@@ -307,6 +357,7 @@ fn main() -> Result<()> {
         Commands::Probe(args) => run_probe(args),
         Commands::Replay(args) => run_replay(args),
         Commands::Export(args) => run_export(args),
+        Commands::Feedback(args) => run_feedback(args),
     }
 }
 
@@ -1069,6 +1120,248 @@ fn print_policy_items(label: &str, items: &[String]) {
         for item in items {
             println!("  - {item}");
         }
+    }
+}
+
+fn run_feedback(args: FeedbackArgs) -> Result<()> {
+    match args.command {
+        FeedbackCommands::Override(args) => run_feedback_override(args),
+        FeedbackCommands::Analyze(args) => run_feedback_analyze(args),
+    }
+}
+
+fn run_feedback_override(args: FeedbackOverrideArgs) -> Result<()> {
+    let manifest_path = resolve_manifest_path(&args.bundle);
+    let bundle_root = manifest_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .to_path_buf();
+    let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
+    let decision = parse_override_decision(&args.decision)?;
+    let evidence = ReviewerOverrideEvidence {
+        schema_version: FEEDBACK_SCHEMA_VERSION.to_string(),
+        bundle_id: manifest.bundle_id,
+        manifest_digest: manifest.integrity.manifest_digest.prefixed(),
+        stage: args.stage,
+        override_record: ReviewerOverride {
+            decision,
+            accepted_risk_ids: args.risks,
+            reviewer_identity_source: args.reviewer,
+            timestamp: timestamp(Utc::now()),
+            reason: args.reason,
+            linked_outcome: args.linked_outcome,
+            update_calibration: args.update_calibration,
+        },
+    };
+    let out_path = args
+        .out
+        .unwrap_or_else(|| bundle_root.join("feedback").join("reviewer-override.json"));
+    write_json(&out_path, &evidence)?;
+
+    println!("Pramaan reviewer override recorded");
+    println!("override: {}", out_path.display());
+    println!("bundle_id: {}", evidence.bundle_id);
+    println!("stage: {}", evidence.stage);
+    println!(
+        "accepted_risks: {}",
+        evidence.override_record.accepted_risk_ids.join(", ")
+    );
+    println!(
+        "update_calibration: {}",
+        evidence.override_record.update_calibration
+    );
+    Ok(())
+}
+
+fn parse_override_decision(value: &str) -> Result<OverrideDecision> {
+    match value {
+        "approved_despite_risk" | "approved" | "accept" => {
+            Ok(OverrideDecision::ApprovedDespiteRisk)
+        }
+        "rejected" | "reject" => Ok(OverrideDecision::Rejected),
+        "needs_follow_up" | "follow_up" => Ok(OverrideDecision::NeedsFollowUp),
+        _ => anyhow::bail!(
+            "unknown override decision {value}; use approved_despite_risk, rejected, or needs_follow_up"
+        ),
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct CalibrationObservationFile {
+    observations: Vec<CalibrationObservation>,
+}
+
+fn run_feedback_analyze(args: FeedbackAnalyzeArgs) -> Result<()> {
+    fs::create_dir_all(&args.out)
+        .with_context(|| format!("creating feedback output directory {}", args.out.display()))?;
+    let baseline = match args.baseline {
+        Some(path) => Some(read_json_file::<RepoBaseline>(&path)?),
+        None => None,
+    };
+    let observations = match args.observations {
+        Some(path) => read_json_file::<CalibrationObservationFile>(&path)?.observations,
+        None => Vec::new(),
+    };
+
+    let mut metrics = Vec::new();
+    let mut drift_warnings = Vec::new();
+    for bundle in args.bundles {
+        let manifest_path = resolve_manifest_path(&bundle);
+        let bundle_root = manifest_path
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .to_path_buf();
+        let manifest = read_manifest(&manifest_path).context("reading bundle manifest")?;
+        let receipts = read_bundle_receipts(&bundle_root, &manifest)?;
+        let metric = feedback_metrics_for_bundle(&bundle_root, &manifest, &receipts)?;
+        if let Some(baseline) = &baseline {
+            drift_warnings.extend(compare_to_baseline(&metric, baseline));
+        }
+        metrics.push(metric);
+    }
+
+    let report = FeedbackReport {
+        schema_version: FEEDBACK_SCHEMA_VERSION.to_string(),
+        bundle_count: metrics.len(),
+        metrics,
+        drift_warnings,
+        calibration: evaluate_calibration(&observations),
+        reviewer_overrides: Vec::new(),
+        limitations: vec![
+            "Phase 34 feedback analysis is local JSON/CSV evidence, not a hosted dashboard.".to_string(),
+            "Calibration uses only supplied labeled outcomes; absent labels keep calibration in no_labeled_outcomes mode.".to_string(),
+        ],
+    };
+
+    let report_path = args.out.join("feedback-report.json");
+    write_json(&report_path, &report)?;
+    let csv_path = args.out.join("feedback-metrics.csv");
+    fs::write(&csv_path, feedback_metrics_csv(&report.metrics))
+        .with_context(|| format!("writing {}", csv_path.display()))?;
+
+    println!("Pramaan feedback analysis complete");
+    println!("report: {}", report_path.display());
+    println!("csv: {}", csv_path.display());
+    println!("bundles: {}", report.bundle_count);
+    println!("drift_warnings: {}", report.drift_warnings.len());
+    println!("calibration_status: {}", report.calibration.status);
+    Ok(())
+}
+
+fn read_json_file<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T> {
+    serde_json::from_slice(&fs::read(path).with_context(|| format!("reading {}", path.display()))?)
+        .with_context(|| format!("parsing {}", path.display()))
+}
+
+fn feedback_metrics_for_bundle(
+    bundle_root: &Path,
+    manifest: &BundleManifest,
+    receipts: &[Receipt],
+) -> Result<BundleFeedbackMetrics> {
+    let mut residual_by_family = BTreeMap::new();
+    let mut mutation_survivors = 0;
+    let mut oracle_residual_risks = 0;
+    let mut static_residual_risks = 0;
+    let mut skipped_stages = 0;
+    for stage in &manifest.stages {
+        if stage.status == "skipped" {
+            skipped_stages += 1;
+        }
+        if stage.id.contains("mutation") {
+            mutation_survivors += stage
+                .residual_risks
+                .iter()
+                .filter(|risk| risk.as_str() == "R-068")
+                .count() as u64;
+        }
+        if stage.id.contains("oracle") {
+            oracle_residual_risks += stage.residual_risks.len() as u64;
+        }
+        if stage.id.contains("static") {
+            static_residual_risks += stage.residual_risks.len() as u64;
+        }
+        for risk in &stage.residual_risks {
+            *residual_by_family
+                .entry(risk_family(risk).to_string())
+                .or_default() += 1;
+        }
+    }
+
+    let runtime_ms = manifest
+        .stage_budgets
+        .iter()
+        .map(|budget| budget.consumed_ms)
+        .sum();
+    let confidence_score = read_confidence_score(bundle_root)?;
+    let agent_author = receipts
+        .iter()
+        .find_map(|receipt| receipt.agent_author.as_ref())
+        .map(|agent| {
+            let model = agent
+                .model_version
+                .as_deref()
+                .or(agent.model_family.as_deref())
+                .unwrap_or("unknown_model");
+            format!("{}:{model}", agent.product)
+        });
+
+    Ok(BundleFeedbackMetrics {
+        bundle_id: manifest.bundle_id.clone(),
+        repository: manifest.repository.path.clone(),
+        final_status: manifest.final_status.clone(),
+        runtime_ms,
+        confidence_score,
+        mutation_survivors,
+        oracle_residual_risks,
+        skipped_stages,
+        static_residual_risks,
+        residual_by_family,
+        agent_author,
+    })
+}
+
+fn read_confidence_score(bundle_root: &Path) -> Result<Option<u8>> {
+    let path = bundle_root.join("confidence.json");
+    if !path.exists() {
+        return Ok(None);
+    }
+    let value: serde_json::Value = read_json_file(&path)?;
+    Ok(value
+        .get("confidence_score")
+        .and_then(serde_json::Value::as_u64)
+        .and_then(|score| u8::try_from(score).ok()))
+}
+
+fn feedback_metrics_csv(metrics: &[BundleFeedbackMetrics]) -> String {
+    let mut csv = String::from(
+        "bundle_id,repository,final_status,runtime_ms,confidence_score,mutation_survivors,oracle_residual_risks,skipped_stages,static_residual_risks,agent_author\n",
+    );
+    for metric in metrics {
+        csv.push_str(&format!(
+            "{},{},{},{},{},{},{},{},{},{}\n",
+            csv_cell(&metric.bundle_id),
+            csv_cell(&metric.repository),
+            csv_cell(&metric.final_status),
+            metric.runtime_ms,
+            metric
+                .confidence_score
+                .map(|score| score.to_string())
+                .unwrap_or_default(),
+            metric.mutation_survivors,
+            metric.oracle_residual_risks,
+            metric.skipped_stages,
+            metric.static_residual_risks,
+            csv_cell(metric.agent_author.as_deref().unwrap_or(""))
+        ));
+    }
+    csv
+}
+
+fn csv_cell(value: &str) -> String {
+    if value.chars().any(|ch| matches!(ch, ',' | '"' | '\n')) {
+        format!("\"{}\"", value.replace('"', "\"\""))
+    } else {
+        value.to_string()
     }
 }
 

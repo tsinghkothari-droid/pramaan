@@ -711,6 +711,13 @@ corpus and broader runnable fixture set.
 
 **Priority:** P2 feedback
 
+**Status:** Completed 2026-05-21. `pramaan feedback override` now writes
+first-class override evidence into bundles, and `pramaan feedback analyze`
+compares one or more bundles against local repo baselines, calibration labels,
+and dashboard-ready JSON/CSV exports. This is local-file calibration and drift
+evidence, not a hosted analytics backend; long-lived outcome correlation with
+reverts or defects remains future work.
+
 **Success Criteria:**
 
 1. Reviewer overrides persist with accepted risk IDs, reason, reviewer identity source, and merge outcome when available.

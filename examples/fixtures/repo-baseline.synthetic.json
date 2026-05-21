@@ -1,0 +1,12 @@
+{
+  "schema_version": "pramaan.feedback.v1",
+  "repository": ".",
+  "sample_size": 12,
+  "expected_mutation_survivors_max": 0,
+  "expected_oracle_residual_risks_max": 0,
+  "expected_skipped_stages_max": 0,
+  "expected_static_residual_risks_max": 1,
+  "expected_runtime_ms_p95": 90000,
+  "confidence_score_floor": 65,
+  "noise_floor_note": "Synthetic baseline for CLI and docs fixtures; replace with repo-local history before enforcing."
+}
